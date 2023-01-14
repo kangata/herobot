@@ -17,22 +17,7 @@
             <div class="mx-auto mb-16 w-auto text-slate-900">
                 <slot name="logo" />
             </div>
-            <h1 class="sr-only">Log in to your Tailwind UI account</h1>
-            <form action="/login" class="w-full max-w-sm">
-                <div class="mb-6"><label for="email" class="block text-sm font-semibold leading-6 text-gray-900">Email
-                        address</label><input type="email" id="email"
-                        class="mt-2 appearance-none text-slate-900 bg-white rounded-md block w-full px-3 h-10 shadow-sm sm:text-sm focus:outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-sky-500 ring-1 ring-slate-200"
-                        required="" value=""></div>
-                <div class="mb-6"><label for="password"
-                        class="block text-sm font-semibold leading-6 text-gray-900">Password</label><input
-                        type="password" id="password"
-                        class="mt-2 appearance-none text-slate-900 bg-white rounded-md block w-full px-3 h-10 shadow-sm sm:text-sm focus:outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-sky-500 ring-1 ring-slate-200"
-                        required="" value=""></div><button type="submit"
-                    class="inline-flex justify-center rounded-lg text-sm font-semibold py-2.5 px-4 bg-slate-900 text-white hover:bg-slate-700 w-full"><span>Sign
-                        in to account</span></button>
-                <p class="mt-8 text-center"><a href="/password/reset" class="text-sm hover:underline">Forgot
-                        password?</a></p>
-            </form>
+            <slot />
         </div>
         <footer class="relative shrink-0">
             <div

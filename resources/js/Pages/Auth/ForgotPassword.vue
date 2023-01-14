@@ -21,6 +21,7 @@ const submit = () => {
 </script>
 
 <template>
+
     <Head title="Forgot Password" />
 
     <AuthenticationCard>
@@ -28,33 +29,27 @@ const submit = () => {
             <AuthenticationCardLogo />
         </template>
 
-        <div class="mb-4 text-sm text-gray-600">
-            Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.
-        </div>
-
-        <div v-if="status" class="mb-4 font-medium text-sm text-green-600">
-            {{ status }}
-        </div>
-
-        <form @submit.prevent="submit">
-            <div>
-                <InputLabel for="email" value="Email" />
-                <TextInput
-                    id="email"
-                    v-model="form.email"
-                    type="email"
-                    class="mt-1 block w-full"
-                    required
-                    autofocus
-                />
-                <InputError class="mt-2" :message="form.errors.email" />
+        <div class="max-w-sm">
+            <h1 class="mb-2 text-center text-sm font-semibold text-gray-900">Reset your password</h1>
+            <p class="mb-10 text-center text-sm">Enter your email and we'll send you a link to reset your password.</p>
+            <div v-if="status" class="mb-4 font-medium text-sm text-green-600">
+                {{ status }}
             </div>
+            <form class="w-full max-w-sm" @submit.prevent="submit">
+                <div>
+                    <InputLabel for="email" value="Email" />
+                    <TextInput id="email" v-model="form.email" type="email" class="mt-1 block w-full" required
+                        autofocus />
+                    <InputError class="mt-2" :message="form.errors.email" />
+                </div>
 
-            <div class="flex items-center justify-end mt-4">
-                <PrimaryButton :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
-                    Email Password Reset Link
-                </PrimaryButton>
-            </div>
-        </form>
+                <div class="flex items-center mt-4">
+                    <PrimaryButton class="w-full" :class="{ 'opacity-25': form.processing }"
+                        :disabled="form.processing">
+                        Reset your password
+                    </PrimaryButton>
+                </div>
+            </form>
+        </div>
     </AuthenticationCard>
 </template>
