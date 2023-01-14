@@ -14,6 +14,8 @@ defineProps({
 </script>
 
 <template>
+    <Head title="Herobot - Chatbot untuk Bisnis" />
+
     <HeroSection />
 
     <FeatureSection />
