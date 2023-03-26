@@ -100,7 +100,7 @@
                                 Penjualan, Marketing, Pendidikan, Kesehatan, Keuangan, Transportasi, dan lain - lain.
                             </p>
                             <div class="mt-8 flex gap-x-4 sm:justify-center">
-                                <a href="https://wa.me/6285723933591" target="_blank"
+                                <a href="https://wa.me/6289526544405" target="_blank"
                                     class="inline-block rounded-lg bg-indigo-600 px-4 py-1.5 text-base font-semibold leading-7 text-white shadow-sm ring-1 ring-indigo-600 hover:bg-indigo-700 hover:ring-indigo-700">
                                     Hubungi Kami
                                     <span class="text-indigo-200" aria-hidden="true">&rarr;</span>
