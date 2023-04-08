@@ -34,5 +34,5 @@ Route::middleware([
         return Inertia::render('Dashboard');
     })->name('dashboard');
 
-    Route::get('/logout', [LogoutController::class, 'logout'])->name('logout');
+    Route::get('/logout', [LogoutController::class, 'logout']);
 });
