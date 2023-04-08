@@ -1,5 +1,7 @@
 <template>
     <div>
+        <Head :title="title" />
+
         <TransitionRoot as="template" :show="sidebarOpen">
             <Dialog as="div" class="relative z-50 lg:hidden" @close="sidebarOpen = false">
                 <TransitionChild as="template" enter="transition-opacity ease-linear duration-300" enter-from="opacity-0"
@@ -272,7 +274,7 @@
 <script setup>
 import { ref } from 'vue'
 import { Inertia } from '@inertiajs/inertia';
-import { usePage } from '@inertiajs/inertia-vue3';
+import { Head, usePage } from '@inertiajs/inertia-vue3';
 import {
     Dialog,
     DialogPanel,
@@ -297,6 +299,10 @@ import {
 } from '@heroicons/vue/24/outline'
 import { ChevronDownIcon, MagnifyingGlassIcon } from '@heroicons/vue/20/solid'
 import ApplicationLogo from '../Components/ApplicationLogo.vue';
+
+defineProps({
+    title: String,
+});
 
 const navigation = [
     { name: 'Dashboard', href: route('dashboard'), icon: HomeIcon, current: true },
