@@ -34,5 +34,21 @@ Route::middleware([
         return Inertia::render('Dashboard');
     })->name('dashboard');
 
+    Route::get('/bots', function () {
+        return Inertia::render('Bots/Index');
+    })->name('bots');
+
+    Route::get('/knowledge', function () {
+        return Inertia::render('Knowledge/Index');
+    })->name('knowledge');
+
+    Route::get('/reports', function () {
+        return Inertia::render('Reports/Index');
+    })->name('reports');
+
+    Route::get('/integrations', function () {
+        return Inertia::render('Integrations/Index');
+    })->name('integrations');
+
     Route::get('/logout', [LogoutController::class, 'logout']);
 });

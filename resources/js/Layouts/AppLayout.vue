@@ -38,13 +38,13 @@
                                         <li>
                                             <ul role="list" class="-mx-2 space-y-1">
                                                 <li v-for="item in navigation" :key="item.name">
-                                                    <a :href="item.href"
+                                                    <Link :href="item.href"
                                                         :class="[item.current ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
                                                         <component :is="item.icon"
                                                             :class="[item.current ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600', 'h-6 w-6 shrink-0']"
                                                             aria-hidden="true" />
                                                         {{ item.name }}
-                                                    </a>
+                                                    </Link>
                                                 </li>
                                             </ul>
                                         </li>
@@ -52,24 +52,24 @@
                                             <div class="text-xs font-semibold leading-6 text-gray-400">Your teams</div>
                                             <ul role="list" class="-mx-2 mt-2 space-y-1">
                                                 <li v-for="team in teams" :key="team.name">
-                                                    <a :href="team.href"
+                                                    <Link :href="team.href"
                                                         :class="[team.current ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
                                                         <span
                                                             :class="[team.current ? 'text-indigo-600 border-indigo-600' : 'text-gray-400 border-gray-200 group-hover:border-indigo-600 group-hover:text-indigo-600', 'flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-[0.625rem] font-medium bg-white']">{{
                                                                 team.initial }}</span>
                                                         <span class="truncate">{{ team.name }}</span>
-                                                    </a>
+                                                    </Link>
                                                 </li>
                                             </ul>
                                         </li>
                                         <li class="mt-auto">
-                                            <a :href="route('profile.show')"
+                                            <Link :href="route('profile.show')"
                                                 class="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-700 hover:bg-gray-50 hover:text-indigo-600">
                                                 <Cog6ToothIcon
                                                     class="h-6 w-6 shrink-0 text-gray-400 group-hover:text-indigo-600"
                                                     aria-hidden="true" />
                                                 Settings
-                                            </a>
+                                            </Link>
                                         </li>
                                     </ul>
                                 </nav>
@@ -93,67 +93,68 @@
                             <ul role="list" class="-mx-2 space-y-1">
                                 <!-- Dashboard -->
                                 <li>
-                                    <a :href="route('dashboard')"
+                                    <Link :href="route('dashboard')"
                                         :class="[route().current('dashboard') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
                                         <component :is="HomeIcon"
                                             :class="[route().current('dashboard') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600', 'h-6 w-6 shrink-0']"
                                             aria-hidden="true" />
                                         Dashboard
-                                    </a>
-                                </li>
-                                <!-- Team -->
-                                <li>
-                                    <a :href="route('teams.show', $page.props.user.current_team)"
-                                        :class="[route().current('teams.show') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
-                                        <component :is="UsersIcon"
-                                            :class="[route().current('teams.show') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600', 'h-6 w-6 shrink-0']"
-                                            aria-hidden="true" />
-                                        Team
-                                    </a>
+                                    </Link>
                                 </li>
 
-                                <!-- Projects -->
+                                <!-- Bot -->
                                 <li>
-                                    <a href="#"
-                                        class="text-gray-700 hover:text-indigo-600 hover:bg-gray-50 group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
-                                        <component :is="FolderIcon"
-                                            class="h-6 w-6 shrink-0 text-gray-400 group-hover:text-indigo-600"
+                                    <Link :href="route('bots')"
+                                        :class="[route().current('bots') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
+                                        <component :is="BotIcon"
+                                            :class="[route().current('bots') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600', 'h-6 w-6 shrink-0']"
                                             aria-hidden="true" />
-                                        Projects
-                                    </a>
-                                </li>
-
-                                <!-- Calendar -->
-                                <li>
-                                    <a href="#"
-                                        class="text-gray-700 hover:text-indigo-600 hover:bg-gray-50 group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
-                                        <component :is="CalendarIcon"
-                                            class="h-6 w-6 shrink-0 text-gray-400 group-hover:text-indigo-600"
-                                            aria-hidden="true" />
-                                        Calendar
-                                    </a>
+                                        Bots
+                                    </Link>
                                 </li>
 
                                 <!-- Documents -->
                                 <li>
-                                    <a href="#"
-                                        class="text-gray-700 hover:text-indigo-600 hover:bg-gray-50 group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                                    <Link :href="route('knowledge')"
+                                        :class="[route().current('knowledge') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
                                         <component :is="DocumentDuplicateIcon"
-                                            class="h-6 w-6 shrink-0 text-gray-400 group-hover:text-indigo-600"
+                                            :class="[route().current('knowledge') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600', 'h-6 w-6 shrink-0']"
                                             aria-hidden="true" />
-                                        Documents
-                                    </a>
+                                        Knowledge
+                                    </Link>
                                 </li>
 
                                 <!-- Reports -->
                                 <li>
-                                    <a href="#"
-                                        class="text-gray-700 hover:text-indigo-600 hover:bg-gray-50 group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                                    <Link :href="route('reports')"
+                                        :class="[route().current('reports') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
                                         <component :is="ChartPieIcon"
-                                            class="h-6 w-6 shrink-0 text-gray-400 group-hover:text-indigo-600"
+                                            :class="[route().current('reports') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600', 'h-6 w-6 shrink-0']"
                                             aria-hidden="true" />
                                         Reports
-                                    </a>
+                                    </Link>
+                                </li>
+
+                                <!-- Integrations -->
+                                <li>
+                                    <Link :href="route('integrations')"
+                                        :class="[route().current('integrations') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
+                                        <component :is="LinkIcon"
+                                            :class="[route().current('integrations') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600', 'h-6 w-6 shrink-0']"
+                                            aria-hidden="true" />
+                                        Integrations
+                                    </Link>
+                                </li>
+
+                                <!-- Team -->
+                                <li>
+                                    <Link :href="route('teams.show', $page.props.user.current_team)"
+                                        :class="[route().current('teams.show') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
+                                        <component :is="UsersIcon"
+                                            :class="[route().current('teams.show') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600', 'h-6 w-6 shrink-0']"
+                                            aria-hidden="true" />
+                                        Team Settings
+                                    </Link>
                                 </li>
                             </ul>
                         </li>
@@ -161,36 +162,36 @@
                             <div class="text-xs font-semibold leading-6 text-gray-400">Your teams</div>
                             <ul role="list" class="-mx-2 mt-2 space-y-1">
                                 <li v-for="team in $page.props.user.all_teams" :key="team.id">
-                                    <a @click.prevent="switchToTeam(team)" href="#"
+                                    <Link @click.prevent="switchToTeam(team)" href="#"
                                         :class="[!route().current('teams.create') && team.id === $page.props.user.current_team_id ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
                                         <span
                                             :class="[!route().current('teams.create') && team.id === $page.props.user.current_team_id ? 'text-indigo-600 border-indigo-600' : 'text-gray-400 border-gray-200 group-hover:border-indigo-600 group-hover:text-indigo-600', 'flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-[0.625rem] font-medium bg-white']">{{
                                                 team.name.charAt(0).toUpperCase() }}
                                         </span>
                                         <span class="truncate">{{ team.name }}</span>
-                                    </a>
+                                    </Link>
                                 </li>
                                 <li v-if="$page.props.jetstream.canCreateTeams">
-                                    <a :href="route('teams.create')"
+                                    <Link :href="route('teams.create')"
                                         :class="[route().current('teams.create') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
                                         <span
                                             :class="[route().current('teams.create') ? 'text-indigo-600 border-indigo-600' : 'text-gray-400 border-gray-200 group-hover:border-indigo-600 group-hover:text-indigo-600', 'flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-[0.625rem] font-medium bg-white']">
                                             +
                                         </span>
                                         <span class="truncate">Create New Team</span>
-                                    </a>
+                                    </Link>
                                 </li>
                             </ul>
                         </li>
                     </ul>
                     <ul>
                         <li class="mt-auto">
-                            <a :href="route('profile.show')"
+                            <Link :href="route('profile.show')"
                                 class="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-700 hover:bg-gray-50 hover:text-indigo-600">
                                 <Cog6ToothIcon class="h-6 w-6 shrink-0 text-gray-400 group-hover:text-indigo-600"
                                     aria-hidden="true" />
                                 Settings
-                            </a>
+                            </Link>
                         </li>
                     </ul>
                 </nav>
@@ -250,9 +251,9 @@
                                 <MenuItems
                                     class="absolute right-0 z-10 mt-2.5 w-32 origin-top-right rounded-md bg-white py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none">
                                     <MenuItem v-for="item in userNavigation" :key="item.name" v-slot="{ active }">
-                                    <a :href="item.href"
+                                    <Link :href="item.href"
                                         :class="[active ? 'bg-gray-50' : '', 'block px-3 py-1 text-sm leading-6 text-gray-900']">{{
-                                            item.name }}</a>
+                                            item.name }}</Link>
                                     </MenuItem>
                                 </MenuItems>
                             </transition>
@@ -274,7 +275,7 @@
 <script setup>
 import { ref } from 'vue'
 import { Inertia } from '@inertiajs/inertia';
-import { Head, usePage } from '@inertiajs/inertia-vue3';
+import { Head, usePage, Link } from '@inertiajs/inertia-vue3';
 import {
     Dialog,
     DialogPanel,
@@ -297,8 +298,9 @@ import {
     UsersIcon,
     XMarkIcon,
 } from '@heroicons/vue/24/outline'
-import { ChevronDownIcon, MagnifyingGlassIcon } from '@heroicons/vue/20/solid'
+import { ChevronDownIcon, LinkIcon, MagnifyingGlassIcon } from '@heroicons/vue/20/solid'
 import ApplicationLogo from '../Components/ApplicationLogo.vue';
+import BotIcon from '@/Assets/Icons/BotIcon.svg';
 
 defineProps({
     title: String,
