@@ -29,9 +29,7 @@
                             <!-- Sidebar component, swap this element with another sidebar if you like -->
                             <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-white px-6 pb-4">
                                 <div class="flex h-16 shrink-0 items-center">
-                                    <img class="h-8 w-auto"
-                                        src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600"
-                                        alt="Your Company" />
+                                    <ApplicationLogo class="block h-9 w-auto" />
                                 </div>
                                 <nav class="flex flex-1 flex-col">
                                     <ul role="list" class="flex flex-1 flex-col gap-y-7">
@@ -51,13 +49,24 @@
                                         <li>
                                             <div class="text-xs font-semibold leading-6 text-gray-400">Your teams</div>
                                             <ul role="list" class="-mx-2 mt-2 space-y-1">
-                                                <li v-for="team in teams" :key="team.name">
-                                                    <Link :href="team.href"
-                                                        :class="[team.current ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
+                                                <li v-for="team in $page.props.user.all_teams" :key="team.id">
+                                                    <Link @click.prevent="switchToTeam(team)" href="#"
+                                                        :class="[!route().current('teams.create') && team.id === $page.props.user.current_team_id ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
                                                         <span
-                                                            :class="[team.current ? 'text-indigo-600 border-indigo-600' : 'text-gray-400 border-gray-200 group-hover:border-indigo-600 group-hover:text-indigo-600', 'flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-[0.625rem] font-medium bg-white']">{{
-                                                                team.initial }}</span>
+                                                            :class="[!route().current('teams.create') && team.id === $page.props.user.current_team_id ? 'text-indigo-600 border-indigo-600' : 'text-gray-400 border-gray-200 group-hover:border-indigo-600 group-hover:text-indigo-600', 'flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-[0.625rem] font-medium bg-white']">{{
+                                                                team.name.charAt(0).toUpperCase() }}
+                                                        </span>
                                                         <span class="truncate">{{ team.name }}</span>
+                                                    </Link>
+                                                </li>
+                                                <li v-if="$page.props.jetstream.canCreateTeams">
+                                                    <Link :href="route('teams.create')"
+                                                        :class="[route().current('teams.create') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
+                                                        <span
+                                                            :class="[route().current('teams.create') ? 'text-indigo-600 border-indigo-600' : 'text-gray-400 border-gray-200 group-hover:border-indigo-600 group-hover:text-indigo-600', 'flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-[0.625rem] font-medium bg-white']">
+                                                            +
+                                                        </span>
+                                                        <span class="truncate">Create New Team</span>
                                                     </Link>
                                                 </li>
                                             </ul>
@@ -91,69 +100,13 @@
                     <ul role="list" class="flex flex-1 flex-col gap-y-7">
                         <li>
                             <ul role="list" class="-mx-2 space-y-1">
-                                <!-- Dashboard -->
-                                <li>
-                                    <Link :href="route('dashboard')"
-                                        :class="[route().current('dashboard') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
-                                        <component :is="HomeIcon"
-                                            :class="[route().current('dashboard') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600', 'h-6 w-6 shrink-0']"
+                                <li v-for="item in navigation" :key="item.name">
+                                    <Link :href="item.href"
+                                        :class="[item.current ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
+                                        <component :is="item.icon"
+                                            :class="[item.current ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600', 'h-6 w-6 shrink-0']"
                                             aria-hidden="true" />
-                                        Dashboard
-                                    </Link>
-                                </li>
-
-                                <!-- Bot -->
-                                <li>
-                                    <Link :href="route('bots.index')"
-                                        :class="[route().current('bots*') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
-                                        <component :is="BotIcon"
-                                            :class="[route().current('bots*') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600', 'h-6 w-6 shrink-0']"
-                                            aria-hidden="true" />
-                                            Bot Management
-                                    </Link>
-                                </li>
-
-                                <!-- Documents -->
-                                <li>
-                                    <Link :href="route('knowledge')"
-                                        :class="[route().current('knowledge') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
-                                        <component :is="DocumentDuplicateIcon"
-                                            :class="[route().current('knowledge') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600', 'h-6 w-6 shrink-0']"
-                                            aria-hidden="true" />
-                                        Knowledge
-                                    </Link>
-                                </li>
-
-                                <!-- Reports -->
-                                <li>
-                                    <Link :href="route('reports')"
-                                        :class="[route().current('reports') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
-                                        <component :is="ChartPieIcon"
-                                            :class="[route().current('reports') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600', 'h-6 w-6 shrink-0']"
-                                            aria-hidden="true" />
-                                        Reports
-                                    </Link>
-                                </li>
-
-                                <!-- Integrations -->
-                                <li>
-                                    <Link :href="route('integrations')"
-                                        :class="[route().current('integrations') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
-                                        <component :is="LinkIcon"
-                                            :class="[route().current('integrations') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600', 'h-6 w-6 shrink-0']"
-                                            aria-hidden="true" />
-                                        Integrations
-                                    </Link>
-                                </li>
-
-                                <!-- Team -->
-                                <li>
-                                    <Link :href="route('teams.show', $page.props.user.current_team)"
-                                        :class="[route().current('teams.show') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
-                                        <component :is="UsersIcon"
-                                            :class="[route().current('teams.show') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600', 'h-6 w-6 shrink-0']"
-                                            aria-hidden="true" />
-                                        Team Settings
+                                        {{ item.name }}
                                     </Link>
                                 </li>
                             </ul>
@@ -289,13 +242,10 @@ import {
 import {
     Bars3Icon,
     BellIcon,
-    CalendarIcon,
     ChartPieIcon,
     Cog6ToothIcon,
     DocumentDuplicateIcon,
-    FolderIcon,
     HomeIcon,
-    UsersIcon,
     XMarkIcon,
 } from '@heroicons/vue/24/outline'
 import { ChevronDownIcon, LinkIcon, MagnifyingGlassIcon } from '@heroicons/vue/20/solid'
@@ -307,19 +257,14 @@ defineProps({
 });
 
 const navigation = [
-    { name: 'Dashboard', href: route('dashboard'), icon: HomeIcon, current: true },
-    { name: 'Team', href: route('teams.show', usePage().props.value.user.current_team), icon: UsersIcon, current: false },
-    { name: 'Projects', href: '#', icon: FolderIcon, current: false },
-    { name: 'Calendar', href: '#', icon: CalendarIcon, current: false },
-    { name: 'Documents', href: '#', icon: DocumentDuplicateIcon, current: false },
-    { name: 'Reports', href: '#', icon: ChartPieIcon, current: false },
+    { name: 'Dashboard', href: route('dashboard'), icon: HomeIcon, current: route().current('dashboard') },
+    { name: 'Bot Management', href: route('bots.index'), icon: BotIcon, current: route().current('bots*') },
+    { name: 'Knowledge', href: route('knowledge'), icon: DocumentDuplicateIcon, current: route().current('knowledge*') },
+    { name: 'Reports', href: route('reports'), icon: ChartPieIcon, current: route().current('reports*') },
+    { name: 'Integrations', href: route('integrations'), icon: LinkIcon, current: route().current('integrations*') },
+    { name: 'Team Settings', href: route('teams.show', usePage().props.value.user.current_team), icon: Cog6ToothIcon, current: route().current('teams.show') },
 ]
 
-const teams = [
-    { id: 1, name: 'Heroicons', href: '#', initial: 'H', current: true },
-    { id: 2, name: 'Tailwind Labs', href: '#', initial: 'T', current: false },
-    { id: 3, name: 'Workcation', href: '#', initial: 'W', current: false },
-]
 const userNavigation = [
     { name: 'Your profile', href: route('profile.show') },
     { name: 'Sign out', href: route('logout') },
