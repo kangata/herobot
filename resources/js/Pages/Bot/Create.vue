@@ -18,11 +18,6 @@
                 <TextInput id="description" v-model="form.description" type="text" required />
                 <InputError class="mt-2" :message="form.errors.description" />
             </div>
-            <div class="mb-6">
-                <InputLabel for="personality" value="Personality" />
-                <TextArea id="personality" v-model="form.personality" required></TextArea>
-                <InputError class="mt-2" :message="form.errors.personality" />
-            </div>
 
             <div class="flex flex-row text-right">
                 <PrimaryButton class="mr-2" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
@@ -50,7 +45,6 @@ import TextArea from '@/Components/TextArea.vue';
 const form = useForm({
     name: '',
     description: '',
-    personality: '',
 });
 
 const submit = () => {

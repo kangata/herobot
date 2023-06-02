@@ -26,14 +26,12 @@ class BotController extends Controller
         $validatedData = $request->validate([
             'name' => 'required',
             'description' => 'required',
-            'personality' => 'required',
         ]);
 
-        $bot = new Bot;
-        $bot->name = $validatedData['name'];
-        $bot->description = $validatedData['description'];
-        $bot->personality = $validatedData['personality'];
-        $bot->save();
+        Bot::create([
+            'name' => $validatedData['name'],
+            'description' => $validatedData['description'],
+        ]);
 
         return redirect()->route('bots.index')->with('success', 'Bot created successfully.');
     }
@@ -50,13 +48,12 @@ class BotController extends Controller
         $validatedData = $request->validate([
             'name' => 'required',
             'description' => 'required',
-            'personality' => 'required',
         ]);
 
-        $bot->name = $validatedData['name'];
-        $bot->description = $validatedData['description'];
-        $bot->personality = $validatedData['personality'];
-        $bot->save();
+        $bot->update([
+            'name' => $validatedData['name'],
+            'description' => $validatedData['description'],
+        ]);
 
         return redirect()->route('bots.index')->with('success', 'Bot updated successfully.');
     }

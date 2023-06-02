@@ -18,7 +18,6 @@ return new class extends Migration
             $table->foreignId('team_id')->constrained();
             $table->string('name');
             $table->text('description');
-            $table->text('personality');
             $table->timestamps();
             $table->softDeletes();
         });

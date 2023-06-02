@@ -12,7 +12,7 @@ class Bot extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['name', 'description', 'personality'];
+    protected $fillable = ['name', 'description'];
 
     protected $appends = ['integrations'];
 
