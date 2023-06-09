@@ -1,7 +1,7 @@
 <template>
-    <AppLayout title="Knowledge">
+    <AppLayout title="Knowledges">
         <div>
-            <h3 class="text-base font-semibold leading-6 text-gray-900">Knowledge</h3>
+            <h3 class="text-base font-semibold leading-6 text-gray-900">Knowledges</h3>
         </div>
     </AppLayout>
 </template>

@@ -38,9 +38,9 @@ Route::middleware([
     // Bots
     Route::resource('bots', BotController::class);
 
-    Route::get('/knowledge', function () {
+    Route::get('/knowledges', function () {
         return Inertia::render('Knowledge/Index');
-    })->name('knowledge');
+    })->name('knowledges');
 
     Route::get('/reports', function () {
         return Inertia::render('Reports/Index');
