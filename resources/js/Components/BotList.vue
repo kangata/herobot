@@ -4,7 +4,8 @@
             <li v-for="bot in bots" :key="bot.id" class="rounded-xl border border-gray-200">
                 <div class="flex items-center gap-x-4 border-b border-gray-900/5 p-6">
                     <div>
-                        <div class="text-sm font-medium leading-6 text-gray-900">{{ bot.name }}</div>
+                        <Link :href="route('bots.show', bot.id)"
+                            class="font-medium leading-6 text-gray-900">{{ bot.name }}</Link>
                         <div class="text-sm leading-6 text-gray-900">{{ bot.description }}</div>
                     </div>
                     <Menu as="div" class="relative ml-auto">
@@ -20,14 +21,14 @@
                             <MenuItems
                                 class="absolute right-0 z-10 mt-0.5 w-32 origin-top-right rounded-md bg-white py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none">
                                 <MenuItem v-slot="{ active }">
-                                <a :href="route('bots.show', bot.id)"
+                                <Link :href="route('bots.show', bot.id)"
                                     :class="[active ? 'bg-gray-50' : '', 'block px-3 py-1 text-sm leading-6 text-gray-900']">View<span
-                                        class="sr-only">, {{ bot.name }}</span></a>
+                                        class="sr-only">, {{ bot.name }}</span></Link>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
-                                <a :href="route('bots.edit', bot.id)"
+                                <Link :href="route('bots.edit', bot.id)"
                                     :class="[active ? 'bg-gray-50' : '', 'block px-3 py-1 text-sm leading-6 text-gray-900']">Edit<span
-                                        class="sr-only">, {{ bot.name }}</span></a>
+                                        class="sr-only">, {{ bot.name }}</span></Link>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
                                 <a @click="showDeleteConfirmation(bot)"
@@ -102,7 +103,7 @@
 
 <script setup>
 import { ref } from 'vue';
-import { useForm } from '@inertiajs/inertia-vue3';
+import { Link, useForm } from '@inertiajs/inertia-vue3';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue'
 import { PlusIcon, EllipsisHorizontalIcon } from '@heroicons/vue/20/solid'
 import ConfirmationModal from '@/Components/ConfirmationModal.vue';

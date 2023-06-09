@@ -41,6 +41,13 @@ class BotController extends Controller
         return redirect()->route('bots.index')->with('success', 'Bot created successfully.');
     }
 
+    public function show(Bot $bot)
+    {
+        return inertia('Bot/Show', [
+            'bot' => $bot
+        ]);
+    }
+
     public function edit(Bot $bot)
     {
         return inertia('Bot/Edit', [
