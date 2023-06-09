@@ -136,15 +136,15 @@
                         </li>
                     </ul>
                     <ul>
-                        <li class="mt-auto">
-                            <Link :href="route('profile.show')"
-                                class="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-700 hover:bg-gray-50 hover:text-indigo-600">
-                            <Cog6ToothIcon class="h-6 w-6 shrink-0 text-gray-400 group-hover:text-indigo-600"
-                                aria-hidden="true" />
-                            Settings
+                        <li class="mt-auto" v-for="item in bottomNavigation" :key="item.name">
+                            <Link :href="item.href" class="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-700 hover:bg-gray-50 hover:text-indigo-600">
+                                <component :is="item.icon"
+                                    class="h-6 w-6 shrink-0 text-gray-400 group-hover:text-indigo-600"
+                                    aria-hidden="true" />
+                                {{ item.name }}
                             </Link>
                         </li>
-                    </ul>
+                  </ul>
                 </nav>
             </div>
         </div>
@@ -164,6 +164,7 @@ import {
     Cog6ToothIcon,
     DocumentDuplicateIcon,
     HomeIcon,
+    UserGroupIcon,
     XMarkIcon,
 } from '@heroicons/vue/24/outline'
 import { LinkIcon } from '@heroicons/vue/20/solid'
@@ -176,7 +177,11 @@ const navigation = [
     { name: 'Knowledge', href: route('knowledge'), icon: DocumentDuplicateIcon, current: route().current('knowledge*') },
     { name: 'Reports', href: route('reports'), icon: ChartPieIcon, current: route().current('reports*') },
     { name: 'Integrations', href: route('integrations'), icon: LinkIcon, current: route().current('integrations*') },
-    { name: 'Team Settings', href: route('teams.show', usePage().props.value.user.current_team), icon: Cog6ToothIcon, current: route().current('teams.show') },
+]
+
+const bottomNavigation = [
+    { name: 'Team Settings', href: route('teams.show', usePage().props.value.user.current_team), icon: UserGroupIcon, current: route().current('teams.show') },
+    { name: 'Settings', href: route('profile.show'), icon: Cog6ToothIcon, current: route().current('profile.show') },
 ]
 
 const switchToTeam = (team) => {
