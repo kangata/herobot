@@ -36,12 +36,7 @@ Route::middleware([
     })->name('dashboard');
 
     // Bots
-    Route::get('/bots', [BotController::class, 'index'])->name('bots.index');
-    Route::get('/bots/create', [BotController::class, 'create'])->name('bots.create');
-    Route::post('/bots', [BotController::class, 'store'])->name('bots.store');
-    // Route::get('/bots/{bot}/edit', [BotController::class, 'edit'])->name('bots.edit');
-    // Route::put('/bots/{bot}', [BotController::class, 'update'])->name('bots.update');
-    // Route::delete('/bots/{bot}', [BotController::class, 'destroy'])->name('bots.destroy');
+    Route::resource('bots', BotController::class);
 
     Route::get('/knowledge', function () {
         return Inertia::render('Knowledge/Index');
