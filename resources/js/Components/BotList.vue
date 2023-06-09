@@ -30,8 +30,8 @@
                                         class="sr-only">, {{ bot.name }}</span></a>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
-                                <a href="#"
-                                    :class="[active ? 'bg-gray-50' : '', 'block px-3 py-1 text-sm leading-6 text-red-500']">Delete<span
+                                <a @click="showDeleteConfirmation(bot)"
+                                    :class="[active ? 'bg-gray-50' : '', 'cursor-pointer block px-3 py-1 text-sm leading-6 text-red-500']">Delete<span
                                         class="sr-only">, {{ bot.name }}</span></a>
                                 </MenuItem>
                             </MenuItems>
@@ -57,6 +57,31 @@
                 </dl>
             </li>
         </ul>
+
+        <ConfirmationModal :show="confirmingBotDeletion" @close="confirmingBotDeletion = false">
+            <template #title>
+                Delete Bot
+            </template>
+
+            <template #content>
+                Are you sure you want to delete this bot? Once a bot is deleted, all of its resources and data will be permanently deleted.
+            </template>
+
+            <template #footer>
+                <SecondaryButton @click="confirmingBotDeletion = false">
+                    Cancel
+                </SecondaryButton>
+
+                <DangerButton
+                    class="ml-3"
+                    :class="{ 'opacity-25': formDelete.processing }"
+                    :disabled="formDelete.processing"
+                    @click="deleteBot"
+                >
+                    Delete Bot
+                </DangerButton>
+            </template>
+        </ConfirmationModal>
     </div>
     <div v-else class="text-center pt-8">
         <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"
@@ -76,8 +101,13 @@
 </template>
 
 <script setup>
+import { ref } from 'vue';
+import { useForm } from '@inertiajs/inertia-vue3';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue'
 import { PlusIcon, EllipsisHorizontalIcon } from '@heroicons/vue/20/solid'
+import ConfirmationModal from '@/Components/ConfirmationModal.vue';
+import DangerButton from '@/Components/DangerButton.vue';
+import SecondaryButton from '@/Components/SecondaryButton.vue';
 import PrimaryButton from './PrimaryButton.vue';
 
 const props = defineProps({
@@ -87,39 +117,19 @@ const props = defineProps({
     }
 });
 
-// const statuses = {
-//     Active: 'text-green-700 bg-green-50 ring-green-600/20',
-//     Inactive: 'text-red-700 bg-red-50 ring-red-600/10',
-//     Pending: 'text-yellow-700 bg-yellow-50 ring-yellow-600/10'
-// }
+const confirmingBotDeletion = ref(false);
+const formDelete = useForm();
+const botToDelete = ref(null);
 
-// const bots = [
-//     {
-//         id: 1,
-//         name: 'Bot 1',
-//         description: 'This is a sample description for Bot 1.',
-//         imageUrl: 'https://tailwindui.com/img/logos/48x48/tuple.svg',
-//         integrations: [
-//             { name: 'WhatsApp', status: 'Active' },
-//             { name: 'Telegram', status: 'Active' },
-//         ]
-//     },
-//     {
-//         id: 2,
-//         name: 'Bot 2',
-//         description: 'This is a sample description for Bot 2.',
-//         imageUrl: 'https://tailwindui.com/img/logos/48x48/savvycal.svg',
-//         integrations: [
-//             { name: 'WhatsApp', status: 'Pending' }
-//         ]
-//     },
-//     {
-//         id: 3,
-//         name: 'Bot 3',
-//         description: 'This is a sample description for Bot 3.',
-//         imageUrl: 'https://tailwindui.com/img/logos/48x48/reform.svg',
-//         integrations: [
-//         ]
-//     }
-// ]
+const showDeleteConfirmation = (bot) => {
+    botToDelete.value = bot;
+    confirmingBotDeletion.value = true;
+};
+
+const deleteBot = () => {
+    formDelete.delete(route('bots.destroy', botToDelete.value), {
+        errorBag: 'deleteBot',
+    });
+    confirmingBotDeletion.value = false;
+};
 </script>
