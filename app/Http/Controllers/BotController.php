@@ -7,6 +7,11 @@ use App\Models\Bot;
 
 class BotController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Bot::class);
+    }
+
     public function index(Request $request)
     {
         $bots = $request->user()->currentTeamBots()->all();
