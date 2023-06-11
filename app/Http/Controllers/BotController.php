@@ -16,14 +16,14 @@ class BotController extends Controller
     {
         $bots = $request->user()->currentTeamBots()->all();
 
-        return inertia('Bot/Index', [
+        return inertia('Bots/Index', [
             'bots' => $bots
         ]);
     }
 
     public function create()
     {
-        return inertia('Bot/Create');
+        return inertia('Bots/Create');
     }
 
     public function store(Request $request)
@@ -43,14 +43,14 @@ class BotController extends Controller
 
     public function show(Bot $bot)
     {
-        return inertia('Bot/Show', [
+        return inertia('Bots/Show', [
             'bot' => $bot
         ]);
     }
 
     public function edit(Bot $bot)
     {
-        return inertia('Bot/Edit', [
+        return inertia('Bots/Edit', [
             'bot' => $bot
         ]);
     }
