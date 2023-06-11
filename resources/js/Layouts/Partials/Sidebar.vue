@@ -151,8 +151,7 @@
     </div>
 </template>
 <script setup>
-import { router } from '@inertiajs/vue3';
-import { usePage, Link } from '@inertiajs/vue3';
+import { usePage, Link, router } from '@inertiajs/vue3';
 import {
     Dialog,
     DialogPanel,
@@ -185,7 +184,7 @@ const bottomNavigation = [
 ]
 
 const switchToTeam = (team) => {
-    Inertia.put(route('current-team.update'), {
+    router.put(route('current-team.update'), {
         team_id: team.id,
     }, {
         preserveState: false,

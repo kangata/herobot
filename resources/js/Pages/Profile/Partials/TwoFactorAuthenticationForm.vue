@@ -40,7 +40,7 @@ watch(twoFactorEnabled, () => {
 const enableTwoFactorAuthentication = () => {
     enabling.value = true;
 
-    Inertia.post('/user/two-factor-authentication', {}, {
+    router.post('/user/two-factor-authentication', {}, {
         preserveScroll: true,
         onSuccess: () => Promise.all([
             showQrCode(),
@@ -94,7 +94,7 @@ const regenerateRecoveryCodes = () => {
 const disableTwoFactorAuthentication = () => {
     disabling.value = true;
 
-    Inertia.delete('/user/two-factor-authentication', {
+    router.delete('/user/two-factor-authentication', {
         preserveScroll: true,
         onSuccess: () => {
             disabling.value = false;

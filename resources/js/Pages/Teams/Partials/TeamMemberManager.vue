@@ -47,7 +47,7 @@ const addTeamMember = () => {
 };
 
 const cancelTeamInvitation = (invitation) => {
-    Inertia.delete(route('team-invitations.destroy', invitation), {
+    router.delete(route('team-invitations.destroy', invitation), {
         preserveScroll: true,
     });
 };
