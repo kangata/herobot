@@ -151,8 +151,8 @@
     </div>
 </template>
 <script setup>
-import { Inertia } from '@inertiajs/inertia';
-import { usePage, Link } from '@inertiajs/inertia-vue3';
+import { router } from '@inertiajs/vue3';
+import { usePage, Link } from '@inertiajs/vue3';
 import {
     Dialog,
     DialogPanel,
@@ -180,7 +180,7 @@ const navigation = [
 ]
 
 const bottomNavigation = [
-    { name: 'Team Settings', href: route('teams.show', usePage().props.value.user.current_team), icon: UserGroupIcon, current: route().current('teams.show') },
+    { name: 'Team Settings', href: route('teams.show', usePage().props.user.current_team), icon: UserGroupIcon, current: route().current('teams.show') },
     { name: 'Settings', href: route('profile.show'), icon: Cog6ToothIcon, current: route().current('profile.show') },
 ]
 

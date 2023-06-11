@@ -1,5 +1,5 @@
 <script setup>
-import { Head, Link } from '@inertiajs/inertia-vue3';
+import { Head } from '@inertiajs/vue3';
 import HeroSection from '../Components/HeroSection.vue';
 import FeatureSection from '../Components/FeatureSection.vue';
 import NewsletterSection from '../Components/NewsletterSection.vue';

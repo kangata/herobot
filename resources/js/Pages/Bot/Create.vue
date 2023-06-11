@@ -33,7 +33,7 @@
 </template>
 
 <script setup>
-import { useForm } from '@inertiajs/inertia-vue3';
+import { useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';

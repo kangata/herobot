@@ -103,7 +103,7 @@
 
 <script setup>
 import { ref } from 'vue';
-import { Link, useForm } from '@inertiajs/inertia-vue3';
+import { Link, useForm } from '@inertiajs/vue3';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue'
 import { PlusIcon, EllipsisHorizontalIcon } from '@heroicons/vue/20/solid'
 import ConfirmationModal from '@/Components/ConfirmationModal.vue';
@@ -119,7 +119,7 @@ const props = defineProps({
 });
 
 const confirmingBotDeletion = ref(false);
-const formDelete = useForm();
+const formDelete = useForm({});
 const botToDelete = ref(null);
 
 const showDeleteConfirmation = (bot) => {

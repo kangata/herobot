@@ -19,7 +19,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { Head } from '@inertiajs/inertia-vue3';
+import { Head } from '@inertiajs/vue3';
 import Sidebar from './Partials/Sidebar.vue'
 import Topbar from './Partials/Topbar.vue';
 

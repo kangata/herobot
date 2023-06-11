@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue';
-import { Inertia } from '@inertiajs/inertia';
-import { useForm, usePage } from '@inertiajs/inertia-vue3';
+import { router } from '@inertiajs/vue3';
+import { useForm, usePage } from '@inertiajs/vue3';
 import ActionMessage from '@/Components/ActionMessage.vue';
 import ActionSection from '@/Components/ActionSection.vue';
 import ConfirmationModal from '@/Components/ConfirmationModal.vue';
@@ -30,8 +30,8 @@ const updateRoleForm = useForm({
     role: null,
 });
 
-const leaveTeamForm = useForm();
-const removeTeamMemberForm = useForm();
+const leaveTeamForm = useForm({});
+const removeTeamMemberForm = useForm({});
 
 const currentlyManagingRole = ref(false);
 const managingRoleFor = ref(null);
@@ -70,7 +70,7 @@ const confirmLeavingTeam = () => {
 };
 
 const leaveTeam = () => {
-    leaveTeamForm.delete(route('team-members.destroy', [props.team, usePage().props.value.user]));
+    leaveTeamForm.delete(route('team-members.destroy', [props.team, usePage().props.user]));
 };
 
 const confirmTeamMemberRemoval = (teamMember) => {
