@@ -48,14 +48,14 @@
                                             <div class="text-xs font-semibold leading-6 text-gray-400">Your teams</div>
                                             <ul role="list" class="-mx-2 mt-2 space-y-1">
                                                 <li v-for="team in $page.props.user.all_teams" :key="team.id">
-                                                    <Link @click.prevent="switchToTeam(team)" href="#"
+                                                    <a @click.prevent="switchToTeam(team)" href="#"
                                                         :class="[!route().current('teams.create') && team.id === $page.props.user.current_team_id ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
                                                     <span
                                                         :class="[!route().current('teams.create') && team.id === $page.props.user.current_team_id ? 'text-indigo-600 border-indigo-600' : 'text-gray-400 border-gray-200 group-hover:border-indigo-600 group-hover:text-indigo-600', 'flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-[0.625rem] font-medium bg-white']">{{
                                                             team.name.charAt(0).toUpperCase() }}
                                                     </span>
                                                     <span class="truncate">{{ team.name }}</span>
-                                                    </Link>
+                                                    </a>
                                                 </li>
                                                 <li v-if="$page.props.jetstream.canCreateTeams">
                                                     <Link :href="route('teams.create')"
@@ -113,14 +113,14 @@
                             <div class="text-xs font-semibold leading-6 text-gray-400">Your teams</div>
                             <ul role="list" class="-mx-2 mt-2 space-y-1">
                                 <li v-for="team in $page.props.user.all_teams" :key="team.id">
-                                    <Link @click.prevent="switchToTeam(team)" href="#"
+                                    <a @click.prevent="switchToTeam(team)" href="#"
                                         :class="[!route().current('teams.create') && team.id === $page.props.user.current_team_id ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
                                     <span
                                         :class="[!route().current('teams.create') && team.id === $page.props.user.current_team_id ? 'text-indigo-600 border-indigo-600' : 'text-gray-400 border-gray-200 group-hover:border-indigo-600 group-hover:text-indigo-600', 'flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-[0.625rem] font-medium bg-white']">{{
                                             team.name.charAt(0).toUpperCase() }}
                                     </span>
                                     <span class="truncate">{{ team.name }}</span>
-                                    </Link>
+                                    </a>
                                 </li>
                                 <li v-if="$page.props.jetstream.canCreateTeams">
                                     <Link :href="route('teams.create')"
@@ -184,6 +184,10 @@ const bottomNavigation = [
 ]
 
 const switchToTeam = (team) => {
+    if (team.id === usePage().props.user.current_team_id) {
+        return router.visit(route('teams.show', team));
+    }
+
     router.put(route('current-team.update'), {
         team_id: team.id,
     }, {
