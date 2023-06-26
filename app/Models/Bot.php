@@ -12,18 +12,9 @@ class Bot extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['name', 'description'];
+    protected $fillable = ['team_id', 'name', 'description'];
 
     protected $appends = ['integrations'];
-
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::creating(function ($model) {
-            $model->team_id = Auth::user()->currentTeam->id;
-        });
-    }
 
     public function team()
     {

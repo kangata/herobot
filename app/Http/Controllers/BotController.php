@@ -33,12 +33,13 @@ class BotController extends Controller
             'description' => 'required',
         ]);
 
-        Bot::create([
+        $bot = Bot::create([
+            'team_id' => $request->user()->currentTeam->id,
             'name' => $validatedData['name'],
             'description' => $validatedData['description'],
         ]);
 
-        return redirect()->route('bots.index')->with('success', 'Bot created successfully.');
+        return redirect()->route('bots.show', $bot)->with('success', 'Bot created successfully.');
     }
 
     public function show(Bot $bot)
@@ -67,7 +68,7 @@ class BotController extends Controller
             'description' => $validatedData['description'],
         ]);
 
-        return redirect()->route('bots.index')->with('success', 'Bot updated successfully.');
+        return redirect()->route('bots.show', $bot)->with('success', 'Bot updated successfully.');
     }
 
     public function destroy(Bot $bot)

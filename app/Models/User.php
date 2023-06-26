@@ -63,4 +63,9 @@ class User extends Authenticatable
     {
         return $this->currentTeam->bots;
     }
+
+    public function knowledges()
+    {
+        return $this->currentTeam->knowledges;
+    }
 }

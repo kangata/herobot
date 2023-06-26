@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\BotController;
+use App\Http\Controllers\KnowledgeController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -38,9 +39,8 @@ Route::middleware([
     // Bots
     Route::resource('bots', BotController::class);
 
-    Route::get('/knowledges', function () {
-        return Inertia::render('Knowledges/Index');
-    })->name('knowledges');
+    // Knowledges
+    Route::resource('knowledges', KnowledgeController::class);
 
     Route::get('/reports', function () {
         return Inertia::render('Reports/Index');

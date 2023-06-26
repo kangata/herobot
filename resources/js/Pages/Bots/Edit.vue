@@ -19,14 +19,14 @@
                 <InputError class="mt-2" :message="form.errors.description" />
             </div>
 
-            <div class="flex flex-row text-right">
+            <div class="flex flex-row items-center">
+                <SecondaryButton class="mr-2" :href="route('bots.index')">
+                    Cancel
+                </SecondaryButton>
+
                 <PrimaryButton class="mr-2" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
                     Save
                 </PrimaryButton>
-
-                <SecondaryButton :href="route('bots.index')">
-                    Cancel
-                </SecondaryButton>
             </div>
         </form>
     </AppLayout>

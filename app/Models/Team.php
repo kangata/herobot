@@ -46,4 +46,9 @@ class Team extends JetstreamTeam
     {
         return $this->hasMany(Bot::class);
     }
+
+    public function knowledges()
+    {
+        return $this->hasMany(Knowledge::class);
+    }
 }
