@@ -23,6 +23,6 @@
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import { PlusIcon } from '@heroicons/vue/20/solid';
-import KnowledgeList from '@/Components/KnowledgeList.vue';
+import KnowledgeList from './Partials/KnowledgeList.vue';
 </script>
 

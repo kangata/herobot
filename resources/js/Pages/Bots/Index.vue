@@ -21,8 +21,8 @@
 
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
-import BotList from '@/Components/BotList.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import { PlusIcon } from '@heroicons/vue/20/solid';
+import BotList from './Partials/BotList.vue';
 </script>
 
