@@ -171,10 +171,10 @@ import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import BotIcon from '@/Assets/Icons/BotIcon.svg';
 
 const navigation = [
-    { name: 'Dashboard', href: route('dashboard'), icon: HomeIcon, current: route().current('dashboard') },
+    // { name: 'Dashboard', href: route('dashboard'), icon: HomeIcon, current: route().current('dashboard') },
     { name: 'Bot Management', href: route('bots.index'), icon: BotIcon, current: route().current('bots*') },
     { name: 'Knowledge', href: route('knowledges.index'), icon: DocumentDuplicateIcon, current: route().current('knowledges*') },
-    { name: 'Reports', href: route('reports'), icon: ChartPieIcon, current: route().current('reports*') },
+    // { name: 'Reports', href: route('reports'), icon: ChartPieIcon, current: route().current('reports*') },
     { name: 'Integrations', href: route('integrations'), icon: LinkIcon, current: route().current('integrations*') },
 ]
 
