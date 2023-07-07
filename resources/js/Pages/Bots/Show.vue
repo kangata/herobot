@@ -25,6 +25,9 @@
         <div class="grid grid-cols-4 gap-4">
             <div class="rounded-xl border border-gray-200 text-base">
                 <div class="p-6 border-b border-gray-900/5">
+                    <div class="bg-green-500 text-white inline-block py-1 px-2 text-xs rounded mb-2">
+                        Whatsapp
+                    </div>
                     <div class="font-medium">Bot Dihak</div>
                     <div class="text-sm text-gray-500 mt-2">+628123123123</div>
                 </div>

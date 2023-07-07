@@ -2,7 +2,7 @@
     <div v-if="knowledges.length > 0">
         <ul role="list" class="grid grid-cols-1 gap-x-6 gap-y-8 lg:grid-cols-3 xl:gap-x-8">
             <li v-for="knowledge in knowledges" :key="knowledge.id" class="rounded-xl border border-gray-200">
-                <div class="flex items-center gap-x-4 border-b border-gray-900/5 p-6">
+                <div class="flex items-center gap-x-4 p-6">
                     <div>
                         <Link :href="route('knowledges.edit', knowledge.id)"
                             class="font-medium leading-6 text-gray-900">{{ knowledge.name }}</Link>
@@ -34,8 +34,6 @@
                         </transition>
                     </Menu>
                 </div>
-                <dl class="-my-3 divide-y divide-gray-100 px-6 py-4 text-sm leading-6">
-                </dl>
             </li>
         </ul>
 

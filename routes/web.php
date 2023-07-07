@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\BotController;
+use App\Http\Controllers\IntegrationController;
 use App\Http\Controllers\KnowledgeController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -42,13 +43,12 @@ Route::middleware([
     // Knowledges
     Route::resource('knowledges', KnowledgeController::class);
 
+    // Integrations
+    Route::resource('integrations', IntegrationController::class);
+
     Route::get('/reports', function () {
         return Inertia::render('Reports/Index');
     })->name('reports');
-
-    Route::get('/integrations', function () {
-        return Inertia::render('Integrations/Index');
-    })->name('integrations');
 
     Route::get('/logout', [LogoutController::class, 'logout']);
 });
