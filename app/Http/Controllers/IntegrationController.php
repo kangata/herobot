@@ -16,4 +16,9 @@ class IntegrationController extends Controller
     {
         return inertia('Integrations/Index');
     }
+
+    public function create(Request $request)
+    {
+        return inertia('Integrations/Create');
+    }
 }
