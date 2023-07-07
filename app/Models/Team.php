@@ -51,4 +51,9 @@ class Team extends JetstreamTeam
     {
         return $this->hasMany(Knowledge::class);
     }
+
+    public function integrations()
+    {
+        return $this->hasMany(Integration::class);
+    }
 }

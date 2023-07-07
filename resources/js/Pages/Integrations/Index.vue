@@ -14,7 +14,7 @@
                 </div>
             </div>
 
-            <IntegrationList :integrations="integrations" />
+            <IntegrationList :integrations="$page.props.integrations" />
         </div>
     </AppLayout>
 </template>
@@ -24,9 +24,5 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import { PlusIcon } from '@heroicons/vue/20/solid';
 import IntegrationList from './Partials/IntegrationList.vue';
-
-const integrations = [
-    {id: 1, name: "Dihak Phone", type: "whatsapp", phone: "+628123123123"},
-]
 </script>
 

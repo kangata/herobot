@@ -68,4 +68,9 @@ class User extends Authenticatable
     {
         return $this->currentTeam->knowledges;
     }
+
+    public function integrations()
+    {
+        return $this->currentTeam->integrations;
+    }
 }
