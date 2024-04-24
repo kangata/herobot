@@ -47,11 +47,11 @@
                                         <li>
                                             <div class="text-xs font-semibold leading-6 text-gray-400">Your teams</div>
                                             <ul role="list" class="-mx-2 mt-2 space-y-1">
-                                                <li v-for="team in $page.props.user.all_teams" :key="team.id">
+                                                <li v-for="team in $page.props.auth.user.all_teams" :key="team.id">
                                                     <a @click.prevent="switchToTeam(team)" href="#"
-                                                        :class="[!route().current('teams.create') && team.id === $page.props.user.current_team_id ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
+                                                        :class="[!route().current('teams.create') && team.id === $page.props.auth.user.current_team_id ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
                                                     <span
-                                                        :class="[!route().current('teams.create') && team.id === $page.props.user.current_team_id ? 'text-indigo-600 border-indigo-600' : 'text-gray-400 border-gray-200 group-hover:border-indigo-600 group-hover:text-indigo-600', 'flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-[0.625rem] font-medium bg-white']">{{
+                                                        :class="[!route().current('teams.create') && team.id === $page.props.auth.user.current_team_id ? 'text-indigo-600 border-indigo-600' : 'text-gray-400 border-gray-200 group-hover:border-indigo-600 group-hover:text-indigo-600', 'flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-[0.625rem] font-medium bg-white']">{{
                                                             team.name.charAt(0).toUpperCase() }}
                                                     </span>
                                                     <span class="truncate">{{ team.name }}</span>
@@ -112,11 +112,11 @@
                         <li>
                             <div class="text-xs font-semibold leading-6 text-gray-400">Your teams</div>
                             <ul role="list" class="-mx-2 mt-2 space-y-1">
-                                <li v-for="team in $page.props.user.all_teams" :key="team.id">
+                                <li v-for="team in $page.props.auth.user.all_teams" :key="team.id">
                                     <a @click.prevent="switchToTeam(team)" href="#"
-                                        :class="[!route().current('teams.create') && team.id === $page.props.user.current_team_id ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
+                                        :class="[!route().current('teams.create') && team.id === $page.props.auth.user.current_team_id ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
                                     <span
-                                        :class="[!route().current('teams.create') && team.id === $page.props.user.current_team_id ? 'text-indigo-600 border-indigo-600' : 'text-gray-400 border-gray-200 group-hover:border-indigo-600 group-hover:text-indigo-600', 'flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-[0.625rem] font-medium bg-white']">{{
+                                        :class="[!route().current('teams.create') && team.id === $page.props.auth.user.current_team_id ? 'text-indigo-600 border-indigo-600' : 'text-gray-400 border-gray-200 group-hover:border-indigo-600 group-hover:text-indigo-600', 'flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-[0.625rem] font-medium bg-white']">{{
                                             team.name.charAt(0).toUpperCase() }}
                                     </span>
                                     <span class="truncate">{{ team.name }}</span>
@@ -170,6 +170,8 @@ import { LinkIcon } from '@heroicons/vue/20/solid'
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import BotIcon from '@/Assets/Icons/BotIcon.svg';
 
+const page = usePage();
+
 const navigation = [
     // { name: 'Dashboard', href: route('dashboard'), icon: HomeIcon, current: route().current('dashboard') },
     { name: 'Bot Management', href: route('bots.index'), icon: BotIcon, current: route().current('bots*') },
@@ -179,12 +181,12 @@ const navigation = [
 ]
 
 const bottomNavigation = [
-    { name: 'Team Settings', href: route('teams.show', usePage().props.user.current_team), icon: UserGroupIcon, current: route().current('teams.show') },
+    { name: 'Team Settings', href: route('teams.show', page.props.auth.user.current_team), icon: UserGroupIcon, current: route().current('teams.show') },
     { name: 'Settings', href: route('profile.show'), icon: Cog6ToothIcon, current: route().current('profile.show') },
 ]
 
 const switchToTeam = (team) => {
-    if (team.id === usePage().props.user.current_team_id) {
+    if (team.id === page.props.auth.user.current_team_id) {
         return router.visit(route('teams.show', team));
     }
 

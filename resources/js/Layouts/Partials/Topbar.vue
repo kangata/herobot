@@ -32,12 +32,12 @@
                     <MenuButton class="-m-1.5 flex items-center p-1.5">
                         <span class="sr-only">Open user menu</span>
                         <div v-if="$page.props.jetstream.managesProfilePhotos" class="shrink-0">
-                            <img class="h-8 w-8 rounded-full object-cover" :src="$page.props.user.profile_photo_url"
-                                :alt="$page.props.user.name">
+                            <img class="h-8 w-8 rounded-full object-cover" :src="$page.props.auth.user.profile_photo_url"
+                                :alt="$page.props.auth.user.name">
                         </div>
                         <span class="hidden lg:flex lg:items-center">
                             <span class="ml-4 text-sm font-semibold leading-6 text-gray-900" aria-hidden="true">
-                                {{ $page.props.user.name }}
+                                {{ $page.props.auth.user.name }}
                             </span>
                             <ChevronDownIcon class="ml-2 h-5 w-5 text-gray-400" aria-hidden="true" />
                         </span>
