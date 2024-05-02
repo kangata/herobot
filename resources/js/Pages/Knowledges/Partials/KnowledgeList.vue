@@ -1,20 +1,25 @@
 <template>
     <div v-if="knowledges.length > 0">
         <ul role="list" class="grid grid-cols-1 gap-x-6 gap-y-8 lg:grid-cols-3 xl:gap-x-8">
-            <li v-for="knowledge in knowledges" :key="knowledge.id" class="rounded-xl border border-gray-200">
-                <div class="flex items-center gap-x-4 p-6">
-                    <div>
-                        <Link :href="route('knowledges.edit', knowledge.id)"
-                            class="font-medium leading-6 text-gray-900">{{ knowledge.name }}</Link>
-                        <div class="text-sm leading-6 text-gray-900">{{ knowledge.description }}</div>
-                    </div>
+            <li v-for="knowledge in knowledges" :key="knowledge.id"
+                class="rounded-xl border border-gray-200 relative overflow-hidden">
+                <Link :href="route('knowledges.edit', knowledge.id)"
+                    class="text-white text-center w-full h-32 align-middle justify-center flex flex-col items-center"
+                    :class="knowledgeIcons[knowledge.type].class">
+                <component :is="knowledgeIcons[knowledge.type].icon" class="h-6 w-6" />
+                <span class="capitalize mt-2">
+                    {{ knowledgeIcons[knowledge.type].text }}
+                </span>
+                </Link>
+                <div class="absolute top-4 right-4">
                     <Menu as="div" class="relative ml-auto">
-                        <MenuButton class="-m-2.5 block p-2.5 text-gray-400 hover:text-gray-500">
+                        <MenuButton class="-m-2.5 block p-2.5 text-white hover:text-gray-200">
                             <span class="sr-only">Open options</span>
                             <EllipsisHorizontalIcon class="h-5 w-5" aria-hidden="true" />
                         </MenuButton>
                         <transition enter-active-class="transition ease-out duration-100"
-                            enter-from-class="transform opacity-0 scale-95" enter-to-class="transform opacity-100 scale-100"
+                            enter-from-class="transform opacity-0 scale-95"
+                            enter-to-class="transform opacity-100 scale-100"
                             leave-active-class="transition ease-in duration-75"
                             leave-from-class="transform opacity-100 scale-100"
                             leave-to-class="transform opacity-0 scale-95">
@@ -22,17 +27,24 @@
                                 class="absolute right-0 z-10 mt-0.5 w-32 origin-top-right rounded-md bg-white py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none">
                                 <MenuItem v-slot="{ active }">
                                 <Link :href="route('knowledges.edit', knowledge.id)"
-                                    :class="[active ? 'bg-gray-50' : '', 'block px-3 py-1 text-sm leading-6 text-gray-900']">Edit<span
-                                        class="sr-only">, {{ knowledge.name }}</span></Link>
+                                    :class="[active ? 'bg-gray-50' : '', 'block px-3 py-1 text-sm leading-6 text-gray-900']">
+                                Edit</Link>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
-                                <a @click="showDeleteConfirmation(knowledge)"
-                                    :class="[active ? 'bg-gray-50' : '', 'cursor-pointer block px-3 py-1 text-sm leading-6 text-red-500']">Delete<span
-                                        class="sr-only">, {{ knowledge.name }}</span></a>
+                                <a @click="showDeleteConfirmation(knowledge.id)"
+                                    :class="[active ? 'bg-gray-50' : '', 'cursor-pointer block px-3 py-1 text-sm leading-6 text-red-500']">Delete</a>
                                 </MenuItem>
                             </MenuItems>
                         </transition>
                     </Menu>
+                </div>
+                <div class="items-center gap-x-4 p-6">
+                    <Link :href="route('knowledges.edit', 1)" class="font-medium leading-6 text-gray-900">{{
+        knowledge.name }}</Link>
+                    <div class="flex w-full text-sm leading-5 text-gray-500">
+                        <span class="flex-grow">{{ knowledge.created_at }}</span>
+                        <span>{{ knowledge.size }}</span>
+                    </div>
                 </div>
             </li>
         </ul>
@@ -43,7 +55,8 @@
             </template>
 
             <template #content>
-                Are you sure you want to delete this knowledge? Once a knowledge is deleted, all of its resources and data will be permanently deleted.
+                Are you sure you want to delete this knowledge? Once a knowledge is deleted, all of its resources and
+                data will be permanently deleted.
             </template>
 
             <template #footer>
@@ -51,12 +64,8 @@
                     Cancel
                 </SecondaryButton>
 
-                <DangerButton
-                    class="ml-3"
-                    :class="{ 'opacity-25': formDelete.processing }"
-                    :disabled="formDelete.processing"
-                    @click="deleteknowledge"
-                >
+                <DangerButton class="ml-3" :class="{ 'opacity-25': formDelete.processing }"
+                    :disabled="formDelete.processing" @click="deleteknowledge">
                     Delete knowledge
                 </DangerButton>
             </template>
@@ -88,13 +97,19 @@ import ConfirmationModal from '@/Components/ConfirmationModal.vue';
 import DangerButton from '@/Components/DangerButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+import { ChatBubbleLeftIcon, DocumentTextIcon, PaperClipIcon } from '@heroicons/vue/24/outline';
 
-const props = defineProps({
-    knowledges: {
-        type: Array,
-        default: () => []
-    }
-});
+const knowledges = [
+    { id: 1, name: 'Dataset 1', type: 'text', created_at: '01 May 2024', size: '100kb' },
+    { id: 2, name: 'Dataset 2', type: 'qa', created_at: '01 May 2024', size: '100kb' },
+    { id: 3, name: 'Dataset 3', type: 'file', created_at: '01 May 2024', size: '100kb' },
+];
+
+const knowledgeIcons = {
+    text: { icon: DocumentTextIcon, text: 'Text', class: 'bg-blue-600' },
+    qa: { icon: ChatBubbleLeftIcon, text: 'Question & Answer', class: 'bg-green-600' },
+    file: { icon: PaperClipIcon, text: 'File', class: 'bg-yellow-600' },
+};
 
 const confirmingknowledgeDeletion = ref(false);
 const formDelete = useForm({});

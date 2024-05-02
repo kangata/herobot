@@ -122,6 +122,12 @@ const confirmingBotDeletion = ref(false);
 const formDelete = useForm({});
 const botToDelete = ref(null);
 
+const statuses = {
+    Active: 'text-green-700 bg-green-50 ring-green-600/20',
+    Inactive: 'text-red-700 bg-red-50 ring-red-600/10',
+    Pending: 'text-yellow-700 bg-yellow-50 ring-yellow-600/10'
+}
+
 const showDeleteConfirmation = (bot) => {
     botToDelete.value = bot;
     confirmingBotDeletion.value = true;

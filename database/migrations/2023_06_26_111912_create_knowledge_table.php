@@ -17,8 +17,20 @@ return new class extends Migration
             $table->id();
             $table->foreignId('team_id')->constrained();
             $table->string('name');
-            $table->string('description');
-            $table->text('data');
+            $table->enum('type', ['qa', 'text', 'file']);
+            $table->json('qa')->nullable();
+            $table->text('text')->nullable();
+            $table->string('filepath')->nullable();
+            $table->string('filename')->nullable();
+            $table->unsignedBigInteger('size')->nullable();
+            $table->timestamps();
+        });
+        
+        Schema::create('knowledge_vectors', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('knowledge_id')->constrained();
+            $table->text('text');
+            $table->json('vector');
             $table->timestamps();
         });
     }
@@ -30,6 +42,7 @@ return new class extends Migration
      */
     public function down()
     {
+        Schema::dropIfExists('knowledge_vectors');
         Schema::dropIfExists('knowledge');
     }
 };
