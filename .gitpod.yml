@@ -1,0 +1,41 @@
+tasks:
+  - name: Run Laravel Sail
+    openMode: split-left
+    command: |
+      export WWWGROUP=$(id -u)
+      export WWWUSER=$(id -g)
+      composer i --ignore-platform-reqs
+      if [ ! -f .env ]; then
+        export SETUP=true
+        cp .env.example .env
+        sed -i 's/^DB_HOST=.*/DB_HOST=mariadb/' .env
+        sed -i "s#APP_URL=http://localhost#APP_URL=$(gp url 80)#g" .env
+        echo "GITPOD_VITE_URL=$(gp url 5173)" >> .env
+        echo "FORCE_HTTPS=true" >> .env
+      fi
+      docker-compose up -d
+      if [ "$SETUP" = true ]; then
+        ./vendor/bin/sail artisan key:generate
+      fi
+      ./vendor/bin/sail npm install
+      gp sync-done install
+      until docker-compose exec mariadb mysqladmin ping --silent &> /dev/null; do
+        echo "Waiting for mariadb to be up..."
+        sleep 2
+      done
+      ./vendor/bin/sail artisan migrate --force
+      docker-compose up --no-recreate
+  - name: Run Vite
+    openMode: split-right
+    command: |
+      gp sync-await install
+      ./vendor/bin/sail npm run dev
+
+ports:
+  - name: front-end
+    port: 80
+    onOpen: open-preview
+  - port: 5173
+    onOpen: ignore
+    visibility: public
+    name: Node Server for Vite
