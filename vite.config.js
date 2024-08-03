@@ -19,4 +19,9 @@ export default defineConfig({
         }),
         svgLoader(),
     ],
+    server: {
+        hmr: {
+            host: 'localhost',
+        },
+    },
 });
