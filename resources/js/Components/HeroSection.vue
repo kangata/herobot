@@ -20,7 +20,7 @@
                 <nav class="flex h-9 items-center justify-between" aria-label="Global">
                     <div class="flex lg:min-w-0 lg:flex-1" aria-label="Global">
                         <a href="#" class="-m-1.5 p-1.5">
-                            <span class="sr-only">Your Company</span>
+                            <span class="sr-only">Herobot</span>
                             <ApplicationLogo class="h-8"/>
                         </a>
                     </div>
@@ -45,9 +45,8 @@
                         <div class="flex h-9 items-center justify-between">
                             <div class="flex">
                                 <a href="#" class="-m-1.5 p-1.5">
-                                    <span class="sr-only">Your Company</span>
-                                    <img class="h-8"
-                                        src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600" alt="" />
+                                    <span class="sr-only">Herobot</span>
+                                    <ApplicationLogo class="h-8"/>
                                 </a>
                             </div>
                             <div class="flex">
@@ -68,9 +67,8 @@
                                         }}</a>
                                 </div>
                                 <div class="py-6">
-                                    <a href="#"
-                                        class="-mx-3 block rounded-lg py-2.5 px-3 text-base font-semibold leading-6 text-gray-900 hover:bg-gray-400/10">Log
-                                        in</a>
+                                    <Link :href="route('login')"
+                                        class="-mx-3 block rounded-lg py-2.5 px-3 text-base font-semibold leading-6 text-gray-900 hover:bg-gray-400/10">Log in</Link>
                                 </div>
                             </div>
                         </div>
