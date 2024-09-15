@@ -12,9 +12,26 @@ class Knowledge extends Model
     protected $fillable = [
         'team_id',
         'name',
-        'description',
-        'data',
+        'type',
+        'qa',
+        'text',
+        'filepath',
+        'filename',
+        'size',
     ];
+
+    protected $casts = [
+        'qa' => 'array',
+    ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::addGlobalScope('order', function ($builder) {
+            $builder->orderBy('created_at', 'desc');
+        });
+    }
 
     public function team()
     {

@@ -10,6 +10,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Jetstream\HasTeams;
 use Laravel\Sanctum\HasApiTokens;
+use App\Models\Knowledge;
 
 class User extends Authenticatable
 {
@@ -66,7 +67,7 @@ class User extends Authenticatable
 
     public function knowledges()
     {
-        return $this->currentTeam->knowledges;
+        return $this->currentTeam->hasMany(Knowledge::class, 'team_id');
     }
 
     public function integrations()

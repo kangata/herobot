@@ -14,7 +14,7 @@ class KnowledgeController extends Controller
 
     public function index(Request $request)
     {
-        $knowledges = $request->user()->knowledges()->all();
+        $knowledges = $request->user()->knowledges()->get();
 
         return inertia('Knowledges/Index', [
             'knowledges' => $knowledges
@@ -23,22 +23,22 @@ class KnowledgeController extends Controller
 
     public function create()
     {
-        return inertia('Knowledges/Create');
+        return inertia('Knowledges/Form');
     }
 
     public function store(Request $request)
     {
         $validatedData = $request->validate([
-            'name' => 'required',
-            'description' => 'required',
-            'value' => 'required',
+            'name' => ['required', 'string', 'max:255'],
+            'type' => ['required', 'in:text'],
+            'text' => ['required', 'string'],
         ]);
 
         Knowledge::create([
             'team_id' => $request->user()->currentTeam->id,
             'name' => $validatedData['name'],
-            'description' => $validatedData['description'],
-            'data' => $validatedData['value'],
+            'type' => 'text',
+            'text' => $validatedData['text'],
         ]);
 
         return redirect()->route('knowledges.index')->with('success', 'Knowledge created successfully.');
@@ -46,7 +46,7 @@ class KnowledgeController extends Controller
 
     public function edit(Knowledge $knowledge)
     {
-        return inertia('Knowledges/Edit', [
+        return inertia('Knowledges/Form', [
             'knowledge' => $knowledge,
         ]);
     }
@@ -54,15 +54,15 @@ class KnowledgeController extends Controller
     public function update(Request $request, Knowledge $knowledge)
     {
         $validatedData = $request->validate([
-            'name' => 'required',
-            'description' => 'required',
-            'value' => 'required',
+            'name' => ['required', 'string', 'max:255'],
+            'type' => ['required', 'in:text'],
+            'text' => ['required', 'string'],
         ]);
 
         $knowledge->update([
             'name' => $validatedData['name'],
-            'description' => $validatedData['description'],
-            'data' => $validatedData['value'],
+            'type' => $validatedData['type'],
+            'text' => $validatedData['text'],
         ]);
 
         return redirect()->route('knowledges.index')->with('success', 'Knowledge updated successfully.');

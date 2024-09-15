@@ -39,11 +39,10 @@
                     </Menu>
                 </div>
                 <div class="items-center gap-x-4 p-6">
-                    <Link :href="route('knowledges.edit', 1)" class="font-medium leading-6 text-gray-900">{{
-        knowledge.name }}</Link>
+                    <Link :href="route('knowledges.edit', knowledge.id)" class="font-medium leading-6 text-gray-900">{{
+                        knowledge.name }}</Link>
                     <div class="flex w-full text-sm leading-5 text-gray-500">
-                        <span class="flex-grow">{{ knowledge.created_at }}</span>
-                        <span>{{ knowledge.size }}</span>
+                        <span class="flex-grow">{{ $filters.formatDate(knowledge.created_at) }}</span>
                     </div>
                 </div>
             </li>
@@ -65,7 +64,7 @@
                 </SecondaryButton>
 
                 <DangerButton class="ml-3" :class="{ 'opacity-25': formDelete.processing }"
-                    :disabled="formDelete.processing" @click="deleteknowledge">
+                    :disabled="formDelete.processing" @click="deleteKnowledge">
                     Delete knowledge
                 </DangerButton>
             </template>
@@ -99,11 +98,12 @@ import SecondaryButton from '@/Components/SecondaryButton.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import { ChatBubbleLeftIcon, DocumentTextIcon, PaperClipIcon } from '@heroicons/vue/24/outline';
 
-const knowledges = [
-    { id: 1, name: 'Dataset 1', type: 'text', created_at: '01 May 2024', size: '100kb' },
-    { id: 2, name: 'Dataset 2', type: 'qa', created_at: '01 May 2024', size: '100kb' },
-    { id: 3, name: 'Dataset 3', type: 'file', created_at: '01 May 2024', size: '100kb' },
-];
+const props = defineProps({
+    knowledges: {
+        type: Array,
+        required: true,
+    }
+});
 
 const knowledgeIcons = {
     text: { icon: DocumentTextIcon, text: 'Text', class: 'bg-blue-600' },
@@ -120,10 +120,11 @@ const showDeleteConfirmation = (knowledge) => {
     confirmingknowledgeDeletion.value = true;
 };
 
-const deleteknowledge = () => {
+const deleteKnowledge = () => {
     formDelete.delete(route('knowledges.destroy', knowledgeToDelete.value), {
-        errorBag: 'deleteknowledge',
+        onSuccess: () => {
+            confirmingknowledgeDeletion.value = false;
+        }
     });
-    confirmingknowledgeDeletion.value = false;
 };
 </script>
