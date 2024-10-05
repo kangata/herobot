@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use App\Services\WhatsApp\WhatsAppService;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -13,7 +15,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        $this->app->singleton('whatsapp', function ($app) {
+            return new WhatsAppService(config('services.whatsapp.base_url'));
+        });
     }
 
     /**
@@ -24,7 +28,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot()
     {
         if (config('app.force_https')) {
-            \URL::forceScheme('https');
+            URL::forceScheme('https');
         }
     }
 }

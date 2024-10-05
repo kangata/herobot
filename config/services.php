@@ -31,4 +31,8 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'whatsapp' => [
+        'base_url' => env('WHATSAPP_SERVICE_BASE_URL', 'http://localhost:3000'),
+    ],
+
 ];

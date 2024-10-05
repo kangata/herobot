@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Facades\WhatsApp;
 use App\Models\Integration;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class IntegrationController extends Controller
 {
@@ -47,6 +49,13 @@ class IntegrationController extends Controller
         return inertia('Integrations/Show', [
             'integration' => $integration,
         ]);
+    }
+
+    public function getQR(Integration $integration)
+    {
+        $qrCode = WhatsApp::getQR($integration->id);
+
+        return response()->json($qrCode);
     }
 
     public function edit(Integration $integration)

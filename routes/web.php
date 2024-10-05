@@ -45,6 +45,7 @@ Route::middleware([
 
     // Integrations
     Route::resource('integrations', IntegrationController::class);
+    Route::get('/integrations/{integration}/qr', [IntegrationController::class, 'getQR'])->name('integrations.qr');
 
     Route::get('/reports', function () {
         return Inertia::render('Reports/Index');

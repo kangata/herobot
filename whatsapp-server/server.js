@@ -13,10 +13,12 @@ app.use(express.json())
 const connections = new Map()
 const qrCodes = new Map()
 
+const storagePath = process.argv[2] || path.join(__dirname, 'auth_info_baileys');
+
 async function connectToWhatsApp(integrationId) {
-    const authFolder = path.join(__dirname, 'auth_info_baileys', integrationId)
+    const authFolder = path.join(storagePath, integrationId);
     if (!fs.existsSync(authFolder)) {
-        fs.mkdirSync(authFolder, { recursive: true })
+        fs.mkdirSync(authFolder, { recursive: true });
     }
 
     const { state, saveCreds } = await useMultiFileAuthState(authFolder)
@@ -98,14 +100,18 @@ app.post('/connect', async (req, res) => {
     }
 })
 
-app.get('/qr/:integrationId', (req, res) => {
+app.get('/qr/:integrationId', async (req, res) => {
     const { integrationId } = req.params
-    const qrCode = qrCodes.get(integrationId)
-    if (qrCode) {
-        res.json({ qr: qrCode })
-    } else {
-        res.status(404).json({ error: 'QR code not available' })
-    }
+    await connectionPool.getConnection(integrationId)
+
+    setTimeout(async () => {
+        const qrCode = qrCodes.get(integrationId)
+        if (qrCode) {
+            res.json({ qr: qrCode })
+        } else {
+            res.status(404).json({ error: 'QR code not available' })
+        }
+    }, 1000)
 })
 
 app.post('/send-message', async (req, res) => {
