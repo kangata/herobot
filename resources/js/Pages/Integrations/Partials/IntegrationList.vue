@@ -40,7 +40,7 @@
                 </div>
                 <div class="px-6 py-4 flex items-center text-xs">
                     <div class="flex items-center grow">
-                        <template v-if="integration.online === 'online'">
+                        <template v-if="integration.is_connected">
                             <div class="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
                             <div class="text-green-500">Connected</div>
                         </template>

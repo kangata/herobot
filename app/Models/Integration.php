@@ -14,8 +14,11 @@ class Integration extends Model
         'name',
         'type',
         'phone',
-        'connected',
-        'whatsapp_id',
+        'is_connected',
+    ];
+
+    protected $casts = [
+        'is_connected' => 'boolean',
     ];
 
     public function team()
