@@ -30,6 +30,11 @@ tasks:
     command: |
       gp sync-await install
       ./vendor/bin/sail npm run dev
+  - name: Run WhatsApp Server
+    command: |
+      cd whatsapp-server
+      npm install
+      node server.js
 
 ports:
   - name: front-end
