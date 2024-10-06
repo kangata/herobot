@@ -20,6 +20,28 @@ const qrCodes = new Map()
 
 const storagePath = process.argv[2] || path.join(__dirname, 'auth_info_baileys');
 
+async function startAllConnections() {
+    if (!fs.existsSync(storagePath)) {
+        console.log('Storage path does not exist. No connections to start.');
+        return;
+    }
+
+    const integrationFolders = fs.readdirSync(storagePath, { withFileTypes: true })
+        .filter(dirent => dirent.isDirectory())
+        .map(dirent => dirent.name);
+
+    console.log(`Found ${integrationFolders.length} integration folders. Starting connections...`);
+
+    for (const integrationId of integrationFolders) {
+        try {
+            await connectionPool.getConnection(integrationId);
+            console.log(`Started connection for integration: ${integrationId}`);
+        } catch (error) {
+            console.error(`Failed to start connection for integration ${integrationId}:`, error);
+        }
+    }
+}
+
 async function connectToWhatsApp(integrationId) {
     const authFolder = path.join(storagePath, integrationId);
     if (!fs.existsSync(authFolder)) {
@@ -41,6 +63,10 @@ async function connectToWhatsApp(integrationId) {
             connections.delete(integrationId)
             connectionPool.connections.delete(integrationId)
             qrCodes.delete(integrationId)
+            const authFolder = path.join(storagePath, integrationId);
+            if (fs.existsSync(authFolder)) {
+                fs.rmSync(authFolder, { recursive: true, force: true });
+            }
         }
     }, 120000) // 2 minutes timeout
 
@@ -245,6 +271,7 @@ app.post('/disconnect', async (req, res) => {
     }
 })
 
-app.listen(port, () => {
-    console.log(`WhatsApp server listening at http://localhost:${port}`)
-})
+app.listen(port, async () => {
+    console.log(`WhatsApp server listening at http://localhost:${port}`);
+    await startAllConnections();
+});
