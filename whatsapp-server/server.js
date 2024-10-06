@@ -5,6 +5,8 @@ const qrcode = require('qrcode')
 const fs = require('fs')
 const path = require('path')
 const pino = require('pino')
+const dotenv = require('dotenv');
+dotenv.config();
 
 const app = express()
 const port = 3000
@@ -19,6 +21,9 @@ const connections = new Map()
 const qrCodes = new Map()
 
 const storagePath = process.argv[2] || path.join(__dirname, 'auth_info_baileys');
+
+const LARAVEL_API_URL = process.env.WHATSAPP_LARAVEL_URL || 'http://localhost:80';
+const WHATSAPP_SERVER_TOKEN = process.env.WHATSAPP_SERVER_TOKEN;
 
 async function startAllConnections() {
     if (!fs.existsSync(storagePath)) {
@@ -130,10 +135,11 @@ async function handleIncomingMessage(sock, integrationId, m) {
         // Send typing indicator
         await sock.sendPresenceUpdate('composing', sender)
 
-        const response = await fetch('http://localhost:80/api/whatsapp/incoming-message', {
+        const response = await fetch(`${LARAVEL_API_URL}/api/whatsapp/incoming-message`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'X-WhatsApp-Server-Token': WHATSAPP_SERVER_TOKEN
             },
             body: JSON.stringify({
                 integrationId,
@@ -164,10 +170,11 @@ async function handleIncomingMessage(sock, integrationId, m) {
 
 function sendWebSocketUpdate(integrationId, data) {
     console.log('sendWebSocketUpdate', integrationId, data)
-    return fetch('http://localhost:80/api/whatsapp-webhook', {
+    return fetch(`${LARAVEL_API_URL}/api/whatsapp/webhook`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            'X-WhatsApp-Server-Token': WHATSAPP_SERVER_TOKEN
         },
         body: JSON.stringify({
             integrationId,

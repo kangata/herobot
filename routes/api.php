@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\WhatsAppWebhookController;
 use App\Http\Controllers\WhatsAppMessageController;
+use App\Http\Middleware\WhatsAppServerAuth;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,5 +21,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::post('/whatsapp-webhook', [WhatsAppWebhookController::class, 'handle']);
-Route::post('/whatsapp/incoming-message', [WhatsAppMessageController::class, 'handleIncomingMessage']);
+Route::middleware([WhatsAppServerAuth::class])->group(function () {
+    Route::post('/whatsapp/webhook', [WhatsAppWebhookController::class, 'handle']);
+    Route::post('/whatsapp/incoming-message', [WhatsAppMessageController::class, 'handleIncomingMessage']);
+});

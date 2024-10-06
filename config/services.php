@@ -32,7 +32,8 @@ return [
     ],
 
     'whatsapp' => [
-        'base_url' => env('WHATSAPP_SERVICE_BASE_URL', 'http://localhost:3000'),
+        'base_url' => env('WHATSAPP_SERVER_URL', 'http://localhost:3000'),
+        'token' => env('WHATSAPP_SERVER_TOKEN'),
     ],
 
     'openrouter' => [
