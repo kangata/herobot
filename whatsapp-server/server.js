@@ -60,7 +60,10 @@ async function connectToWhatsApp(integrationId) {
         logger: logger
     })
 
+    console.log('Starting connection for integration:', integrationId)
+
     let connectionTimeout = setTimeout(() => {
+        console.log('Connection timeout for integration:', integrationId, sock.user)
         if (sock.user == null) {
             sock.ev.removeAllListeners('connection.update')
             sock.ev.removeAllListeners('creds.update')
@@ -70,6 +73,7 @@ async function connectToWhatsApp(integrationId) {
             qrCodes.delete(integrationId)
             const authFolder = path.join(storagePath, integrationId);
             if (fs.existsSync(authFolder)) {
+                console.log('Deleting auth folder:', authFolder)
                 fs.rmSync(authFolder, { recursive: true, force: true });
             }
         }
@@ -87,10 +91,10 @@ async function connectToWhatsApp(integrationId) {
                     if (fs.existsSync(authFolder)) {
                         fs.rmSync(authFolder, { recursive: true, force: true });
                     }
-                    clearTimeout(connectionTimeout)
                     sendWebSocketUpdate(integrationId, { status: 'disconnected' })
                 }
 
+                clearTimeout(connectionTimeout)
                 connectToWhatsApp(integrationId);
             }
         } else if (connection === 'open') {
@@ -106,7 +110,7 @@ async function connectToWhatsApp(integrationId) {
             qrcode.toDataURL(qr)
                 .then(qrImage => {
                     qrCodes.set(integrationId, qrImage)
-                    sendWebSocketUpdate(integrationId, { qr: qrImage })
+                    sendWebSocketUpdate(integrationId, { status: 'waiting_for_qr_scan', qr: qrImage })
                 })
                 .catch(err => console.error('Failed to generate QR code:', err))
         }

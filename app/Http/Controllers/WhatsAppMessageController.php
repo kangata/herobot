@@ -40,9 +40,12 @@ class WhatsAppMessageController extends Controller
 
     private function generateResponse($bot, $message, $chatHistory)
     {
-        $openrouterApiKey = config('services.openrouter.api_key');
         $siteUrl = config('app.url');
         $siteName = config('app.name');
+        [
+            'api_key' => $apiKey,
+            'model' => $model
+        ] = config('services.openrouter');
 
         $messages = [
             ['role' => 'system', 'content' => "You are a helpful assistant for {$bot->name}. Use the following knowledge to answer questions: " . json_encode($bot->knowledge->pluck('text'))],
@@ -57,20 +60,57 @@ class WhatsAppMessageController extends Controller
 
         try {
             $response = Http::withHeaders([
-                'Authorization' => "Bearer {$openrouterApiKey}",
+                'Authorization' => "Bearer {$apiKey}",
                 'HTTP-Referer' => $siteUrl,
                 'X-Title' => $siteName,
                 'Content-Type' => 'application/json'
             ])->post('https://openrouter.ai/api/v1/chat/completions', [
-                'model' => 'google/gemini-flash-1.5-exp',
+                'model' => $model,
                 'messages' => $messages
             ]);
 
-            return $response->json()['choices'][0]['message']['content'];
+            $response = $response->json()['choices'][0]['message']['content'];
+
+            Log::info('OpenRouter: ' . json_encode([
+                'model' => $model,
+                'messages' => $messages,
+                'response' => $response,
+            ]));
+
+            // Convert markdown to WhatsApp formatting
+            $response = $this->convertMarkdownToWhatsApp($response);
+
+            return $response;
         } catch (\Exception $e) {
             Log::error('Failed to generate response: ' . $e->getMessage());
             return "I'm sorry, I couldn't generate a response at the moment. Please try again later.";
         }
+    }
+
+    private function convertMarkdownToWhatsApp($text)
+    {
+        // Convert italic: *text* or _text_ to _text_
+        $text = preg_replace('/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)|_(.+?)_/', '_$1$2_', $text);
+
+        // Convert bold: **text** or __text__ to *text*
+        $text = preg_replace('/(\*\*|__)(.*?)\1/', '*$2*', $text);
+
+        // Convert strikethrough: ~~text~~ to ~text~
+        $text = preg_replace('/~~(.*?)~~/', '~$1~', $text);
+
+        // Convert inline code: `text` to ```text```
+        $text = preg_replace('/`([^`]+)`/', '```$1```', $text);
+
+        // Convert bullet points: - text to • text
+        $text = preg_replace('/^- /m', '• ', $text);
+
+        // Convert links: [text](url) to text: url
+        $text = preg_replace('/\[([^\]]+)\]\(([^\)]+)\)/', '$2', $text);
+
+        // Convert headers: # text to text
+        $text = preg_replace('/^#+\s+(.*)$/m', '*$1*', $text);
+
+        return $text;
     }
 
     private function saveChatHistory($integrationId, $sender, $message, $response)
