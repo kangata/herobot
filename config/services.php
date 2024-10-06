@@ -35,4 +35,8 @@ return [
         'base_url' => env('WHATSAPP_SERVICE_BASE_URL', 'http://localhost:3000'),
     ],
 
+    'openrouter' => [
+        'api_key' => env('OPENROUTER_API_KEY'),
+    ],
+
 ];

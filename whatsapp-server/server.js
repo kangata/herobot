@@ -84,13 +84,60 @@ async function connectToWhatsApp(integrationId) {
     sock.ev.on('creds.update', saveCreds)
 
     sock.ev.on('messages.upsert', async (m) => {
-        // Handle incoming messages here
+        await handleIncomingMessage(sock, integrationId, m)
     })
 
     connections.set(integrationId, sock)
 }
 
+async function handleIncomingMessage(sock, integrationId, m) {
+    const message = m.messages[0]
+    if (message.key.fromMe) return // Ignore outgoing messages
+
+    const sender = message.key.remoteJid
+    const messageContent = message.message.conversation || message.message.extendedTextMessage?.text || ''
+
+    try {
+        // Send read receipt
+        await sock.readMessages([message.key])
+
+        // Send typing indicator
+        await sock.sendPresenceUpdate('composing', sender)
+
+        const response = await fetch('http://localhost:80/api/whatsapp/incoming-message', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                integrationId,
+                sender,
+                message: messageContent
+            })
+        });
+
+        const responseData = await response.json();
+
+        // Logging
+        console.log('Incoming Message:', {
+            integrationId,
+            sender,
+            message: messageContent
+        });
+        console.log('Response:', responseData.response);
+
+        // Stop typing indicator
+        await sock.sendPresenceUpdate('paused', sender)
+
+        // Send the response back to the sender
+        await sock.sendMessage(sender, { text: responseData.response })
+    } catch (error) {
+        console.error('Failed to handle incoming message:', error)
+    }
+}
+
 function sendWebSocketUpdate(integrationId, data) {
+    console.log('sendWebSocketUpdate', integrationId, data)
     return fetch('http://localhost:80/api/whatsapp-webhook', {
         method: 'POST',
         headers: {

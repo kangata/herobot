@@ -30,4 +30,9 @@ class Integration extends Model
     {
         return $this->morphToMany(Bot::class, 'connectable', 'bot_connections');
     }
+
+    public function chatHistories()
+    {
+        return $this->hasMany(ChatHistory::class);
+    }
 }
