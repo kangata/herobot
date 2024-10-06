@@ -64,8 +64,11 @@ async function connectToWhatsApp(integrationId) {
             }
         } else if (connection === 'open') {
             qrCodes.delete(integrationId) // Clear QR code once connected
+
             clearTimeout(connectionTimeout) // Clear the timeout when connected
-            sendWebSocketUpdate(integrationId, { status: 'connected' })
+
+            const phone = sock.user.id.split(':')[0]
+            sendWebSocketUpdate(integrationId, { status: 'connected', phone })
         }
 
         if (qr) {

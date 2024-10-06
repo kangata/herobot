@@ -6,7 +6,7 @@
                     <div class="bg-green-500 text-white inline-block py-1 px-2 text-xs rounded mb-2 capitalize">{{ integration.type }}</div>
                     <Link :href="route('integrations.show', integration.id)"
                         class="font-medium leading-6 text-gray-900 block">{{ integration.name }}</Link>
-                    <div class="text-sm text-gray-500 mt-2">{{ integration.phone ?? '-' }}</div>
+                    <div class="text-sm text-gray-500 mt-2">{{ $filters.formatPhoneNumber(integration.phone) || '-' }}</div>
                     <Menu as="div" class="absolute top-6 right-6">
                         <MenuButton class="-m-2.5 block p-2.5 text-gray-400 hover:text-gray-500">
                             <span class="sr-only">Open options</span>

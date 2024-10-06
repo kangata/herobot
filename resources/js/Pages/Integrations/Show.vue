@@ -5,7 +5,7 @@
                 <div class="sm:flex-auto">
                     <h1 class="text-xl font-semibold leading-6 text-gray-900">{{ integration.name }}</h1>
                     <div class="mt-2">
-                        <div class="bg-green-500 text-white inline-block py-1 px-2 text-xs rounded">Whatsapp</div>
+                        <div class="bg-green-500 text-white inline-block py-1 px-2 text-xs rounded capitalize">{{ integration.type }}</div>
                     </div>
                 </div>
                 <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
@@ -40,10 +40,39 @@
             </div>
         </div>
 
-        <div v-else class="w-full mx-auto">
-            <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6" role="alert">
-                <p class="font-bold">Connected</p>
-                <p>Your WhatsApp account is successfully linked to the bot.</p>
+        <div v-else class="bg-white shadow sm:rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="sm:flex sm:items-center sm:justify-between">
+                    <div>
+                        <h3 class="text-lg font-medium leading-6 text-gray-900">WhatsApp Connected</h3>
+                        <div class="mt-2 max-w-xl text-sm text-gray-500">
+                            <p>Your WhatsApp account is successfully linked to the bot.</p>
+                        </div>
+                    </div>
+                    <div class="mt-5 sm:mt-0 sm:ml-6 sm:flex sm:flex-shrink-0 sm:items-center">
+                        <CheckCircleIcon class="h-8 w-8 text-green-400" aria-hidden="true" />
+                    </div>
+                </div>
+                <div class="mt-5">
+                    <div class="rounded-md bg-gray-50 px-6 py-5">
+                        <div class="sm:flex sm:items-center sm:justify-between">
+                            <div class="sm:flex sm:items-center">
+                                <PhoneIcon class="h-8 w-8 text-gray-400" aria-hidden="true" />
+                                <div class="ml-3">
+                                    <h4 class="text-lg font-medium text-gray-900">{{ $filters.formatPhoneNumber(integration.phone) }}</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-5">
+                    <button
+                        type="button"
+                        class="inline-flex items-center justify-center rounded-md border border-transparent bg-red-100 px-4 py-2 font-medium text-red-700 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 sm:text-sm"
+                    >
+                        Disconnect WhatsApp
+                    </button>
+                </div>
             </div>
         </div>
     </AppLayout>
@@ -52,9 +81,10 @@
 <script setup>
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
-import { PencilIcon } from "@heroicons/vue/24/outline";
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { router } from '@inertiajs/vue3';
+import { PencilIcon, CheckCircleIcon, PhoneIcon } from "@heroicons/vue/24/outline";
+
 
 const props = defineProps({
     integration: Object,

@@ -29,7 +29,7 @@
                         {{ integration.type }}
                     </div>
                     <div class="font-medium">{{ integration.name }}</div>
-                    <div class="text-sm text-gray-500 mt-2">{{ integration.phone }}</div>
+                    <div class="text-sm text-gray-500 mt-2">{{ $filters.formatPhoneNumber(integration.phone) || '-' }}</div>
                 </div>
                 <div class="px-6 py-3 flex items-center text-xs">
                     <div class="flex items-center grow">
@@ -92,7 +92,7 @@
                         class="w-full text-left p-2 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                         :disabled="integration.isLoading"
                     >
-                        {{ integration.isLoading ? 'Connecting...' : `${integration.name} (${integration.type})` }}
+                        {{ integration.isLoading ? 'Connecting...' : `${integration.name} (${$filters.formatPhoneNumber(integration.phone) || '-'})` }}
                     </button>
                 </div>
                 <div v-if="availableIntegrations.length === 0" class="text-center text-gray-500 py-4">
