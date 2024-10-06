@@ -14,15 +14,18 @@ class Bot extends Model
 
     protected $fillable = ['team_id', 'name', 'description'];
 
-    protected $appends = ['integrations'];
-
     public function team()
     {
         return $this->belongsTo(Team::class);
     }
 
-    public function getIntegrationsAttribute()
+    public function integrations()
     {
-        return [];
+        return $this->morphedByMany(Integration::class, 'connectable', 'bot_connections');
+    }
+
+    public function knowledge()
+    {
+        return $this->morphedByMany(Knowledge::class, 'connectable', 'bot_connections');
     }
 }

@@ -3,7 +3,7 @@
         <ul role="list" class="grid grid-cols-1 gap-x-6 gap-y-8 lg:grid-cols-3 xl:gap-x-8">
             <li v-for="integration in integrations" :key="integration.id" class="rounded-xl border border-gray-200">
                 <div class="p-6 border-b border-gray-900/5 relative">
-                    <div class="bg-green-500 text-white inline-block py-1 px-2 text-xs rounded mb-2">Whatsapp</div>
+                    <div class="bg-green-500 text-white inline-block py-1 px-2 text-xs rounded mb-2 capitalize">{{ integration.type }}</div>
                     <Link :href="route('integrations.show', integration.id)"
                         class="font-medium leading-6 text-gray-900 block">{{ integration.name }}</Link>
                     <div class="text-sm text-gray-500 mt-2">{{ integration.phone ?? '-' }}</div>

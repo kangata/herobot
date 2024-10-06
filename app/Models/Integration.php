@@ -25,4 +25,9 @@ class Integration extends Model
     {
         return $this->belongsTo(Team::class);
     }
+
+    public function bots()
+    {
+        return $this->morphToMany(Bot::class, 'connectable', 'bot_connections');
+    }
 }

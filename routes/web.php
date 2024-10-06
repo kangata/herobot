@@ -53,3 +53,10 @@ Route::middleware([
 
     Route::get('/logout', [LogoutController::class, 'logout']);
 });
+
+Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+    Route::post('/bots/{bot}/connect-integration', [BotController::class, 'connectIntegration'])->name('bots.connect-integration');
+    Route::delete('/bots/{bot}/disconnect-integration', [BotController::class, 'disconnectIntegration'])->name('bots.disconnect-integration');
+    Route::post('/bots/{bot}/connect-knowledge', [BotController::class, 'connectKnowledge'])->name('bots.connect-knowledge');
+    Route::delete('/bots/{bot}/disconnect-knowledge', [BotController::class, 'disconnectKnowledge'])->name('bots.disconnect-knowledge');
+});
