@@ -168,6 +168,36 @@ app.post('/send-message', async (req, res) => {
     }
 })
 
+app.post('/disconnect', async (req, res) => {
+    const { integrationId } = req.body
+    if (!integrationId) {
+        return res.status(400).json({ error: 'Integration ID is required' })
+    }
+
+    try {
+        const authFolder = path.join(storagePath, integrationId);
+        if (fs.existsSync(authFolder)) {
+            fs.rmSync(authFolder, { recursive: true, force: true });
+        }
+
+        const connection = connections.get(integrationId)
+        if (connection) {
+            connection.logout()
+            connection.end(true)
+            connections.delete(integrationId)
+            connectionPool.connections.delete(integrationId)
+        }
+
+        qrCodes.delete(integrationId)
+
+        sendWebSocketUpdate(integrationId, { status: 'disconnected' })
+
+        res.json({ success: true, message: 'Disconnected successfully' })
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to disconnect' })
+    }
+})
+
 app.listen(port, () => {
     console.log(`WhatsApp server listening at http://localhost:${port}`)
 })

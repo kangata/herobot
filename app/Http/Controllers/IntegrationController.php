@@ -79,8 +79,26 @@ class IntegrationController extends Controller
         return redirect()->route('integrations.show', $integration)->with('success', 'Integration updated successfully.');
     }
 
+    public function disconnect(Integration $integration)
+    {
+        $result = WhatsApp::disconnect($integration->id);
+
+        if ($result['success']) {
+            $integration->update(['is_connected' => false, 'phone' => null]);
+            return redirect()->route('integrations.show', $integration)->with('success', 'WhatsApp disconnected successfully.');
+        }
+
+        return redirect()->route('integrations.show', $integration)->with('error', 'Failed to disconnect WhatsApp.');
+    }
+
     public function destroy(Integration $integration)
     {
+        if ($integration->type === 'whatsapp') {
+            dispatch(function () use ($integration) {
+                WhatsApp::disconnect($integration->id);
+            });
+        }
+
         $integration->delete();
 
         return redirect()->route('integrations.index')->with('success', 'Integration deleted successfully.');

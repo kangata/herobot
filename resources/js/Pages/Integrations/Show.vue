@@ -34,9 +34,6 @@
                 <div class="bg-white p-4 rounded-lg shadow-md">
                     <img :src="whatsapp.qr" alt="WhatsApp Integration QR Code" class="w-full h-auto" />
                 </div>
-                <p class="mt-4 text-sm text-gray-500">
-                    This QR code will expire in 10 minutes. If it expires, please refresh the page to generate a new one.
-                </p>
             </div>
         </div>
 
@@ -69,8 +66,17 @@
                     <button
                         type="button"
                         class="inline-flex items-center justify-center rounded-md border border-transparent bg-red-100 px-4 py-2 font-medium text-red-700 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 sm:text-sm"
+                        @click="disconnectWhatsApp"
+                        :disabled="isDisconnecting"
                     >
-                        Disconnect WhatsApp
+                        <span class="flex items-center" v-if="isDisconnecting">
+                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-red-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Disconnecting...
+                        </span>
+                        <span v-else>Disconnect WhatsApp</span>
                     </button>
                 </div>
             </div>
@@ -84,7 +90,6 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { PencilIcon, CheckCircleIcon, PhoneIcon } from "@heroicons/vue/24/outline";
-
 
 const props = defineProps({
     integration: Object,
@@ -118,4 +123,17 @@ onMounted(() => {
 onUnmounted(() => {
     window.Echo.leave(`integration.${props.integration.id}`);
 });
+
+const isDisconnecting = ref(false);
+
+const disconnectWhatsApp = () => {
+    isDisconnecting.value = true;
+    router.post(route('integrations.disconnect', props.integration.id), {}, {
+        preserveState: true,
+        preserveScroll: true,
+        onFinish: () => {
+            isDisconnecting.value = false;
+        },
+    })
+};
 </script>

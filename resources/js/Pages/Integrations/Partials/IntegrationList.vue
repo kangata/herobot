@@ -121,6 +121,8 @@ const showDeleteConfirmation = (integration) => {
 const deleteintegration = () => {
     formDelete.delete(route('integrations.destroy', integrationToDelete.value), {
         errorBag: 'deleteintegration',
+        preserveState: true,
+        preserveScroll: true,
     });
     confirmingintegrationDeletion.value = false;
 };

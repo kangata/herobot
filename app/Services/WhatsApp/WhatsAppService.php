@@ -39,4 +39,13 @@ class WhatsAppService
 
         return $response->json();
     }
+
+    public function disconnect(string $integrationId): array
+    {
+        $response = Http::post("{$this->baseUrl}/disconnect", [
+            'integrationId' => $integrationId,
+        ]);
+
+        return $response->json();
+    }
 }
