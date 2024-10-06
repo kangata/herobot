@@ -30,9 +30,9 @@
                     <li><strong>Point your phone</strong> at this screen to capture the QR code</li>
                 </ol>
             </div>
-            <div v-if="qr" class="w-1/2 flex flex-col justify-center">
+            <div v-if="whatsapp.qr" class="w-1/2 flex flex-col justify-center">
                 <div class="bg-white p-4 rounded-lg shadow-md">
-                    <img :src="qr" alt="WhatsApp Integration QR Code" class="w-full h-auto" />
+                    <img :src="whatsapp.qr" alt="WhatsApp Integration QR Code" class="w-full h-auto" />
                 </div>
                 <p class="mt-4 text-sm text-gray-500">
                     This QR code will expire in 10 minutes. If it expires, please refresh the page to generate a new one.
@@ -58,30 +58,34 @@ import { router } from '@inertiajs/vue3';
 
 const props = defineProps({
     integration: Object,
-    qr: String,
+    whatsapp: {
+        type: Object,
+        default: () => ({
+            qr: null,
+            status: null
+        })
+    }
 });
 
-const integration = ref(props.integration);
-
-const qr = ref(props.qr);
-
 onMounted(() => {
-    window.Echo.private(`integration.${integration.value.id}`)
-        .listen('IntegrationUpdated', ({ integration, data }) => {
-            if (data.qr) {
-                qr.value = data.qr;
-            }
-        });
-
     router.reload({
-        only: ['qr'],
-        onFinish: () => {
-            qr.value = props.qr;
-        }
+        only: [
+            'whatsapp'
+        ]
     });
+
+    window.Echo.private(`integration.${props.integration.id}`)
+        .listen('IntegrationUpdated', (_) => {
+            router.reload({
+                only: [
+                    'integration',
+                    'whatsapp'
+                ],
+            });
+        });
 });
 
 onUnmounted(() => {
-    window.Echo.leave(`integration.${integration.value.id}`);
+    window.Echo.leave(`integration.${props.integration.id}`);
 });
 </script>

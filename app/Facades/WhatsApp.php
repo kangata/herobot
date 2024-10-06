@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Facade;
 
 /**
  * @method static array connect(string $integrationId)
- * @method static array getQR(string $integrationId)
+ * @method static array status(string $integrationId)
  * @method static array sendMessage(string $integrationId, string $recipient, string $message)
  *
  * @see \App\Services\WhatsApp\WhatsAppService

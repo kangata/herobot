@@ -51,7 +51,9 @@ class IntegrationController extends Controller
     {
         return inertia('Integrations/Show', [
             'integration' => $integration,
-            'qr' => Inertia::lazy(fn () => WhatsApp::getQR($integration->id)['data']),
+            'whatsapp' => Inertia::lazy(
+                fn () => WhatsApp::status($integration->id) ?? null
+            ),
         ]);
     }
 

@@ -16,12 +16,12 @@ class WhatsAppWebhookController extends Controller
 
         $integration = Integration::findOrFail($integrationId);
 
-        if (isset($data['status']) && $data['status'] === 'connected') {
-            $integration->update(['is_connected' => true]);
+        if (isset($data['status'])) {
+            $integration->update(['is_connected' => $data['status'] === 'connected']);
         }
 
         // Broadcast the general update
-        IntegrationUpdated::dispatch($integration, $data);
+        IntegrationUpdated::dispatch($integration);
 
         return response()->json(['message' => 'Webhook processed successfully']);
     }

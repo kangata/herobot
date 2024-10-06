@@ -4,9 +4,14 @@ const { Boom } = require('@hapi/boom')
 const qrcode = require('qrcode')
 const fs = require('fs')
 const path = require('path')
+const pino = require('pino')
 
 const app = express()
 const port = 3000
+
+const logger = pino({
+    level: 'error'
+});
 
 app.use(express.json())
 
@@ -25,12 +30,11 @@ async function connectToWhatsApp(integrationId) {
     
     const sock = makeWASocket({
         auth: state,
-        printQRInTerminal: true
+        logger: logger
     })
 
     let connectionTimeout = setTimeout(() => {
         if (sock.user == null) {
-            console.log(`Connection timeout for ${integrationId}`)
             sock.ev.removeAllListeners('connection.update')
             sock.ev.removeAllListeners('creds.update')
             sock.ev.removeAllListeners('messages.upsert')
@@ -42,21 +46,29 @@ async function connectToWhatsApp(integrationId) {
 
     sock.ev.on('connection.update', async (update) => {
         const { connection, lastDisconnect, qr } = update
+
         if (connection === 'close') {
-            const shouldReconnect = (lastDisconnect.error instanceof Boom &&
-                lastDisconnect.error.output.statusCode !== DisconnectReason.loggedOut)
-            if (shouldReconnect) {
-                connectToWhatsApp(integrationId)
+            if (lastDisconnect.error instanceof Boom) {
+                const isLoggedOut = lastDisconnect.error.output.statusCode === DisconnectReason.loggedOut
+
+                if (isLoggedOut) {
+                    const authFolder = path.join(storagePath, integrationId);
+                    if (fs.existsSync(authFolder)) {
+                        fs.rmSync(authFolder, { recursive: true, force: true });
+                    }
+                    clearTimeout(connectionTimeout)
+                    sendWebSocketUpdate(integrationId, { status: 'disconnected' })
+                }
+
+                connectToWhatsApp(integrationId);
             }
         } else if (connection === 'open') {
-            console.log(`Connected to WhatsApp for ${integrationId}`)
             qrCodes.delete(integrationId) // Clear QR code once connected
             clearTimeout(connectionTimeout) // Clear the timeout when connected
             sendWebSocketUpdate(integrationId, { status: 'connected' })
         }
 
         if (qr) {
-            // Generate QR code image asynchronously
             qrcode.toDataURL(qr)
                 .then(qrImage => {
                     qrCodes.set(integrationId, qrImage)
@@ -69,7 +81,6 @@ async function connectToWhatsApp(integrationId) {
     sock.ev.on('creds.update', saveCreds)
 
     sock.ev.on('messages.upsert', async (m) => {
-        console.log(`New message for ${integrationId}:`, JSON.stringify(m, undefined, 2))
         // Handle incoming messages here
     })
 
@@ -87,8 +98,6 @@ function sendWebSocketUpdate(integrationId, data) {
             ...data
         })
     })
-    .then(response => response.text().then(text => console.log('WebSocket Update sent to Laravel:', text)))
-    .catch(error => console.error('Failed to send update to Laravel:', error));
 }
 
 // Use a connection pool for better resource management
@@ -119,17 +128,25 @@ app.post('/connect', async (req, res) => {
     }
 })
 
-app.get('/qr/:integrationId', async (req, res) => {
+app.get('/status/:integrationId', async (req, res) => {
     const { integrationId } = req.params
     await connectionPool.getConnection(integrationId)
 
     setTimeout(async () => {
         const qrCode = qrCodes.get(integrationId)
-        if (qrCode) {
-            res.json({ data: qrCode })
-        } else {
-            res.status(404).json({ error: 'QR code not available' })
+        const connection = connections.get(integrationId)
+        let status = 'disconnected'
+
+        if (connection && connection.user) {
+            status = 'connected'
+        } else if (qrCode) {
+            status = 'waiting_for_qr_scan'
         }
+
+        res.json({
+            status,
+            qr: qrCode || null
+        })
     }, 1000)
 })
 

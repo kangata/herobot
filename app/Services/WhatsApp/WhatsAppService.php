@@ -22,9 +22,9 @@ class WhatsAppService
         return $response->json();
     }
 
-    public function getQR(string $integrationId): array
+    public function status(string $integrationId): array
     {
-        $response = Http::get("{$this->baseUrl}/qr/{$integrationId}");
+        $response = Http::get("{$this->baseUrl}/status/{$integrationId}");
 
         return $response->json();
     }
