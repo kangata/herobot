@@ -30,9 +30,9 @@
                     <li><strong>Point your phone</strong> at this screen to capture the QR code</li>
                 </ol>
             </div>
-            <div v-if="qrCode" class="w-1/2 flex flex-col justify-center">
+            <div v-if="qr" class="w-1/2 flex flex-col justify-center">
                 <div class="bg-white p-4 rounded-lg shadow-md">
-                    <img :src="qrCode" alt="WhatsApp Integration QR Code" class="w-full h-auto" />
+                    <img :src="qr" alt="WhatsApp Integration QR Code" class="w-full h-auto" />
                 </div>
                 <p class="mt-4 text-sm text-gray-500">
                     This QR code will expire in 10 minutes. If it expires, please refresh the page to generate a new one.
@@ -53,27 +53,35 @@
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { PencilIcon } from "@heroicons/vue/24/outline";
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { router } from '@inertiajs/vue3';
 
 const props = defineProps({
     integration: Object,
+    qr: String,
 });
 
-const qrCode = ref('');
+const integration = ref(props.integration);
 
-const fetchQRCode = async () => {
-    try {
-        const response = await fetch(route('integrations.qr', props.integration.id));
-        const data = await response.json();
-        qrCode.value = data.qr;
-    } catch (error) {
-        console.error('Error fetching QR code:', error);
-    }
-};
+const qr = ref(props.qr);
 
 onMounted(() => {
-    if (!props.integration.is_connected) {
-        fetchQRCode();
-    }
+    window.Echo.private(`integration.${integration.value.id}`)
+        .listen('IntegrationUpdated', ({ integration, data }) => {
+            if (data.qr) {
+                qr.value = data.qr;
+            }
+        });
+
+    router.reload({
+        only: ['qr'],
+        onFinish: () => {
+            qr.value = props.qr;
+        }
+    });
+});
+
+onUnmounted(() => {
+    window.Echo.leave(`integration.${integration.value.id}`);
 });
 </script>

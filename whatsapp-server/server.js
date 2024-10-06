@@ -52,12 +52,16 @@ async function connectToWhatsApp(integrationId) {
             console.log(`Connected to WhatsApp for ${integrationId}`)
             qrCodes.delete(integrationId) // Clear QR code once connected
             clearTimeout(connectionTimeout) // Clear the timeout when connected
+            sendWebSocketUpdate(integrationId, { status: 'connected' })
         }
 
         if (qr) {
             // Generate QR code image asynchronously
             qrcode.toDataURL(qr)
-                .then(qrImage => qrCodes.set(integrationId, qrImage))
+                .then(qrImage => {
+                    qrCodes.set(integrationId, qrImage)
+                    sendWebSocketUpdate(integrationId, { qr: qrImage })
+                })
                 .catch(err => console.error('Failed to generate QR code:', err))
         }
     })
@@ -70,6 +74,21 @@ async function connectToWhatsApp(integrationId) {
     })
 
     connections.set(integrationId, sock)
+}
+
+function sendWebSocketUpdate(integrationId, data) {
+    return fetch('http://localhost:80/api/whatsapp-webhook', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            integrationId,
+            ...data
+        })
+    })
+    .then(response => response.text().then(text => console.log('WebSocket Update sent to Laravel:', text)))
+    .catch(error => console.error('Failed to send update to Laravel:', error));
 }
 
 // Use a connection pool for better resource management
@@ -107,7 +126,7 @@ app.get('/qr/:integrationId', async (req, res) => {
     setTimeout(async () => {
         const qrCode = qrCodes.get(integrationId)
         if (qrCode) {
-            res.json({ qr: qrCode })
+            res.json({ data: qrCode })
         } else {
             res.status(404).json({ error: 'QR code not available' })
         }
