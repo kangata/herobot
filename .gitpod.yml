@@ -41,11 +41,13 @@ tasks:
     command: |
       gp sync-await install
       ./vendor/bin/sail artisan whatsapp:start
-  - name: Run Reberb Server
+  - name: Run Reverb Server
+    openMode: split-right
     command: |
       gp sync-await install
       ./vendor/bin/sail artisan reverb:start
   - name: Run Queue
+    openMode: split-right
     command: |
       gp sync-await install
       ./vendor/bin/sail artisan queue:listen
