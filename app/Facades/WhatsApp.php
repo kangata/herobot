@@ -1,0 +1,20 @@
+<?php
+
+namespace App\Facades;
+
+use Illuminate\Support\Facades\Facade;
+
+/**
+ * @method static array connect(string $integrationId)
+ * @method static array getQR(string $integrationId)
+ * @method static array sendMessage(string $integrationId, string $recipient, string $message)
+ *
+ * @see \App\Services\WhatsApp\WhatsAppService
+ */
+class WhatsApp extends Facade
+{
+    protected static function getFacadeAccessor()
+    {
+        return 'whatsapp';
+    }
+}

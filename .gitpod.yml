@@ -10,8 +10,15 @@ tasks:
         cp .env.example .env
         sed -i 's/^DB_HOST=.*/DB_HOST=mariadb/' .env
         sed -i "s#APP_URL=http://localhost#APP_URL=$(gp url 80)#g" .env
+        sed -i "s#QUEUE_CONNECTION=sync#QUEUE_CONNECTION=database#g" .env
+        sed -i "s#BROADCAST_DRIVER=log#BROADCAST_DRIVER=reverb#g" .env
+        sed -i "s#VITE_REVERB_HOST=127.0.0.1#VITE_REVERB_HOST=$(gp url 8080 | sed 's#^https\?://##')#g" .env
+        sed -i "s#VITE_REVERB_PORT=8080#VITE_REVERB_PORT=443#g" .env
+        sed -i "s#VITE_REVERB_SCHEME=http#VITE_REVERB_SCHEME=https#g" .env
         echo "GITPOD_VITE_URL=$(gp url 5173)" >> .env
         echo "FORCE_HTTPS=true" >> .env
+        echo "SAIL_XDEBUG_MODE=debug" >> .env
+        echo "SAIL_XDEBUG_CONFIG=\"start_with_request=yes\"" >> .env
       fi
       docker-compose up -d
       if [ "$SETUP" = true ]; then
@@ -23,13 +30,25 @@ tasks:
         echo "Waiting for mariadb to be up..."
         sleep 2
       done
-      ./vendor/bin/sail artisan migrate --force
+      ./vendor/bin/sail artisan migrate --force --seed
       docker-compose up --no-recreate
   - name: Run Vite
     openMode: split-right
     command: |
       gp sync-await install
       ./vendor/bin/sail npm run dev
+  - name: Run WhatsApp Server
+    command: |
+      gp sync-await install
+      ./vendor/bin/sail artisan whatsapp:start
+  - name: Run Reberb Server
+    command: |
+      gp sync-await install
+      ./vendor/bin/sail artisan reverb:start
+  - name: Run Queue
+    command: |
+      gp sync-await install
+      ./vendor/bin/sail artisan queue:listen
 
 ports:
   - name: front-end
