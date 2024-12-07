@@ -50,7 +50,7 @@ class KnowledgeController extends Controller
         ]);
 
         // If bot_id is provided, connect the knowledge to the bot
-        if ($request->has('bot_id') && $bot = Bot::findOrFail($request->bot_id)) {
+        if ($request->has('bot_id') && $bot = Bot::find($request->bot_id)) {
             $this->authorize('update', $bot);
             $bot->knowledge()->attach($knowledge->id);
             return redirect()->route('bots.show', $bot)->with('success', 'Knowledge created and connected successfully.');

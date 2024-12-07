@@ -48,7 +48,7 @@ class IntegrationController extends Controller
         ]);
 
         // If bot_id is provided, connect the integration to the bot
-        if ($request->has('bot_id') && $bot = Bot::findOrFail($request->bot_id)) {
+        if ($request->has('bot_id') && $bot = Bot::find($request->bot_id)) {
             $this->authorize('update', $bot);
             $bot->integrations()->attach($integration->id);
             return redirect()->route('bots.show', $bot)->with('success', 'Integration created and connected successfully.');
