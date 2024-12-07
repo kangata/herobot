@@ -31,6 +31,11 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'xendit' => [
+        'secret_key' => env('XENDIT_SECRET_KEY'),
+        'webhook_token' => env('XENDIT_WEBHOOK_TOKEN'),
+    ],
+
     'whatsapp' => [
         'base_url' => env('WHATSAPP_SERVER_URL', 'http://localhost:3000'),
         'token' => env('WHATSAPP_SERVER_TOKEN'),

@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\BotController;
 use App\Http\Controllers\IntegrationController;
 use App\Http\Controllers\KnowledgeController;
+use App\Http\Controllers\BillingController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -60,4 +61,13 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::delete('/bots/{bot}/disconnect-integration', [BotController::class, 'disconnectIntegration'])->name('bots.disconnect-integration');
     Route::post('/bots/{bot}/connect-knowledge', [BotController::class, 'connectKnowledge'])->name('bots.connect-knowledge');
     Route::delete('/bots/{bot}/disconnect-knowledge', [BotController::class, 'disconnectKnowledge'])->name('bots.disconnect-knowledge');
+
+    Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
+    Route::post('/billing/topup', [BillingController::class, 'topup'])->name('billing.topup');
+    Route::get('/billing/topup/success', [BillingController::class, 'topupSuccess'])->name('billing.topup.success');
+    Route::get('/billing/topup/failure', [BillingController::class, 'topupFailure'])->name('billing.topup.failure');
+
+    Route::post('/billing/webhook', [BillingController::class, 'handleWebhook'])
+        ->name('billing.webhook')
+        ->withoutMiddleware(['auth:sanctum', 'web', 'verified', 'verify_csrf_token']);
 });

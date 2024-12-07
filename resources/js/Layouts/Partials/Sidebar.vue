@@ -137,9 +137,10 @@
                     </ul>
                     <ul>
                         <li class="mt-auto" v-for="item in bottomNavigation" :key="item.name">
-                            <Link :href="item.href" class="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-700 hover:bg-gray-50 hover:text-indigo-600">
+                            <Link :href="item.href"
+                                :class="[item.current ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50', 'group -mx-2 flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
                                 <component :is="item.icon"
-                                    class="h-6 w-6 shrink-0 text-gray-400 group-hover:text-indigo-600"
+                                    :class="[item.current ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600', 'h-6 w-6 shrink-0']"
                                     aria-hidden="true" />
                                 {{ item.name }}
                             </Link>
@@ -165,6 +166,7 @@ import {
     HomeIcon,
     UserGroupIcon,
     XMarkIcon,
+    CreditCardIcon,
 } from '@heroicons/vue/24/outline'
 import { LinkIcon } from '@heroicons/vue/20/solid'
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
@@ -183,6 +185,7 @@ const navigation = [
 const bottomNavigation = [
     { name: 'Team Settings', href: route('teams.show', page.props.auth.user.current_team), icon: UserGroupIcon, current: route().current('teams.show') },
     { name: 'Settings', href: route('profile.show'), icon: Cog6ToothIcon, current: route().current('profile.show') },
+    { name: 'Billing & Usage', href: route('billing.index'), icon: CreditCardIcon, current: route().current('billing*') },
 ]
 
 const switchToTeam = (team) => {

@@ -56,4 +56,16 @@ class Team extends JetstreamTeam
     {
         return $this->hasMany(Integration::class);
     }
+
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class);
+    }
+
+    public function balance()
+    {
+        return $this->hasOne(Balance::class)->withDefault([
+            'amount' => 0,
+        ]);
+    }
 }
