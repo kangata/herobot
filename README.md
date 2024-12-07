@@ -34,26 +34,38 @@ To set up the Herobot App locally, follow these steps:
        composer install --ignore-platform-reqs
      ```
 
-4. **Start Docker Containers**:
-   - Start the Docker containers:
-     ```sh
-     docker-compose up -d
-     ```
+4. **Start Services**
+   ```sh
+   # Start Docker containers in detached mode
+   ./vendor/bin/sail up -d
 
-5. **Install npm Dependencies**:
-   - Install the necessary npm dependencies using Sail:
-     ```sh
-     ./vendor/bin/sail npm install
-     ```
+   # Install NPM dependencies
+   ./vendor/bin/sail npm install
 
-6. **Run Vite**:
-   - Start the Vite development server using Sail:
-     ```sh
-     ./vendor/bin/sail npm run dev
-     ```
+   # Start Vite development server
+   ./vendor/bin/sail npm run dev
 
-7. **Access the Application**:
+   # Start Reverb WebSocket server
+   ./vendor/bin/sail artisan reverb:start
+
+   # Start WhatsApp server
+   ./vendor/bin/sail artisan whatsapp:start
+   ```
+
+5. **Access the Application**:
    - The application will be accessible on port 80. Open your browser and navigate to `http://localhost`.
+
+
+6. **Stopping Services**:
+   ```sh
+   # Stop Docker containers
+   ./vendor/bin/sail down
+
+   # If you need to stop individual services:
+   # Stop Vite development server: Ctrl+C in the terminal running npm run dev
+   # Stop Reverb WebSocket server: Ctrl+C in the terminal running reverb:start
+   # Stop WhatsApp server: Ctrl+C in the terminal running whatsapp:start
+   ```
 
 By following these steps, you will have the Herobot App up and running on your local machine, ready for development and testing.
 
