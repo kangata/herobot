@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Facades\WhatsApp;
 use App\Models\Integration;
 use App\Events\QrCodeUpdated;
+use App\Models\Bot;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Broadcast;
@@ -26,9 +27,11 @@ class IntegrationController extends Controller
         ]);
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        return inertia('Integrations/Create');
+        return inertia('Integrations/Create', [
+            'bot_id' => $request->query('bot_id'),
+        ]);
     }
 
     public function store(Request $request)
@@ -43,6 +46,13 @@ class IntegrationController extends Controller
             'name' => $validatedData['name'],
             'type' => $validatedData['type'],
         ]);
+
+        // If bot_id is provided, connect the integration to the bot
+        if ($request->has('bot_id') && $bot = Bot::findOrFail($request->bot_id)) {
+            $this->authorize('update', $bot);
+            $bot->integrations()->attach($integration->id);
+            return redirect()->route('bots.show', $bot)->with('success', 'Integration created and connected successfully.');
+        }
 
         return redirect()->route('integrations.show', $integration)->with('success', 'Integration created successfully.');
     }

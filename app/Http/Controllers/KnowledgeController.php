@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Knowledge;
+use App\Models\Bot;
 use Illuminate\Http\Request;
 
 class KnowledgeController extends Controller
@@ -21,9 +22,16 @@ class KnowledgeController extends Controller
         ]);
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        return inertia('Knowledges/Form');
+        return inertia('Knowledges/Form', [
+            'bot_id' => $request->query('bot_id'),
+        ]);
+    }
+
+    public function show(Knowledge $knowledge)
+    {
+        return redirect()->route('knowledges.edit', $knowledge);
     }
 
     public function store(Request $request)
@@ -34,12 +42,19 @@ class KnowledgeController extends Controller
             'text' => ['required', 'string'],
         ]);
 
-        Knowledge::create([
+        $knowledge = Knowledge::create([
             'team_id' => $request->user()->currentTeam->id,
             'name' => $validatedData['name'],
             'type' => 'text',
             'text' => $validatedData['text'],
         ]);
+
+        // If bot_id is provided, connect the knowledge to the bot
+        if ($request->has('bot_id') && $bot = Bot::findOrFail($request->bot_id)) {
+            $this->authorize('update', $bot);
+            $bot->knowledge()->attach($knowledge->id);
+            return redirect()->route('bots.show', $bot)->with('success', 'Knowledge created and connected successfully.');
+        }
 
         return redirect()->route('knowledges.index')->with('success', 'Knowledge created successfully.');
     }

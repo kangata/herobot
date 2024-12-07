@@ -44,9 +44,17 @@ import TextInput from '@/Components/TextInput.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import RadioInput from '@/Components/RadioInput.vue';
 
+const props = defineProps({
+    bot_id: {
+        type: [String, Number],
+        default: null,
+    }
+});
+
 const form = useForm({
     name: '',
     type: 'whatsapp',
+    bot_id: props.bot_id,
 });
 
 const submit = () => {

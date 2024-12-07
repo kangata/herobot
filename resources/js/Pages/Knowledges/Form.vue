@@ -79,6 +79,10 @@ const props = defineProps({
       text: '',
     }),
   },
+  bot_id: {
+    type: [String, Number],
+    default: null,
+  }
 });
 
 const isEditing = !!props.knowledge.id;
@@ -87,6 +91,7 @@ const form = useForm({
   name: props.knowledge.name,
   type: props.knowledge.type,
   text: props.knowledge.text,
+  bot_id: props.bot_id,
 });
 
 const knowledgeTypes = [

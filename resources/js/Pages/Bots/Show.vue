@@ -61,7 +61,7 @@
         <div class="grid grid-cols-4 gap-4">
             <div v-for="knowledge in bot.knowledge" :key="knowledge.id" class="rounded-xl border border-gray-200 text-base">
                 <div class="p-6 border-b border-gray-900/5">
-                    <div class="font-medium">{{ knowledge.name }}</div>
+                    <Link :href="route('knowledges.edit', knowledge.id)" class="font-medium">{{ knowledge.name }}</Link>
                     <div class="text-sm text-gray-500 mt-2 capitalize">{{ knowledge.type }}</div>
                 </div>
                 <div class="px-6 py-3 flex text-xs">
@@ -100,7 +100,7 @@
                         </button>
                     </div>
                     <div class="border-t pt-4 mt-4">
-                        <Link :href="route('integrations.create')" class="w-full">
+                        <Link :href="route('integrations.create', { bot_id: bot.id })" class="w-full">
                             <PrimaryButton class="w-full justify-center">
                                 <PlusIcon class="h-5 w-5 mr-2" />
                                 Create New Integration
@@ -136,7 +136,7 @@
                         </button>
                     </div>
                     <div class="border-t pt-4 mt-4">
-                        <Link :href="route('knowledges.create')" class="w-full">
+                        <Link :href="route('knowledges.create', { bot_id: bot.id })" class="w-full">
                             <PrimaryButton class="w-full justify-center">
                                 <PlusIcon class="h-5 w-5 mr-2" />
                                 Create New Knowledge
