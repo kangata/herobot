@@ -9,7 +9,21 @@ class Transaction extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['team_id', 'amount', 'type', 'description'];
+    protected $fillable = [
+        'team_id',
+        'amount',
+        'type',
+        'description',
+        'status',
+        'payment_id',
+        'payment_method',
+        'external_id',
+        'payment_details'
+    ];
+
+    protected $casts = [
+        'payment_details' => 'array'
+    ];
 
     public function team()
     {

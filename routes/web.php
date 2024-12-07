@@ -66,4 +66,8 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('/billing/topup', [BillingController::class, 'topup'])->name('billing.topup');
     Route::get('/billing/topup/success', [BillingController::class, 'topupSuccess'])->name('billing.topup.success');
     Route::get('/billing/topup/failure', [BillingController::class, 'topupFailure'])->name('billing.topup.failure');
+
+    Route::post('/billing/webhook', [BillingController::class, 'handleWebhook'])
+        ->name('billing.webhook')
+        ->withoutMiddleware(['auth:sanctum', 'web', 'verified', 'verify_csrf_token']);
 });
