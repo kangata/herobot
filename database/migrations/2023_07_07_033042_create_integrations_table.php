@@ -19,8 +19,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('type');
             $table->string('phone')->nullable();
-            $table->boolean('connected')->default(false);
-            $table->uuid('whatsapp_id')->nullable();
+            $table->boolean('is_connected')->default(false);
             $table->timestamps();
         });
     }

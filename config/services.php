@@ -31,4 +31,14 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'whatsapp' => [
+        'base_url' => env('WHATSAPP_SERVER_URL', 'http://localhost:3000'),
+        'token' => env('WHATSAPP_SERVER_TOKEN'),
+    ],
+
+    'openrouter' => [
+        'api_key' => env('OPENROUTER_API_KEY'),
+        'model' => env('OPENROUTER_MODEL', 'google/gemini-flash-1.5-exp'),
+    ],
+
 ];

@@ -45,8 +45,8 @@
                         <dd class="flex flex-wrap items-start gap-x-2">
                             <template v-for="(integration, index) in bot.integrations" :key="index">
                                 <div
-                                    :class="[statuses[integration.status], 'rounded-md py-1 px-2 text-xs font-medium ring-1 ring-inset']">
-                                    {{ integration.name }} ({{ integration.status }})</div>
+                                    :class="[statuses[integration.is_connected ? 'Connected' : 'Disconnected'], 'rounded-md py-1 px-2 text-xs font-medium ring-1 ring-inset']">
+                                    {{ integration.name }} ({{ integration.is_connected ? 'Connected' : 'Disconnected' }})</div>
                             </template>
                             <template v-if="bot.integrations.length === 0">
                                 <div class="text-gray-400">
@@ -123,9 +123,8 @@ const formDelete = useForm({});
 const botToDelete = ref(null);
 
 const statuses = {
-    Active: 'text-green-700 bg-green-50 ring-green-600/20',
-    Inactive: 'text-red-700 bg-red-50 ring-red-600/10',
-    Pending: 'text-yellow-700 bg-yellow-50 ring-yellow-600/10'
+    Connected: 'text-green-700 bg-green-50 ring-green-600/20',
+    Disconnected: 'text-red-700 bg-red-50 ring-red-600/10',
 }
 
 const showDeleteConfirmation = (bot) => {

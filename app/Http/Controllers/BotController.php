@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Bot;
+use App\Models\Integration;
+use App\Models\Knowledge;
 
 class BotController extends Controller
 {
@@ -14,7 +16,9 @@ class BotController extends Controller
 
     public function index(Request $request)
     {
-        $bots = $request->user()->currentTeamBots()->all();
+        $bots = Bot::with('integrations')
+            ->where('team_id', $request->user()->currentTeam->id)
+            ->get();
 
         return inertia('Bots/Index', [
             'bots' => $bots
@@ -44,8 +48,20 @@ class BotController extends Controller
 
     public function show(Bot $bot)
     {
+        $bot->load('integrations', 'knowledge');
+
+        $availableIntegrations = Integration::where('team_id', $bot->team_id)
+            ->whereNotIn('id', $bot->integrations->pluck('id'))
+            ->get();
+
+        $availableKnowledge = Knowledge::where('team_id', $bot->team_id)
+            ->whereNotIn('id', $bot->knowledge->pluck('id'))
+            ->get();
+
         return inertia('Bots/Show', [
-            'bot' => $bot
+            'bot' => $bot,
+            'availableIntegrations' => $availableIntegrations,
+            'availableKnowledge' => $availableKnowledge,
         ]);
     }
 
@@ -76,5 +92,49 @@ class BotController extends Controller
         $bot->delete();
 
         return redirect()->route('bots.index')->with('success', 'Bot deleted successfully.');
+    }
+
+    public function connectIntegration(Request $request, Bot $bot)
+    {
+        $validated = $request->validate([
+            'integration_id' => 'required|exists:integrations,id',
+        ]);
+
+        $bot->integrations()->attach($validated['integration_id']);
+
+        return back()->with('success', 'Integration connected successfully.');
+    }
+
+    public function disconnectIntegration(Request $request, Bot $bot)
+    {
+        $validated = $request->validate([
+            'integration_id' => 'required|exists:integrations,id',
+        ]);
+
+        $bot->integrations()->detach($validated['integration_id']);
+
+        return back()->with('success', 'Integration disconnected successfully.');
+    }
+
+    public function connectKnowledge(Request $request, Bot $bot)
+    {
+        $validated = $request->validate([
+            'knowledge_id' => 'required|exists:knowledge,id',
+        ]);
+
+        $bot->knowledge()->attach($validated['knowledge_id']);
+
+        return back()->with('success', 'Knowledge connected successfully.');
+    }
+
+    public function disconnectKnowledge(Request $request, Bot $bot)
+    {
+        $validated = $request->validate([
+            'knowledge_id' => 'required|exists:knowledge,id',
+        ]);
+
+        $bot->knowledge()->detach($validated['knowledge_id']);
+
+        return back()->with('success', 'Knowledge disconnected successfully.');
     }
 }

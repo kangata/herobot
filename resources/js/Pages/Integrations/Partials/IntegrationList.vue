@@ -3,10 +3,10 @@
         <ul role="list" class="grid grid-cols-1 gap-x-6 gap-y-8 lg:grid-cols-3 xl:gap-x-8">
             <li v-for="integration in integrations" :key="integration.id" class="rounded-xl border border-gray-200">
                 <div class="p-6 border-b border-gray-900/5 relative">
-                    <div class="bg-green-500 text-white inline-block py-1 px-2 text-xs rounded mb-2">Whatsapp</div>
+                    <div class="bg-green-500 text-white inline-block py-1 px-2 text-xs rounded mb-2 capitalize">{{ integration.type }}</div>
                     <Link :href="route('integrations.show', integration.id)"
                         class="font-medium leading-6 text-gray-900 block">{{ integration.name }}</Link>
-                    <div class="text-sm text-gray-500 mt-2">{{ integration.phone ?? '-' }}</div>
+                    <div class="text-sm text-gray-500 mt-2">{{ $filters.formatPhoneNumber(integration.phone) || '-' }}</div>
                     <Menu as="div" class="absolute top-6 right-6">
                         <MenuButton class="-m-2.5 block p-2.5 text-gray-400 hover:text-gray-500">
                             <span class="sr-only">Open options</span>
@@ -40,7 +40,7 @@
                 </div>
                 <div class="px-6 py-4 flex items-center text-xs">
                     <div class="flex items-center grow">
-                        <template v-if="integration.online === 'online'">
+                        <template v-if="integration.is_connected">
                             <div class="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
                             <div class="text-green-500">Connected</div>
                         </template>
@@ -121,6 +121,8 @@ const showDeleteConfirmation = (integration) => {
 const deleteintegration = () => {
     formDelete.delete(route('integrations.destroy', integrationToDelete.value), {
         errorBag: 'deleteintegration',
+        preserveState: true,
+        preserveScroll: true,
     });
     confirmingintegrationDeletion.value = false;
 };

@@ -2,8 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Facades\WhatsApp;
 use App\Models\Integration;
+use App\Events\QrCodeUpdated;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Broadcast;
+use Inertia\Inertia;
 
 class IntegrationController extends Controller
 {
@@ -46,6 +51,9 @@ class IntegrationController extends Controller
     {
         return inertia('Integrations/Show', [
             'integration' => $integration,
+            'whatsapp' => Inertia::lazy(
+                fn () => WhatsApp::status($integration->id) ?? null
+            ),
         ]);
     }
 
@@ -71,8 +79,26 @@ class IntegrationController extends Controller
         return redirect()->route('integrations.show', $integration)->with('success', 'Integration updated successfully.');
     }
 
+    public function disconnect(Integration $integration)
+    {
+        $result = WhatsApp::disconnect($integration->id);
+
+        if ($result['success']) {
+            $integration->update(['is_connected' => false, 'phone' => null]);
+            return redirect()->route('integrations.show', $integration)->with('success', 'WhatsApp disconnected successfully.');
+        }
+
+        return redirect()->route('integrations.show', $integration)->with('error', 'Failed to disconnect WhatsApp.');
+    }
+
     public function destroy(Integration $integration)
     {
+        if ($integration->type === 'whatsapp') {
+            dispatch(function () use ($integration) {
+                WhatsApp::disconnect($integration->id);
+            });
+        }
+
         $integration->delete();
 
         return redirect()->route('integrations.index')->with('success', 'Integration deleted successfully.');
