@@ -1,4 +1,5 @@
 {
+    "name": "app.herobot.id",
     "private": true,
     "scripts": {
         "dev": "vite",
