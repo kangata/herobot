@@ -37,7 +37,7 @@ To set up the Herobot App locally, follow these steps:
 4. **Start Docker Containers**:
    - Start the Docker containers:
      ```sh
-     docker-compose up -d
+     ./vendor/bin/sail up -d
      ```
 
 5. **Install npm Dependencies**:
