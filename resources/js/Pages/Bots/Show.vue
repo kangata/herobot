@@ -28,7 +28,7 @@
                     <div class="bg-green-500 text-white inline-block py-1 px-2 text-xs rounded mb-2 capitalize">
                         {{ integration.type }}
                     </div>
-                    <div class="font-medium">{{ integration.name }}</div>
+                    <Link :href="route('integrations.show', integration.id)" class="font-medium block">{{ integration.name }}</Link>
                     <div class="text-sm text-gray-500 mt-2">{{ $filters.formatPhoneNumber(integration.phone) || '-' }}</div>
                 </div>
                 <div class="px-6 py-3 flex items-center text-xs">
@@ -49,7 +49,7 @@
             </div>
             <div @click="openIntegrationModal" class="rounded-xl border border-gray-200 flex items-center justify-center cursor-pointer h-44">
                 <PlusIcon class="h-6 w-6 text-gray-400" />
-                <span class="ml-2">Connect new Integration</span>
+                <span class="ml-2">Connect Integration</span>
             </div>
         </div>
 
@@ -76,7 +76,7 @@
             </div>
             <div @click="openKnowledgeModal" class="rounded-xl border border-gray-200 flex items-center justify-center cursor-pointer h-44">
                 <PlusIcon class="h-6 w-6 text-gray-400" />
-                <span class="ml-2">Connect new Knowledge</span>
+                <span class="ml-2">Connect Knowledge</span>
             </div>
         </div>
 
@@ -86,17 +86,27 @@
                 Connect Integration
             </template>
             <template #content>
-                <div v-for="integration in availableIntegrations" :key="integration.id" class="mb-2">
-                    <button 
-                        @click="connectIntegration(integration.id)" 
-                        class="w-full text-left p-2 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                        :disabled="integration.isLoading"
-                    >
-                        {{ integration.isLoading ? 'Connecting...' : `${integration.name} (${$filters.formatPhoneNumber(integration.phone) || '-'})` }}
-                    </button>
-                </div>
-                <div v-if="availableIntegrations.length === 0" class="text-center text-gray-500 py-4">
-                    No available integrations to connect.
+                <div class="space-y-4">
+                    <div v-if="availableIntegrations.length === 0" class="text-center text-gray-500 py-4">
+                        No available integrations to connect.
+                    </div>
+                    <div v-else v-for="integration in availableIntegrations" :key="integration.id" class="mb-2">
+                        <button 
+                            @click="connectIntegration(integration.id)" 
+                            class="w-full text-left p-2 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                            :disabled="integration.isLoading"
+                        >
+                            {{ integration.isLoading ? 'Connecting...' : `${integration.name} (${$filters.formatPhoneNumber(integration.phone) || '-'})` }}
+                        </button>
+                    </div>
+                    <div class="border-t pt-4 mt-4">
+                        <Link :href="route('integrations.create')" class="w-full">
+                            <PrimaryButton class="w-full justify-center">
+                                <PlusIcon class="h-5 w-5 mr-2" />
+                                Create New Integration
+                            </PrimaryButton>
+                        </Link>
+                    </div>
                 </div>
             </template>
             <template #footer>
@@ -112,17 +122,27 @@
                 Connect Knowledge
             </template>
             <template #content>
-                <div v-for="knowledge in availableKnowledge" :key="knowledge.id" class="mb-2">
-                    <button 
-                        @click="connectKnowledge(knowledge.id)" 
-                        class="w-full text-left p-2 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                        :disabled="knowledge.isLoading"
-                    >
-                        {{ knowledge.isLoading ? 'Connecting...' : `${knowledge.name} (${knowledge.type})` }}
-                    </button>
-                </div>
-                <div v-if="availableKnowledge.length === 0" class="text-center text-gray-500 py-4">
-                    No available knowledge to connect.
+                <div class="space-y-4">
+                    <div v-if="availableKnowledge.length === 0" class="text-center text-gray-500 py-4">
+                        No available knowledge to connect.
+                    </div>
+                    <div v-else v-for="knowledge in availableKnowledge" :key="knowledge.id" class="mb-2">
+                        <button 
+                            @click="connectKnowledge(knowledge.id)" 
+                            class="w-full text-left p-2 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                            :disabled="knowledge.isLoading"
+                        >
+                            {{ knowledge.isLoading ? 'Connecting...' : `${knowledge.name} (${knowledge.type})` }}
+                        </button>
+                    </div>
+                    <div class="border-t pt-4 mt-4">
+                        <Link :href="route('knowledges.create')" class="w-full">
+                            <PrimaryButton class="w-full justify-center">
+                                <PlusIcon class="h-5 w-5 mr-2" />
+                                Create New Knowledge
+                            </PrimaryButton>
+                        </Link>
+                    </div>
                 </div>
             </template>
             <template #footer>
@@ -137,6 +157,7 @@
 <script setup>
 import { ref, reactive } from 'vue';
 import { useForm } from '@inertiajs/vue3';
+import { Link } from '@inertiajs/vue3';
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import SecondaryButton from "@/Components/SecondaryButton.vue";
 import AppLayout from "@/Layouts/AppLayout.vue";

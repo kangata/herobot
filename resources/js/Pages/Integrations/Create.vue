@@ -23,7 +23,7 @@
             </div>
 
             <div class="flex flex-row text-right">
-                <SecondaryButton class="mr-2" :href="route('integrations.index')">
+                <SecondaryButton class="mr-2" @click="goBack">
                     Cancel
                 </SecondaryButton>
                 <PrimaryButton :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
@@ -51,5 +51,9 @@ const form = useForm({
 
 const submit = () => {
     form.post(route('integrations.store'));
+};
+
+const goBack = () => {
+    history.back();
 };
 </script>
