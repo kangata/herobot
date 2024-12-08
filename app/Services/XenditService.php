@@ -25,13 +25,12 @@ class XenditService
                 'external_id' => $params['external_id'],
                 'description' => $params['description'], 
                 'amount' => $params['amount'],
-                'invoice_duration' => 172800, // 48 hours
+                'invoice_duration' => 86400, // 24 hours
                 'currency' => 'IDR',
                 'reminder_time' => 1,
                 'payer_email' => $params['payer_email'],
                 'success_redirect_url' => $params['success_redirect_url'],
                 'failure_redirect_url' => $params['failure_redirect_url'],
-                'payment_methods' => ['CREDIT_CARD', 'BCA', 'BNI', 'BSI', 'BRI', 'MANDIRI', 'OVO', 'DANA', 'LINKAJA'],
                 'should_send_email' => true,
                 'customer' => [
                     'email' => $params['payer_email'],

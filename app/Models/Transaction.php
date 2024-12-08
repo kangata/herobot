@@ -18,11 +18,13 @@ class Transaction extends Model
         'payment_id',
         'payment_method',
         'external_id',
-        'payment_details'
+        'payment_details',
+        'expired_at',
     ];
 
     protected $casts = [
-        'payment_details' => 'array'
+        'payment_details' => 'array',
+        'expired_at' => 'datetime',
     ];
 
     public function team()

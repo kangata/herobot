@@ -10,6 +10,10 @@ defineProps({
     type: String,
     default: null,
   },
+  target: {
+    type: String,
+    default: null,
+  },
 });
 
 const buttonClass = 'inline-flex justify-center rounded-lg text-sm font-semibold py-2.5 px-4 bg-indigo-600 text-white hover:bg-indigo-500';
@@ -17,7 +21,10 @@ const buttonClass = 'inline-flex justify-center rounded-lg text-sm font-semibold
 
 <template>
   <template v-if="href">
-    <Link :href="href" :class="buttonClass">
+    <a v-if="target" :href="href" :target="target" :class="buttonClass">
+      <slot />
+    </a>
+    <Link v-else :href="href" :class="buttonClass">
       <slot />
     </Link>
   </template>

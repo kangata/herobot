@@ -25,21 +25,23 @@ class BillingController extends Controller
         $balance = $team->balance;
         $transactions = $team->transactions()
             ->latest()
-            ->where('status', '!=', 'pending')
             ->take(10)
             ->get()
             ->map(function ($transaction) {
+                $currentStatus = $this->determineStatus($transaction);
+                
                 return [
                     'id' => $transaction->id,
                     'created_at' => $transaction->created_at,
                     'amount' => $transaction->amount,
                     'type' => $transaction->type,
                     'description' => $transaction->description,
-                    'status' => $transaction->status,
+                    'status' => $currentStatus,
                     'payment_method' => $transaction->payment_method,
                     'payment_details' => $transaction->payment_details,
-                    'formatted_status' => ucfirst($transaction->status),
-                    'status_color' => $this->getStatusColor($transaction->status),
+                    'expired_at' => $transaction->expired_at,
+                    'formatted_status' => ucfirst($currentStatus),
+                    'status_color' => $this->getStatusColor($currentStatus),
                     'formatted_type' => ucfirst($transaction->type),
                     'type_color' => $this->getTypeColor($transaction->type),
                 ];
@@ -61,8 +63,19 @@ class BillingController extends Controller
             'completed' => 'green',
             'pending' => 'yellow',
             'failed' => 'red',
+            'expired' => 'gray',
             default => 'gray'
         };
+    }
+
+    private function determineStatus($transaction)
+    {
+        if ($transaction->status === 'pending' && 
+            $transaction->expired_at && 
+            now()->isAfter($transaction->expired_at)) {
+            return 'expired';
+        }
+        return $transaction->status;
     }
 
     private function getTypeColor($type)
@@ -108,7 +121,8 @@ class BillingController extends Controller
             
             $transaction->update([
                 'payment_id' => $invoice['id'],
-                'payment_details' => json_encode($invoice),
+                'payment_details' => $invoice,
+                'expired_at' => isset($invoice['expiry_date']) ? $invoice['expiry_date'] : null,
             ]);
 
             return Inertia::location($invoice['invoice_url']);
@@ -162,30 +176,48 @@ class BillingController extends Controller
         Log::info('Xendit webhook received', $payload);
 
         // Handle direct invoice payment notification
-        if (isset($payload['status']) && $payload['status'] === 'PAID') {
+        if (isset($payload['status'])) {
             try {
                 DB::transaction(function () use ($payload) {
                     $transaction = Transaction::where('external_id', $payload['external_id'])
                         ->where('status', 'pending')
-                        ->firstOrFail();
+                        ->first();
 
-                    $transaction->update([
-                        'status' => 'completed',
-                        'payment_method' => $payload['payment_method'],
-                        'payment_details' => json_encode($payload)
-                    ]);
+                    if (!$transaction) {
+                        Log::info('Transaction not found or not in pending status', [
+                            'external_id' => $payload['external_id']
+                        ]);
+                        return;
+                    }
 
-                    $balance = Balance::firstOrCreate(
-                        ['team_id' => $transaction->team_id],
-                        ['amount' => 0]
-                    );
-                    $balance->amount += $payload['amount'];
-                    $balance->save();
+                    // Check if transaction is expired
+                    if ($transaction->expired_at && now()->isAfter($transaction->expired_at)) {
+                        $transaction->update(['status' => 'expired']);
+                        Log::info('Transaction marked as expired', [
+                            'transaction_id' => $transaction->id
+                        ]);
+                        return;
+                    }
 
-                    Log::info('Successfully processed Xendit payment', [
-                        'transaction_id' => $transaction->id,
-                        'amount' => $payload['amount']
-                    ]);
+                    if ($payload['status'] === 'PAID') {
+                        $transaction->update([
+                            'status' => 'completed',
+                            'payment_method' => $payload['payment_method'],
+                            'payment_details' => array_merge($transaction->payment_details ?? [], $payload)
+                        ]);
+
+                        $balance = Balance::firstOrCreate(
+                            ['team_id' => $transaction->team_id],
+                            ['amount' => 0]
+                        );
+                        $balance->amount += $payload['amount'];
+                        $balance->save();
+
+                        Log::info('Successfully processed Xendit payment', [
+                            'transaction_id' => $transaction->id,
+                            'amount' => $payload['amount']
+                        ]);
+                    }
                 });
             } catch (\Exception $e) {
                 Log::error('Error processing Xendit webhook', [
