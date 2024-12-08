@@ -22,7 +22,7 @@ const qrCodes = new Map()
 
 const storagePath = process.argv[2] || path.join(__dirname, 'auth_info_baileys');
 
-const LARAVEL_API_URL = process.env.WHATSAPP_LARAVEL_URL || 'http://localhost:80';
+const LARAVEL_API_URL = process.env.WHATSAPP_LARAVEL_URL || 'http://localhost';
 const WHATSAPP_SERVER_TOKEN = process.env.WHATSAPP_SERVER_TOKEN;
 
 async function startAllConnections() {
@@ -160,13 +160,15 @@ async function handleIncomingMessage(sock, integrationId, m) {
             sender,
             message: messageContent
         });
-        console.log('Response:', responseData.response);
+        console.log('Response:', responseData);
 
-        // Stop typing indicator
-        await sock.sendPresenceUpdate('paused', sender)
+        if (responseData.response) {
+            // Stop typing indicator
+            await sock.sendPresenceUpdate('paused', sender)
 
-        // Send the response back to the sender
-        await sock.sendMessage(sender, { text: responseData.response })
+            // Send the response back to the sender
+            await sock.sendMessage(sender, { text: responseData.response })
+        }
     } catch (error) {
         console.error('Failed to handle incoming message:', error)
     }

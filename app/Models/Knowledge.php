@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Knowledge extends Model
 {
@@ -13,11 +14,12 @@ class Knowledge extends Model
         'team_id',
         'name',
         'type',
-        'qa',
         'text',
+        'qa',
         'filepath',
         'filename',
         'size',
+        'status'
     ];
 
     protected $casts = [
@@ -31,6 +33,11 @@ class Knowledge extends Model
         static::addGlobalScope('order', function ($builder) {
             $builder->orderBy('created_at', 'desc');
         });
+    }
+
+    public function vectors(): HasMany
+    {
+        return $this->hasMany(KnowledgeVector::class);
     }
 
     public function team()

@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('filepath')->nullable();
             $table->string('filename')->nullable();
             $table->unsignedBigInteger('size')->nullable();
+            $table->enum('status', ['pending', 'indexing', 'completed', 'failed'])->default('pending');
             $table->timestamps();
         });
         

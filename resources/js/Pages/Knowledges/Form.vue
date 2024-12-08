@@ -24,14 +24,8 @@
           <legend class="sr-only">Type</legend>
           <div class="space-y-4 sm:flex sm:items-center sm:space-x-10 sm:space-y-0">
             <div v-for="item in knowledgeTypes" :key="item.id" class="flex items-center">
-              <input
-                :id="item.id"
-                v-model="form.type"
-                :value="item.id"
-                name="type"
-                type="radio"
-                class="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600"
-              />
+              <input :id="item.id" v-model="form.type" :value="item.id" name="type" type="radio"
+                class="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600" />
               <label :for="item.id" class="ml-3 block text-sm font-medium leading-6 text-gray-900">
                 {{ item.title }}
               </label>
@@ -44,7 +38,24 @@
       <div class="mb-6">
         <InputLabel for="data" value="Data" />
         <TextArea id="data" v-model="form.text" type="text" required />
-        <InputError class="mt-2" :message="form.errors.text" />
+        <InputError :message="form.errors.text" class="mt-2" />
+
+      <!-- Status Badge (for edit mode) -->
+      <div class="mt-6" v-if="knowledge && knowledge.status">
+        <InputLabel value="Indexing Status" />
+
+        <p class="mt-2 text-sm text-gray-500">
+          This content will be automatically split and indexed for better search results.
+        </p>
+
+        <div class="mt-1">
+          <StatusBadge :status="knowledge.status" />
+          <span v-if="knowledge.status === 'failed'" class="ml-2 text-sm text-red-600">
+            Indexing failed. The content will be re-indexed when you save changes.
+          </span>
+        </div>
+      </div>
+
       </div>
 
       <div class="flex flex-row text-right items-center">
@@ -68,6 +79,7 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import TextArea from '@/Components/TextArea.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
 
 const props = defineProps({
   knowledge: {

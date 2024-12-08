@@ -6,10 +6,10 @@
                 <Link :href="route('knowledges.edit', knowledge.id)"
                     class="text-white text-center w-full h-32 align-middle justify-center flex flex-col items-center"
                     :class="knowledgeIcons[knowledge.type].class">
-                <component :is="knowledgeIcons[knowledge.type].icon" class="h-6 w-6" />
-                <span class="capitalize mt-2">
-                    {{ knowledgeIcons[knowledge.type].text }}
-                </span>
+                    <component :is="knowledgeIcons[knowledge.type].icon" class="h-6 w-6" />
+                    <span class="capitalize mt-2">
+                        {{ knowledgeIcons[knowledge.type].text }}
+                    </span>
                 </Link>
                 <div class="absolute top-4 right-4">
                     <Menu as="div" class="relative ml-auto">
@@ -26,21 +26,25 @@
                             <MenuItems
                                 class="absolute right-0 z-10 mt-0.5 w-32 origin-top-right rounded-md bg-white py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none">
                                 <MenuItem v-slot="{ active }">
-                                <Link :href="route('knowledges.edit', knowledge.id)"
-                                    :class="[active ? 'bg-gray-50' : '', 'block px-3 py-1 text-sm leading-6 text-gray-900']">
-                                Edit</Link>
+                                    <Link :href="route('knowledges.edit', knowledge.id)"
+                                        :class="[active ? 'bg-gray-50' : '', 'block px-3 py-1 text-sm leading-6 text-gray-900']">
+                                    Edit</Link>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
-                                <a @click="showDeleteConfirmation(knowledge.id)"
-                                    :class="[active ? 'bg-gray-50' : '', 'cursor-pointer block px-3 py-1 text-sm leading-6 text-red-500']">Delete</a>
+                                    <a @click="showDeleteConfirmation(knowledge.id)"
+                                        :class="[active ? 'bg-gray-50' : '', 'cursor-pointer block px-3 py-1 text-sm leading-6 text-red-500']">Delete</a>
                                 </MenuItem>
                             </MenuItems>
                         </transition>
                     </Menu>
                 </div>
                 <div class="items-center gap-x-4 p-6">
-                    <Link :href="route('knowledges.edit', knowledge.id)" class="font-medium leading-6 text-gray-900">{{
-                        knowledge.name }}</Link>
+                    <div class="flex items-center justify-between mb-2">
+                        <Link :href="route('knowledges.edit', knowledge.id)" class="font-medium leading-6 text-gray-900">
+                            {{ knowledge.name }}
+                        </Link>
+                        <StatusBadge :status="knowledge.status" />
+                    </div>
                     <div class="flex w-full text-sm leading-5 text-gray-500">
                         <span class="flex-grow">{{ $filters.formatDate(knowledge.created_at) }}</span>
                     </div>
@@ -96,6 +100,7 @@ import ConfirmationModal from '@/Components/ConfirmationModal.vue';
 import DangerButton from '@/Components/DangerButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
 import { ChatBubbleLeftIcon, DocumentTextIcon, PaperClipIcon } from '@heroicons/vue/24/outline';
 
 const props = defineProps({

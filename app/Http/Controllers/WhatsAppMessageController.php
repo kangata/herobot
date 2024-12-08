@@ -4,12 +4,20 @@ namespace App\Http\Controllers;
 
 use App\Models\Integration;
 use App\Models\ChatHistory;
+use App\Services\OpenAIService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class WhatsAppMessageController extends Controller
 {
+    protected $openAIService;
+
+    public function __construct(OpenAIService $openAIService)
+    {
+        $this->openAIService = $openAIService;
+    }
+
     public function handleIncomingMessage(Request $request)
     {
         $integrationId = $request->input('integrationId');
@@ -47,8 +55,20 @@ class WhatsAppMessageController extends Controller
             'model' => $model
         ] = config('services.openrouter');
 
+        // Find the most relevant knowledge using vector similarity
+        $relevantKnowledge = $this->openAIService->searchSimilarKnowledge($message, $bot, 3);
+
+        $systemPrompt = "You are a helpful assistant for {$bot->name}. ";
+        
+        if ($relevantKnowledge->isNotEmpty()) {
+            $systemPrompt .= "Use the following relevant knowledge to answer the user's question. If the knowledge doesn't help answer the question, use your general knowledge:\n\n";
+            foreach ($relevantKnowledge as $knowledge) {
+                $systemPrompt .= "--- {$knowledge['knowledge_name']} ---\n{$knowledge['text']}\n\n";
+            }
+        }
+
         $messages = [
-            ['role' => 'system', 'content' => "You are a helpful assistant for {$bot->name}. Use the following knowledge to answer questions: " . json_encode($bot->knowledge->pluck('text'))],
+            ['role' => 'system', 'content' => $systemPrompt],
             ...$chatHistory->map(function ($ch) {
                 return [
                     ['role' => 'user', 'content' => $ch->message],
