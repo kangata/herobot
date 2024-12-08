@@ -92,8 +92,8 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { Link, useForm } from '@inertiajs/vue3';
+import { ref, onMounted, onUnmounted } from 'vue';
+import { Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue'
 import { PlusIcon, EllipsisHorizontalIcon } from '@heroicons/vue/20/solid'
 import ConfirmationModal from '@/Components/ConfirmationModal.vue';
@@ -116,6 +116,7 @@ const knowledgeIcons = {
     file: { icon: PaperClipIcon, text: 'File', class: 'bg-yellow-600' },
 };
 
+const teamId = usePage().props.auth.user.current_team_id;
 const confirmingknowledgeDeletion = ref(false);
 const formDelete = useForm({});
 const knowledgeToDelete = ref(null);
@@ -132,4 +133,23 @@ const deleteKnowledge = () => {
         }
     });
 };
+
+const setupEchoListener = () => {
+    Echo.private(`team.${teamId}.knowledges`)
+        .listen('KnowledgeUpdated', (e) => {
+            router.reload({
+                only: [
+                    'knowledges'
+                ]
+            });
+        });
+}
+
+onMounted(() => {
+    setupEchoListener();
+});
+
+onUnmounted(() => {
+    Echo.leave(`team.${teamId}.knowledges`);
+});
 </script>

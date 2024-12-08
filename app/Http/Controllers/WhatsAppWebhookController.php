@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Integration;
 use App\Events\IntegrationUpdated;
-use App\Events\QrCodeUpdated;
 use Illuminate\Http\Request;
 
 class WhatsAppWebhookController extends Controller

@@ -6,6 +6,7 @@ use App\Models\Knowledge;
 use App\Models\Bot;
 use App\Services\KnowledgeService;
 use App\Jobs\IndexKnowledgeJob;
+use App\Events\KnowledgeUpdated;
 use Illuminate\Http\Request;
 
 class KnowledgeController extends Controller
@@ -26,7 +27,7 @@ class KnowledgeController extends Controller
             ->get();
 
         return inertia('Knowledges/Index', [
-            'knowledges' => $knowledges
+            'knowledges' => $knowledges,
         ]);
     }
 
@@ -68,6 +69,8 @@ class KnowledgeController extends Controller
             return redirect()->route('bots.show', $bot)->with('success', 'Knowledge created and indexing started.');
         }
 
+        broadcast(new KnowledgeUpdated($knowledge))->toOthers();
+
         return redirect()->route('knowledges.index')->with('success', 'Knowledge created and indexing started.');
     }
 
@@ -95,6 +98,9 @@ class KnowledgeController extends Controller
 
         // Dispatch the indexing job
         IndexKnowledgeJob::dispatch($knowledge);
+
+        // Broadcast the update event
+        broadcast(new KnowledgeUpdated($knowledge))->toOthers();
 
         return redirect()->route('knowledges.index')->with('success', 'Knowledge updated and re-indexing started.');
     }

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\KnowledgeUpdated;
 use App\Models\Knowledge;
 use Illuminate\Support\Facades\Log;
 
@@ -38,6 +39,8 @@ class KnowledgeService
 
             // Update status to completed
             $knowledge->update(['status' => 'completed']);
+
+            KnowledgeUpdated::dispatch($knowledge);
 
             return true;
         } catch (\Exception $e) {
