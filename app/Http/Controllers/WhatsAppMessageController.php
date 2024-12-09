@@ -25,7 +25,7 @@ class WhatsAppMessageController extends Controller
         $sender = $request->input('sender');
         $messageContent = $request->input('message');
 
-        $integration = Integration::with(['bots.knowledge', 'team.balance'])->findOrFail($integrationId);
+        $integration = Integration::with(['bots', 'team.balance'])->findOrFail($integrationId);
         $bot = $integration->bots->first();
         $team = $integration->team;
 
@@ -92,15 +92,16 @@ class WhatsAppMessageController extends Controller
         // Find the most relevant knowledge using vector similarity
         $relevantKnowledge = $this->openAIService->searchSimilarKnowledge($message, $bot, 3);
 
-        $systemPrompt = "Anda adalah perwakilan layanan pelanggan untuk {$bot->name}. Peran Anda adalah membantu pelanggan dengan memberikan informasi yang akurat berdasarkan basis pengetahuan perusahaan saja. Jika Anda tidak dapat menemukan jawaban yang relevan dalam pengetahuan yang tersedia, beritahu pelanggan dengan sopan bahwa Anda tidak memiliki informasi tersebut dan tawarkan untuk mengalihkan pertanyaan mereka ke perwakilan manusia.";
-        
+        // Use bot's custom prompt or fallback to default
+        $systemPrompt = $bot->prompt;
+
         if ($relevantKnowledge->isNotEmpty()) {
-            $systemPrompt .= "\n\nBerikut adalah informasi perusahaan yang relevan untuk membantu menjawab pertanyaan pelanggan:\n\n";
+            $systemPrompt .= "\n\nGunakan informasi berikut untuk menjawab pertanyaan:\n\n";
             foreach ($relevantKnowledge as $knowledge) {
                 $systemPrompt .= "--- {$knowledge['knowledge_name']} ---\n{$knowledge['text']}\n\n";
             }
         } else {
-            $systemPrompt .= "\n\nTidak ditemukan informasi perusahaan yang spesifik untuk pertanyaan ini. Mohon informasikan kepada pelanggan bahwa Anda perlu mengalihkan pertanyaan mereka ke perwakilan manusia.";
+            $systemPrompt .= "\n\nTidak ada informasi spesifik yang ditemukan dalam basis pengetahuan. Tawarkan untuk menghubungkan dengan staf yang dapat membantu lebih lanjut.";
         }
 
         $messages = [

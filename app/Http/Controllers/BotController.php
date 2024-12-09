@@ -35,12 +35,14 @@ class BotController extends Controller
         $validatedData = $request->validate([
             'name' => 'required',
             'description' => 'required',
+            'prompt' => 'required|string',
         ]);
 
         $bot = Bot::create([
             'team_id' => $request->user()->currentTeam->id,
             'name' => $validatedData['name'],
             'description' => $validatedData['description'],
+            'prompt' => $validatedData['prompt'],
         ]);
 
         return redirect()->route('bots.show', $bot)->with('success', 'Bot created successfully.');
@@ -77,11 +79,13 @@ class BotController extends Controller
         $validatedData = $request->validate([
             'name' => 'required',
             'description' => 'required',
+            'prompt' => 'required|string',
         ]);
 
         $bot->update([
             'name' => $validatedData['name'],
             'description' => $validatedData['description'],
+            'prompt' => $validatedData['prompt'],
         ]);
 
         return redirect()->route('bots.show', $bot)->with('success', 'Bot updated successfully.');

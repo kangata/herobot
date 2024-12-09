@@ -15,6 +15,12 @@
             </div>
         </div>
 
+        <hr />
+
+        <div class="my-4 rounded-lg border border-gray-200 p-4 bg-gray-50">
+            <p class="text-sm text-gray-700">{{ bot.prompt }}</p>
+        </div>
+
         <hr class="mb-4" />
 
         <!-- Integration Status -->

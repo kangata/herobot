@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use App\Models\Bot;
 
 return new class extends Migration
 {
@@ -18,6 +19,7 @@ return new class extends Migration
             $table->foreignId('team_id')->constrained();
             $table->string('name');
             $table->text('description');
+            $table->text('prompt')->default(Bot::DEFAULT_PROMPT);
             $table->timestamps();
             $table->softDeletes();
         });
