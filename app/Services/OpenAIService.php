@@ -17,7 +17,7 @@ class OpenAIService
         $this->model = config('services.openai.model', 'gpt-3.5-turbo');
     }
 
-    public function splitTextIntoChunks($text, $maxChunkSize = 150)
+    public function splitTextIntoChunks($text, $maxChunkSize = 500)
     {
         $sentences = preg_split('/(?<=[.!?])\s+/', $text, -1, PREG_SPLIT_NO_EMPTY);
         $chunks = [];

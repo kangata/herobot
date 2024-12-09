@@ -162,12 +162,14 @@ async function handleIncomingMessage(sock, integrationId, m) {
         });
         console.log('Response:', responseData);
 
-        if (responseData.response) {
-            // Stop typing indicator
-            await sock.sendPresenceUpdate('paused', sender)
+        // Stop typing indicator
+        await sock.sendPresenceUpdate('paused', sender)
 
-            // Send the response back to the sender
+        // Send the response back to the sender
+        if (responseData.response) {
             await sock.sendMessage(sender, { text: responseData.response })
+        } else {
+            await sock.sendMessage(sender, { text: 'Terjadi kesalahan! Silakan coba lagi nanti.' })
         }
     } catch (error) {
         console.error('Failed to handle incoming message:', error)

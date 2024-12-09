@@ -48,7 +48,7 @@ return [
 
     'openrouter' => [
         'api_key' => env('OPENROUTER_API_KEY'),
-        'model' => env('OPENROUTER_MODEL', 'google/gemini-flash-1.5-exp'),
+        'model' => env('OPENROUTER_MODEL', 'google/gemini-flash-1.5-8b'),
     ],
 
 ];

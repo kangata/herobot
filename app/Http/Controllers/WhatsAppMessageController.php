@@ -8,6 +8,7 @@ use App\Services\OpenAIService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Models\Transaction;
 
 class WhatsAppMessageController extends Controller
 {
@@ -24,12 +25,23 @@ class WhatsAppMessageController extends Controller
         $sender = $request->input('sender');
         $messageContent = $request->input('message');
 
-        $integration = Integration::with(['bots.knowledge'])->findOrFail($integrationId);
+        $integration = Integration::with(['bots.knowledge', 'team.balance'])->findOrFail($integrationId);
         $bot = $integration->bots->first();
+        $team = $integration->team;
 
         if (!$bot) {
             return response()->json(['error' => 'No bot found for this integration'], 404);
         }
+
+        // Check if team has enough credits (150 per response)
+        if ($team->balance->amount < 150) {
+            return response()->json(['error' => 'Insufficient credits. Please top up your credits to continue using the service.'], 402);
+        }
+
+        // Get latest transaction
+        $latestTransaction = Transaction::where('team_id', $team->id)
+            ->latest()
+            ->first();
 
         $chatHistory = ChatHistory::where('integration_id', $integrationId)
             ->where('sender', $sender)
@@ -40,6 +52,28 @@ class WhatsAppMessageController extends Controller
             ->values();
 
         $response = $this->generateResponse($bot, $messageContent, $chatHistory);
+
+        // Create or update transaction record
+        if ($latestTransaction && $latestTransaction->type == 'usage' && $latestTransaction->created_at->isToday()) {
+            // Update existing transaction for today
+            $totalResponses = ($latestTransaction->amount / 150) + 1;
+            $latestTransaction->update([
+                'amount' => $latestTransaction->amount + 150,
+                'description' => 'AI Response Credits Usage (Total responses: ' . $totalResponses . ')'
+            ]);
+        } else {
+            // Create new transaction
+            Transaction::create([
+                'team_id' => $team->id,
+                'amount' => 150,
+                'type' => 'usage',
+                'description' => 'AI Response Credits Usage (Total responses: 1)',
+                'status' => 'completed'
+            ]);
+        }
+
+        // Deduct credits from team's balance
+        $team->balance->decrement('amount', 150);
 
         $this->saveChatHistory($integrationId, $sender, $messageContent, $response);
 
@@ -58,13 +92,15 @@ class WhatsAppMessageController extends Controller
         // Find the most relevant knowledge using vector similarity
         $relevantKnowledge = $this->openAIService->searchSimilarKnowledge($message, $bot, 3);
 
-        $systemPrompt = "You are a helpful assistant for {$bot->name}. ";
+        $systemPrompt = "Anda adalah perwakilan layanan pelanggan untuk {$bot->name}. Peran Anda adalah membantu pelanggan dengan memberikan informasi yang akurat berdasarkan basis pengetahuan perusahaan saja. Jika Anda tidak dapat menemukan jawaban yang relevan dalam pengetahuan yang tersedia, beritahu pelanggan dengan sopan bahwa Anda tidak memiliki informasi tersebut dan tawarkan untuk mengalihkan pertanyaan mereka ke perwakilan manusia.";
         
         if ($relevantKnowledge->isNotEmpty()) {
-            $systemPrompt .= "Use the following relevant knowledge to answer the user's question. If the knowledge doesn't help answer the question, use your general knowledge:\n\n";
+            $systemPrompt .= "\n\nBerikut adalah informasi perusahaan yang relevan untuk membantu menjawab pertanyaan pelanggan:\n\n";
             foreach ($relevantKnowledge as $knowledge) {
                 $systemPrompt .= "--- {$knowledge['knowledge_name']} ---\n{$knowledge['text']}\n\n";
             }
+        } else {
+            $systemPrompt .= "\n\nTidak ditemukan informasi perusahaan yang spesifik untuk pertanyaan ini. Mohon informasikan kepada pelanggan bahwa Anda perlu mengalihkan pertanyaan mereka ke perwakilan manusia.";
         }
 
         $messages = [
@@ -87,9 +123,7 @@ class WhatsAppMessageController extends Controller
             ])->post('https://openrouter.ai/api/v1/chat/completions', [
                 'model' => $model,
                 'messages' => $messages
-            ]);
-
-            $response = $response->json()['choices'][0]['message']['content'];
+            ])->json();
 
             Log::info('OpenRouter: ' . json_encode([
                 'model' => $model,
@@ -97,13 +131,16 @@ class WhatsAppMessageController extends Controller
                 'response' => $response,
             ]));
 
+            $response = $response['choices'][0]['message']['content'];
+
             // Convert markdown to WhatsApp formatting
             $response = $this->convertMarkdownToWhatsApp($response);
 
             return $response;
         } catch (\Exception $e) {
             Log::error('Failed to generate response: ' . $e->getMessage());
-            return "I'm sorry, I couldn't generate a response at the moment. Please try again later.";
+
+            return false;
         }
     }
 
