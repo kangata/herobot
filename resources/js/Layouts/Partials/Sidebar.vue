@@ -175,7 +175,7 @@ import BotIcon from '@/Assets/Icons/BotIcon.svg';
 const page = usePage();
 
 const navigation = [
-    // { name: 'Dashboard', href: route('dashboard'), icon: HomeIcon, current: route().current('dashboard') },
+    { name: 'Dashboard', href: route('dashboard'), icon: HomeIcon, current: route().current('dashboard') },
     { name: 'Bot Management', href: route('bots.index'), icon: BotIcon, current: route().current('bots*') },
     { name: 'Knowledge', href: route('knowledges.index'), icon: DocumentDuplicateIcon, current: route().current('knowledges*') },
     // { name: 'Reports', href: route('reports'), icon: ChartPieIcon, current: route().current('reports*') },
