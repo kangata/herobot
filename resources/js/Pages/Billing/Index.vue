@@ -65,7 +65,7 @@
                                 :class="{ 'bg-indigo-50 border-indigo-500 ring-2 ring-indigo-500': form.amount === amount }"
                                 @click="form.amount = amount">
                                 <div class="font-semibold">Rp {{ amount.toLocaleString('id-ID') }}</div>
-                                <div class="text-sm text-gray-500">{{ formatCredits(amount) }}</div>
+                                <div class="text-sm text-gray-500">{{ amount.toLocaleString('id-ID') }} credits</div>
                             </button>
                         </div>
                         <InputError :message="form.errors.amount" class="mt-2" />
@@ -183,10 +183,6 @@ const formatDate = (date) => {
         hour: '2-digit',
         minute: '2-digit'
     });
-};
-
-const formatCredits = (amount) => {
-    return `${amount.toLocaleString('en-US')} credits`;
 };
 
 // Add these new refs
