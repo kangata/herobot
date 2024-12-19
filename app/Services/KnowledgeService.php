@@ -27,13 +27,17 @@ class KnowledgeService
             // Delete existing vectors
             $knowledge->vectors()->delete();
 
-            // Create embeddings for each chunk and store them
-            foreach ($chunks as $chunk) {
-                $vector = $this->openAIService->createEmbedding($chunk);
-                
+            // Extract all texts for batch processing
+            $texts = array_column($chunks, 'content');
+            
+            // Create embeddings for all chunks at once
+            $vectors = $this->openAIService->createEmbedding($texts);
+
+            // Create vector records for each chunk with its corresponding embedding
+            foreach ($chunks as $index => $chunk) {
                 $knowledge->vectors()->create([
-                    'text' => $chunk,
-                    'vector' => $vector
+                    'text' => $chunk['content'],
+                    'vector' => $vectors[$index]
                 ]);
             }
 
