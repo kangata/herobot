@@ -4,7 +4,6 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 
 class OpenAIService
 {
@@ -15,6 +14,11 @@ class OpenAIService
     {
         $this->apiKey = config('services.openai.api_key');
         $this->model = config('services.openai.model', 'gpt-3.5-turbo');
+        
+        // Check if the C extension is available
+        if (!function_exists('fast_cosine_similarity')) {
+            Log::warning('Vector search C extension not available. Using PHP implementation.');
+        }
     }
 
     public function splitTextIntoChunks($text, $maxChunkSize = 800)
@@ -140,7 +144,7 @@ class OpenAIService
                     return $knowledge->vectors->map(function ($vector) use ($queryEmbedding) {
                         return [
                             'text' => $vector->text,
-                            'similarity' => $this->cosineSimilarity($queryEmbedding, $vector->vector)
+                            'similarity' => $this->calculateSimilarity($queryEmbedding, $vector->vector),
                         ];
                     });
                 });
@@ -156,7 +160,17 @@ class OpenAIService
         }
     }
 
-    private function cosineSimilarity($vector1, $vector2)
+    private function calculateSimilarity($vector1, $vector2)
+    {
+        if (function_exists('fast_cosine_similarity')) {
+            return fast_cosine_similarity($vector1, $vector2);
+        }
+        
+        // Fallback to PHP implementation
+        return $this->cosineSimilarity($vector1, $vector2);
+    }
+
+    public function cosineSimilarity($vector1, $vector2)
     {
         $dotProduct = 0;
         $norm1 = 0;
