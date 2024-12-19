@@ -33,6 +33,7 @@ class BillingController extends Controller
                 return [
                     'id' => $transaction->id,
                     'created_at' => $transaction->created_at,
+                    'updated_at' => $transaction->updated_at,
                     'amount' => $transaction->amount,
                     'type' => $transaction->type,
                     'description' => $transaction->description,
