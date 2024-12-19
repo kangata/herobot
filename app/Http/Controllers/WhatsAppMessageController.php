@@ -98,7 +98,7 @@ class WhatsAppMessageController extends Controller
         if ($relevantKnowledge->isNotEmpty()) {
             $systemPrompt .= "\n\nGunakan informasi berikut untuk menjawab pertanyaan:\n\n";
             foreach ($relevantKnowledge as $knowledge) {
-                $systemPrompt .= "--- {$knowledge['knowledge_name']} ---\n{$knowledge['text']}\n\n";
+                $systemPrompt .= "{$knowledge['text']}\n\n";
             }
         } else {
             $systemPrompt .= "\n\nTidak ada informasi spesifik yang ditemukan dalam basis pengetahuan. Tawarkan untuk menghubungkan dengan staf yang dapat membantu lebih lanjut.";
@@ -148,7 +148,7 @@ class WhatsAppMessageController extends Controller
     private function convertMarkdownToWhatsApp($text)
     {
         // Convert italic: *text* or _text_ to _text_
-        $text = preg_replace('/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)|_(.+?)_/', '_$1$2_', $text);
+        $text = preg_replace('/(?<!\*)\*(?!\*)(\S+?)(?<!\*)\*(?!\*)|_(\S+?)_/', '_$1$2_', $text);
 
         // Convert bold: **text** or __text__ to *text*
         $text = preg_replace('/(\*\*|__)(.*?)\1/', '*$2*', $text);
