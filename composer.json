@@ -6,7 +6,7 @@
     "keywords": ["herobot"],
     "license": "MIT",
     "require": {
-        "php": "^8.0.2",
+        "php": "^8.4",
         "guzzlehttp/guzzle": "^7.2",
         "inertiajs/inertia-laravel": "^1.0",
         "laravel/framework": "^12.0",
