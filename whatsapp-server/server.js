@@ -1,9 +1,8 @@
-const { default: makeWASocket, DisconnectReason, useMultiFileAuthState } = require('@whiskeysockets/baileys')
+const { default: makeWASocket, DisconnectReason, makeCacheableSignalKeyStore } = require('@whiskeysockets/baileys')
+const { useMySQLAuthState } = require('mysql-baileys')
 const express = require('express')
 const { Boom } = require('@hapi/boom')
 const qrcode = require('qrcode')
-const fs = require('fs')
-const path = require('path')
 const pino = require('pino')
 const dotenv = require('dotenv');
 dotenv.config();
@@ -19,50 +18,95 @@ app.use(express.json())
 
 const connections = new Map()
 const qrCodes = new Map()
-
-const storagePath = process.argv[2] || path.join(__dirname, 'auth_info_baileys');
+const credsSavers = new Map() // Store saveCreds and removeCreds functions
 
 const LARAVEL_API_URL = process.env.WHATSAPP_LARAVEL_URL || 'http://localhost';
 const WHATSAPP_SERVER_TOKEN = process.env.WHATSAPP_SERVER_TOKEN;
 
+// MySQL configuration from environment variables
+const MYSQL_CONFIG = {
+    host: process.env.WA_DB_HOST || 'localhost',
+    port: parseInt(process.env.WA_DB_PORT) || 3306,
+    user: process.env.WA_DB_USER || 'root',
+    password: process.env.WA_DB_PASSWORD,
+    database: process.env.WA_DB_DATABASE || 'whatsapp',
+    tableName: process.env.WA_DB_TABLE_NAME || 'auth',
+    retryRequestDelayMs: parseInt(process.env.WA_DB_RETRY_DELAY) || 200,
+    maxtRetries: parseInt(process.env.WA_DB_MAX_RETRIES) || 10
+};
+
 async function startAllConnections() {
-    if (!fs.existsSync(storagePath)) {
-        console.log('Storage path does not exist. No connections to start.');
-        return;
-    }
+    console.log('MySQL-based authentication initialized. Checking for existing sessions...');
+    
+    try {
+        // Get all existing sessions from MySQL
+        const mysql = require('mysql2/promise');
+        const connection = await mysql.createConnection({
+            host: MYSQL_CONFIG.host,
+            port: MYSQL_CONFIG.port,
+            user: MYSQL_CONFIG.user,
+            password: MYSQL_CONFIG.password,
+            database: MYSQL_CONFIG.database
+        });
 
-    const integrationFolders = fs.readdirSync(storagePath, { withFileTypes: true })
-        .filter(dirent => dirent.isDirectory())
-        .map(dirent => dirent.name);
+        // Create auth table if it doesn't exist
+        const tableName = MYSQL_CONFIG.tableName;
 
-    console.log(`Found ${integrationFolders.length} integration folders. Starting connections...`);
+        await connection.execute(
+            'CREATE TABLE IF NOT EXISTS `' + tableName + '` (`session` varchar(50) NOT NULL, `id` varchar(80) NOT NULL, `value` json DEFAULT NULL, UNIQUE KEY `idxunique` (`session`,`id`), KEY `idxsession` (`session`), KEY `idxid` (`id`)) ENGINE=MyISAM;'
+        );
 
-    for (const integrationId of integrationFolders) {
-        try {
-            await connectionPool.getConnection(integrationId);
-            console.log(`Started connection for integration: ${integrationId}`);
-        } catch (error) {
-            console.error(`Failed to start connection for integration ${integrationId}:`, error);
+        const [rows] = await connection.execute(
+            `SELECT DISTINCT session FROM ${tableName} WHERE session IS NOT NULL AND session != ''`
+        );
+
+        await connection.end();
+
+        if (rows.length > 0) {
+            console.log(`Found ${rows.length} existing sessions. Starting connections...`);
+            
+            for (const row of rows) {
+                const sessionId = row.session;
+                try {
+                    // Start connection for each existing session
+                    await connectionPool.getConnection(sessionId);
+                    console.log(`Started connection for existing session: ${sessionId}`);
+                    
+                    // Add a small delay between connections to avoid overwhelming the system
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                } catch (error) {
+                    console.error(`Failed to start connection for session ${sessionId}:`, error);
+                }
+            }
+        } else {
+            console.log('No existing sessions found in database.');
         }
+    } catch (error) {
+        console.error('Failed to check for existing sessions:', error);
+        console.log('Continuing with on-demand connection startup...');
     }
 }
 
 async function connectToWhatsApp(integrationId) {
-    const authFolder = path.join(storagePath, integrationId);
-    if (!fs.existsSync(authFolder)) {
-        fs.mkdirSync(authFolder, { recursive: true });
-    }
-
-    const { state, saveCreds } = await useMultiFileAuthState(authFolder)
+    const { state, saveCreds, removeCreds } = await useMySQLAuthState({
+        session: integrationId,
+        ...MYSQL_CONFIG
+    })
+    
+    // Store the creds functions for later use
+    credsSavers.set(integrationId, { saveCreds, removeCreds })
     
     const sock = makeWASocket({
-        auth: state,
+        auth: {
+            creds: state.creds,
+            keys: makeCacheableSignalKeyStore(state.keys, logger),
+        },
         logger: logger
     })
 
     console.log('Starting connection for integration:', integrationId)
 
-    let connectionTimeout = setTimeout(() => {
+    let connectionTimeout = setTimeout(async () => {
         console.log('Connection timeout for integration:', integrationId, sock.user)
         if (sock.user == null) {
             sock.ev.removeAllListeners('connection.update')
@@ -71,13 +115,22 @@ async function connectToWhatsApp(integrationId) {
             connections.delete(integrationId)
             connectionPool.connections.delete(integrationId)
             qrCodes.delete(integrationId)
-            const authFolder = path.join(storagePath, integrationId);
-            if (fs.existsSync(authFolder)) {
-                console.log('Deleting auth folder:', authFolder)
-                fs.rmSync(authFolder, { recursive: true, force: true });
+            
+            // Remove MySQL auth data
+            const credsHandler = credsSavers.get(integrationId)
+            if (credsHandler && credsHandler.removeCreds) {
+                try {
+                    await credsHandler.removeCreds()
+                    console.log('Removed MySQL auth data for integration:', integrationId)
+                } catch (error) {
+                    console.error('Failed to remove MySQL auth data:', error)
+                }
             }
+            credsSavers.delete(integrationId)
+
+            sendWebSocketUpdate(integrationId, { status: 'qr_expired' })
         }
-    }, 120000) // 2 minutes timeout
+    }, 2 * 60 * 1000) // 2 minutes timeout
 
     sock.ev.on('connection.update', async (update) => {
         const { connection, lastDisconnect, qr } = update
@@ -87,10 +140,17 @@ async function connectToWhatsApp(integrationId) {
                 const isLoggedOut = lastDisconnect.error.output.statusCode === DisconnectReason.loggedOut
 
                 if (isLoggedOut) {
-                    const authFolder = path.join(storagePath, integrationId);
-                    if (fs.existsSync(authFolder)) {
-                        fs.rmSync(authFolder, { recursive: true, force: true });
+                    // Remove MySQL auth data
+                    const credsHandler = credsSavers.get(integrationId)
+                    if (credsHandler && credsHandler.removeCreds) {
+                        try {
+                            await credsHandler.removeCreds()
+                            console.log('Removed MySQL auth data for logged out integration:', integrationId)
+                        } catch (error) {
+                            console.error('Failed to remove MySQL auth data:', error)
+                        }
                     }
+                    credsSavers.delete(integrationId)
                     sendWebSocketUpdate(integrationId, { status: 'disconnected' })
                 }
 
@@ -263,10 +323,17 @@ app.post('/disconnect', async (req, res) => {
     }
 
     try {
-        const authFolder = path.join(storagePath, integrationId);
-        if (fs.existsSync(authFolder)) {
-            fs.rmSync(authFolder, { recursive: true, force: true });
+        // Remove MySQL auth data
+        const credsHandler = credsSavers.get(integrationId)
+        if (credsHandler && credsHandler.removeCreds) {
+            try {
+                await credsHandler.removeCreds()
+                console.log('Removed MySQL auth data for integration:', integrationId)
+            } catch (error) {
+                console.error('Failed to remove MySQL auth data:', error)
+            }
         }
+        credsSavers.delete(integrationId)
 
         const connection = connections.get(integrationId)
         if (connection) {

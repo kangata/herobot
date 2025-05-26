@@ -31,8 +31,41 @@
                 </ol>
             </div>
             <div v-if="whatsapp.qr" class="w-1/2 flex flex-col justify-center">
-                <div class="bg-white p-4 rounded-lg shadow-md">
-                    <img :src="whatsapp.qr" alt="WhatsApp Integration QR Code" class="w-full h-auto" />
+                <div class="bg-white p-4 rounded-lg shadow-md relative">
+                    <img 
+                        :src="whatsapp.qr" 
+                        alt="WhatsApp Integration QR Code" 
+                        class="w-full h-auto transition-all duration-300"
+                        :class="{ 'blur-sm': isQRExpired }"
+                    />
+                    
+                    <!-- Overlay for expired QR -->
+                    <div v-if="isQRExpired" class="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-40 rounded-lg">
+                        <div class="text-center bg-white rounded-lg p-6 shadow-lg mx-4">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-2">QR Code Timed Out</h3>
+                            <p class="text-sm text-gray-600 mb-4">This QR code has timed out after 2 minutes of inactivity. Please generate a new one to continue.</p>
+                            <button
+                                type="button"
+                                class="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:text-sm transition-colors duration-200"
+                                @click="refreshQR"
+                                :disabled="isRefreshingQR"
+                            >
+                                <span class="flex items-center" v-if="isRefreshingQR">
+                                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Generating...
+                                </span>
+                                <span v-else class="flex items-center">
+                                    <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                    Generate New QR
+                                </span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -110,13 +143,23 @@ onMounted(() => {
     });
 
     window.Echo.private(`integration.${props.integration.id}`)
-        .listen('IntegrationUpdated', (_) => {
-            router.reload({
-                only: [
-                    'integration',
-                    'whatsapp'
-                ],
-            });
+        .listen('IntegrationUpdated', ({ status }) => {
+            if (status === 'qr_expired') {
+                isQRExpired.value = true;
+                router.reload({
+                    only: [
+                        'integration'
+                    ],
+                });
+            } else {
+                isQRExpired.value = false;
+                router.reload({
+                    only: [
+                        'integration',
+                        'whatsapp'
+                    ],
+                });
+            }
         });
 });
 
@@ -125,6 +168,8 @@ onUnmounted(() => {
 });
 
 const isDisconnecting = ref(false);
+const isRefreshingQR = ref(false);
+const isQRExpired = ref(false);
 
 const disconnectWhatsApp = () => {
     isDisconnecting.value = true;
@@ -135,5 +180,18 @@ const disconnectWhatsApp = () => {
             isDisconnecting.value = false;
         },
     })
+};
+
+const refreshQR = () => {
+    isRefreshingQR.value = true;
+    isQRExpired.value = false;
+    router.reload({
+        only: [
+            'whatsapp'
+        ],
+        onFinish: () => {
+            isRefreshingQR.value = false;
+        },
+    });
 };
 </script>

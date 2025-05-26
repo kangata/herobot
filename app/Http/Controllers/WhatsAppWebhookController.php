@@ -32,7 +32,7 @@ class WhatsAppWebhookController extends Controller
         $integration->update($updateData);
 
         // Broadcast the general update
-        IntegrationUpdated::dispatch($integration);
+        IntegrationUpdated::dispatch($integration, $data['status'] ?? 'unknown');
 
         return response()->json(['message' => 'Webhook processed successfully']);
     }

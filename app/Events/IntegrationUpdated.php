@@ -17,6 +17,7 @@ class IntegrationUpdated implements ShouldBroadcast
 
     public function __construct(
         public Integration $integration,
+        public string $status,
     ) {}
 
     public function broadcastOn(): Channel
