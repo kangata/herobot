@@ -27,14 +27,14 @@ class DashboardController extends Controller
             ->distinct('sender')
             ->count();
 
-        // Get credits usage for last 30 days
-        $creditsUsage = Transaction::where('team_id', $team->id)
-            ->where('type', 'usage')
-            ->where('created_at', '>=', now()->subDays(30))
-            ->sum('amount');
+        // // Get credits usage for last 30 days
+        // $creditsUsage = Transaction::where('team_id', $team->id)
+        //     ->where('type', 'usage')
+        //     ->where('created_at', '>=', now()->subDays(30))
+        //     ->sum('amount');
 
-        // Get daily message counts for the last 7 days
-        $startDate = now()->subDays(7)->startOfDay();
+        // Get daily message counts for the last 30 days
+        $startDate = now()->subDays(30)->startOfDay();
         $dates = collect();
         for ($date = clone $startDate; $date <= now(); $date->addDay()) {
             $dates->push($date->format('Y-m-d'));
@@ -65,10 +65,10 @@ class DashboardController extends Controller
                     'name' => 'Total Conversations',
                     'stat' => number_format($totalConversations),
                 ],
-                [
-                    'name' => 'Credits Usage',
-                    'stat' => 'Rp ' . number_format($creditsUsage, 0, ',', '.'),
-                ],
+                // [
+                //     'name' => 'Credits Usage',
+                //     'stat' => 'Rp ' . number_format($creditsUsage, 0, ',', '.'),
+                // ],
             ],
             'chartData' => [
                 'dates' => $filledDailyStats->keys()->map(function ($date) {

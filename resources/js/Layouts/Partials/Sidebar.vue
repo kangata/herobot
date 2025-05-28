@@ -185,7 +185,7 @@ const navigation = [
 const bottomNavigation = [
     { name: 'Team Settings', href: route('teams.show', page.props.auth.user.current_team), icon: UserGroupIcon, current: route().current('teams.show') },
     { name: 'Settings', href: route('profile.show'), icon: Cog6ToothIcon, current: route().current('profile.show') },
-    { name: 'Billing & Usage', href: route('billing.index'), icon: CreditCardIcon, current: route().current('billing*') },
+    // { name: 'Billing & Usage', href: route('billing.index'), icon: CreditCardIcon, current: route().current('billing*') },
 ]
 
 const switchToTeam = (team) => {
