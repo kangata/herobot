@@ -37,7 +37,7 @@
                             class="font-semibold text-gray-900 hover:text-gray-900">{{ item.name }}</a>
                     </div>
                     <div class="hidden lg:flex lg:min-w-0 lg:flex-1 lg:justify-end">
-                        <Link :href="route('login')" class="inline-block rounded-lg px-3 py-1.5 text-sm font-semibold leading-6 text-gray-900 shadow-sm ring-1 ring-gray-900/10 hover:ring-gray-900/20">Masuk / Daftar</Link>
+                        <Link :href="route('login')" class="inline-block rounded-lg px-3 py-1.5 text-sm font-semibold leading-6 text-gray-900 shadow-sm ring-1 ring-gray-900/10 hover:ring-gray-900/20">Sign In / Sign Up</Link>
                     </div>
                 </nav>
                 <Dialog as="div" @close="mobileMenuOpen = false" :open="mobileMenuOpen">
@@ -68,7 +68,7 @@
                                 </div>
                                 <div class="py-6">
                                     <Link :href="route('login')"
-                                        class="-mx-3 block rounded-lg py-2.5 px-3 text-base font-semibold leading-6 text-gray-900 hover:bg-gray-400/10">Log in</Link>
+                                        class="-mx-3 block rounded-lg py-2.5 px-3 text-base font-semibold leading-6 text-gray-900 hover:bg-gray-400/10">Sign In / Sign Up</Link>
                                 </div>
                             </div>
                         </div>
@@ -84,30 +84,29 @@
                             <div
                                 class="relative overflow-hidden rounded-full py-1.5 px-4 text-sm leading-6 ring-1 ring-gray-900/10 hover:ring-gray-900/20">
                                 <span class="text-gray-600">
-                                    Announcing our next round of funding. <a href="#"
+                                    Connect with your customers on their favorite platforms <a href="#"
                                         class="font-semibold text-indigo-600"><span class="absolute inset-0"
-                                            aria-hidden="true" />Read more <span aria-hidden="true">&rarr;</span></a>
+                                            aria-hidden="true" />See all channels <span aria-hidden="true">&rarr;</span></a>
                                 </span>
                             </div>
                         </div>
                         <div>
-                            <h1 class="text-4xl font-bold tracking-tight sm:text-center sm:text-6xl">Transformasi Bisnis
-                                Anda dengan Chatbot AI Kami</h1>
-                            <p class="mt-6 text-lg leading-8 text-gray-600 sm:text-center">Aplikasi untuk membuat
-                                chatbot yang dapat digunakan diberbagai macam bidang, seperti Customer Service,
-                                Penjualan, Marketing, Pendidikan, Kesehatan, Keuangan, Transportasi, dan lain - lain.
+                            <h1 class="text-4xl font-bold tracking-tight sm:text-center sm:text-6xl">Your 24/7 Customer Service Assistant</h1>
+                            <p class="mt-6 text-lg leading-8 text-gray-600 sm:text-center">
+                                Boost your customer engagement across multiple channels. Automate responses, qualify leads, and provide 
+                                instant support - all while saving time and reducing costs. Perfect for businesses of all sizes.
                             </p>
                             <div class="mt-8 flex gap-x-4 sm:justify-center">
-                                <a href="https://wa.me/6289526544405" target="_blank"
+                                <Link :href="route('early-access')"
                                     class="inline-block rounded-lg bg-indigo-600 px-4 py-1.5 text-base font-semibold leading-7 text-white shadow-sm ring-1 ring-indigo-600 hover:bg-indigo-700 hover:ring-indigo-700">
-                                    Hubungi Kami
+                                    Get Started for Free
                                     <span class="text-indigo-200" aria-hidden="true">&rarr;</span>
-                                </a>
-                                <a href="https://wa.me/6281818919593" target="_blank"
+                                </Link>
+                                <Link :href="route('login')"
                                     class="inline-block rounded-lg px-4 py-1.5 text-base font-semibold leading-7 text-gray-900 ring-1 ring-gray-900/10 hover:ring-gray-900/20">
-                                    Live demo
+                                    Sign In
                                     <span class="text-gray-400" aria-hidden="true">&rarr;</span>
-                                </a>
+                                </Link>
                             </div>
                         </div>
                         <div
@@ -140,10 +139,10 @@ import { Bars3Icon, XMarkIcon } from '@heroicons/vue/24/outline'
 import ApplicationLogo from './ApplicationLogo.vue';
 
 const navigation = [
-    { name: 'Product', href: '#' },
-    { name: 'Features', href: '#' },
-    { name: 'Marketplace', href: '#' },
-    { name: 'Company', href: '#' },
+    { name: 'Features', href: '#features' },
+    { name: 'Pricing', href: '#pricing' },
+    { name: 'Documentation', href: '/docs' },
+    { name: 'Contact', href: '#contact' },
 ]
 
 const mobileMenuOpen = ref(false)

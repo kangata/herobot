@@ -2,7 +2,7 @@
 import { Head } from '@inertiajs/vue3';
 import HeroSection from '../Components/HeroSection.vue';
 import FeatureSection from '../Components/FeatureSection.vue';
-import NewsletterSection from '../Components/NewsletterSection.vue';
+import FaqSection from '../Components/FaqSection.vue';
 import FooterSection from '../Components/FooterSection.vue';
 
 defineProps({
@@ -14,13 +14,13 @@ defineProps({
 </script>
 
 <template>
-    <Head title="Herobot - Chatbot untuk Bisnis" />
+    <Head title="Herobot - Your 24/7 Customer Service Assistant | Multi-Channel Support" />
 
     <HeroSection />
 
     <FeatureSection />
 
-    <NewsletterSection />
+    <FaqSection />
 
     <FooterSection />
 </template>

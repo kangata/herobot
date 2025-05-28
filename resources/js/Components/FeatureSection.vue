@@ -14,7 +14,7 @@
 
             <div class="relative lg:grid lg:grid-cols-3 lg:gap-x-12 xl:gap-x-16">
                 <div class="lg:col-span-1">
-                    <h2 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-4xl">Chatbot yang dapat disesuaikan untuk berbagai industri</h2>
+                    <h2 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-4xl">Everything You Need to Scale Your Customer Service</h2>
                 </div>
                 <dl class="mt-20 grid grid-cols-1 gap-16 sm:grid-cols-2 sm:gap-x-12 lg:col-span-2 lg:mt-0">
                     <div v-for="feature in features" :key="feature.name">
@@ -33,28 +33,28 @@
 </template>
 
 <script setup>
-import { BoltIcon, ChartBarIcon, GlobeAltIcon, ScaleIcon } from '@heroicons/vue/24/outline'
+import { ChatBubbleLeftRightIcon, CubeTransparentIcon, BoltIcon, ArrowsPointingOutIcon } from '@heroicons/vue/24/outline'
 
 const features = [
     {
-        name: 'Customer service',
-        description: 'Chatbot dapat digunakan untuk menjawab pertanyaan pelanggan secara otomatis dan memberikan layanan pelanggan yang lebih cepat dan efisien. Chatbot dapat membantu mengurangi antrian telepon dan menjawab pertanyaan yang sering diajukan selama jam kerja atau di luar jam kerja.',
-        icon: GlobeAltIcon,
+        name: 'Multi-Channel Support',
+        description: 'Connect with customers where they are - WhatsApp, WhatsApp Business, Instagram, Facebook Messenger, and TikTok (coming soon). One platform to manage all your conversations.',
+        icon: ChatBubbleLeftRightIcon,
     },
     {
-        name: 'Penjualan',
-        description: 'Chatbot dapat membantu meningkatkan penjualan dengan menawarkan produk dan layanan kepada pelanggan secara otomatis. Chatbot juga dapat membantu menyarankan produk atau layanan yang sesuai dengan kebutuhan pelanggan berdasarkan data yang tersedia.',
-        icon: ScaleIcon,
+        name: 'Smart Business Tools',
+        description: 'Seamlessly integrate with your favorite tools - check shipping costs, connect to Google Forms, update spreadsheets, third party API, and more. Customize your chatbot to fit your business needs.',
+        icon: CubeTransparentIcon,
     },
     {
-        name: 'Travel',
-        description: 'Chatbot dapat membantu menyediakan informasi tentang jadwal penerbangan, harga tiket, dan rute penerbangan secara cepat dan akurat. Chatbot juga dapat membantu mengatur pemesanan tiket dan menyarankan destinasi wisata yang sesuai dengan kebutuhan pelanggan.',
+        name: 'Instant Responses',
+        description: 'Provide immediate answers to common questions, qualify leads, and handle customer inquiries 24/7. Let your team focus on high-value conversations while the bot handles the rest.',
         icon: BoltIcon,
     },
     {
-        name: 'Hotel',
-        description: 'Chatbot dapat membantu menyediakan informasi tentang kamar, harga, dan fasilitas hotel secara cepat dan akurat. Chatbot juga dapat membantu mengatur pemesanan kamar dan menyarankan paket wisata yang sesuai dengan kebutuhan pelanggan',
-        icon: ChartBarIcon,
+        name: 'Scale With Ease',
+        description: 'Start small and grow big. Whether you\'re a small business or a large enterprise, our platform grows with you. Manage multiple channels and teams from one dashboard.',
+        icon: ArrowsPointingOutIcon,
     },
 ]
 </script>
