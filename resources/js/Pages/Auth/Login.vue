@@ -31,7 +31,7 @@ const submit = () => {
 
 <template>
 
-    <Head title="Log in" />
+    <Head title="Herobot - Log in" />
 
     <AuthenticationCard>
         <template #logo>

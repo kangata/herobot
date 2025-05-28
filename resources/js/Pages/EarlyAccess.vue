@@ -25,7 +25,7 @@ const submit = () => {
 </script>
 
 <template>
-    <Head title="Early Access" />
+    <Head title="Herobot - Early Access" />
 
     <AuthenticationCard>
         <template #logo>
@@ -36,11 +36,11 @@ const submit = () => {
             Your application has been submitted successfully. We will contact you soon!
         </div>
 
-        <div class="bg-blue-50 p-4 mb-6 rounded-lg">
-            <p class="text-blue-700 font-medium">
+        <div class="border border-gray-300 p-4 mb-6 rounded-lg">
+            <p class="font-medium">
                 Free Access Available!
             </p>
-            <p class="text-blue-600 text-sm mt-1">
+            <p class="text-sm mt-1">
                 We offer free access for educational institutions and social activities.
             </p>
         </div>
