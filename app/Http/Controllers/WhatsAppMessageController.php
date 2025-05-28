@@ -33,10 +33,10 @@ class WhatsAppMessageController extends Controller
             return response()->json(['error' => 'No bot found for this integration'], 404);
         }
 
-        // Check if team has enough credits (150 per response)
-        if ($team->balance->amount < 150) {
-            return response()->json(['error' => 'Insufficient credits. Please top up your credits to continue using the service.'], 402);
-        }
+        // // Check if team has enough credits (150 per response)
+        // if ($team->balance->amount < 150) {
+        //     return response()->json(['error' => 'Insufficient credits. Please top up your credits to continue using the service.'], 402);
+        // }
 
         // Get latest transaction
         $latestTransaction = Transaction::where('team_id', $team->id)
