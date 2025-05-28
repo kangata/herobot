@@ -30,7 +30,12 @@ const props = defineProps({
     },
     chartData: {
         type: Object,
-        required: true
+        required: true,
+        default: () => ({
+            dates: [],
+            messageCounts: [],
+            conversationCounts: []
+        })
     }
 });
 
@@ -44,7 +49,7 @@ const chartData = {
             backgroundColor: 'rgba(99, 102, 241, 0.1)',
             borderColor: '#6366f1',
             borderWidth: 2,
-            data: props.chartData.counts,
+            data: props.chartData.messageCounts,
             fill: true,
             tension: 0.4,
             pointRadius: 4,
@@ -53,6 +58,23 @@ const chartData = {
             pointBorderWidth: 2,
             pointHoverRadius: 6,
             pointHoverBackgroundColor: '#6366f1',
+            pointHoverBorderColor: '#fff',
+            pointHoverBorderWidth: 2
+        },
+        {
+            label: 'Conversations',
+            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+            borderColor: '#22c55e',
+            borderWidth: 2,
+            data: props.chartData.conversationCounts,
+            fill: true,
+            tension: 0.4,
+            pointRadius: 4,
+            pointBackgroundColor: '#22c55e',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointHoverRadius: 6,
+            pointHoverBackgroundColor: '#22c55e',
             pointHoverBorderColor: '#fff',
             pointHoverBorderWidth: 2
         }
@@ -76,7 +98,7 @@ const chartOptions = {
         },
         title: {
             display: true,
-            text: 'Message Activity - Last 30 Days',
+            text: 'Messages & Conversations Activity - Last 30 Days',
             font: {
                 size: 16,
                 weight: 'bold'
@@ -95,7 +117,7 @@ const chartOptions = {
             borderColor: '#e5e7eb',
             borderWidth: 1,
             padding: 12,
-            displayColors: false
+            displayColors: true
         }
     },
     scales: {

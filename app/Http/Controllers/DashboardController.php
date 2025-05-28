@@ -40,7 +40,8 @@ class DashboardController extends Controller
             $dates->push($date->format('Y-m-d'));
         }
 
-        $dailyStats = ChatHistory::whereHas('integration', function ($query) use ($team) {
+        // Get daily message counts
+        $dailyMessageStats = ChatHistory::whereHas('integration', function ($query) use ($team) {
             $query->where('team_id', $team->id);
         })
             ->where('created_at', '>=', $startDate)
@@ -50,9 +51,24 @@ class DashboardController extends Controller
             ->get()
             ->pluck('count', 'date');
 
-        // Fill in missing dates with 0
-        $filledDailyStats = $dates->mapWithKeys(function ($date) use ($dailyStats) {
-            return [$date => $dailyStats[$date] ?? 0];
+        // Get daily conversation counts (unique senders per day)
+        $dailyConversationStats = ChatHistory::whereHas('integration', function ($query) use ($team) {
+            $query->where('team_id', $team->id);
+        })
+            ->where('created_at', '>=', $startDate)
+            ->select(DB::raw('DATE(created_at) as date'), DB::raw('COUNT(DISTINCT sender) as count'))
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get()
+            ->pluck('count', 'date');
+
+        // Fill in missing dates with 0 for both datasets
+        $filledMessageStats = $dates->mapWithKeys(function ($date) use ($dailyMessageStats) {
+            return [$date => $dailyMessageStats[$date] ?? 0];
+        });
+
+        $filledConversationStats = $dates->mapWithKeys(function ($date) use ($dailyConversationStats) {
+            return [$date => $dailyConversationStats[$date] ?? 0];
         });
 
         return Inertia::render('Dashboard', [
@@ -71,10 +87,11 @@ class DashboardController extends Controller
                 // ],
             ],
             'chartData' => [
-                'dates' => $filledDailyStats->keys()->map(function ($date) {
+                'dates' => $filledMessageStats->keys()->map(function ($date) {
                     return date('M j', strtotime($date));
                 }),
-                'counts' => $filledDailyStats->values(),
+                'messageCounts' => $filledMessageStats->values(),
+                'conversationCounts' => $filledConversationStats->values(),
             ],
         ]);
     }
