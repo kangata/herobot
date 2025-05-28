@@ -19,14 +19,6 @@
                     placeholder="Search..." type="search" name="search" />
             </form>
             <div class="flex items-center gap-x-4 lg:gap-x-6">
-                <button type="button" class="-m-2.5 p-2.5 text-gray-400 hover:text-gray-500">
-                    <span class="sr-only">View notifications</span>
-                    <BellIcon class="h-6 w-6" aria-hidden="true" />
-                </button>
-
-                <!-- Separator -->
-                <div class="hidden lg:block lg:h-6 lg:w-px lg:bg-gray-200" aria-hidden="true" />
-
                 <!-- Profile dropdown -->
                 <Menu as="div" class="relative">
                     <MenuButton class="-m-1.5 flex items-center p-1.5">
