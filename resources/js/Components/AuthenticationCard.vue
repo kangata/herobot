@@ -36,15 +36,5 @@ import { Link } from '@inertiajs/vue3';
             </div>
             <slot />
         </div>
-        <footer class="relative shrink-0">
-            <div
-                class="space-y-4 text-sm text-gray-900 sm:flex sm:items-center sm:justify-center sm:space-y-0 sm:space-x-4">
-                <p class="text-center sm:text-left">Don't have an account?</p>
-                <Link class="inline-flex justify-center rounded-lg text-sm font-semibold py-2.5 px-4 text-slate-900 ring-1 ring-slate-900/10 hover:ring-slate-900/20"
-                    href="/">
-                    <span>Get access <span aria-hidden="true">→</span></span>
-                </Link>
-            </div>
-        </footer>
     </main>
 </template>

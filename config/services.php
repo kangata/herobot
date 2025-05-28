@@ -51,4 +51,9 @@ return [
         'model' => env('OPENROUTER_MODEL', 'google/gemini-flash-1.5-8b'),
     ],
 
+    'telegram' => [
+        'bot_token' => env('TELEGRAM_BOT_TOKEN'),
+        'chat_id' => env('TELEGRAM_CHAT_ID'),
+    ],
+
 ];
