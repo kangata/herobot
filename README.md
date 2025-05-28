@@ -1,6 +1,15 @@
 # Herobot App
 
-Herobot is a platform to build chatbot AI with custom knowledge. It allows users to create, train, and deploy intelligent chatbots tailored to their specific needs, leveraging advanced natural language processing and machine learning techniques. With Herobot, you can easily integrate your chatbot into various applications and services, providing a seamless user experience and enhancing customer engagement.
+Herobot is your 24/7 customer service assistant that helps you manage multi-channel customer conversations effortlessly. With support for WhatsApp, WhatsApp Business, Instagram, Facebook Messenger, and TikTok (coming soon), Herobot enables businesses of all sizes to provide instant responses and superior customer service at scale.
+
+## Key Features
+
+- **Multi-Channel Support**: Manage all your customer conversations from a single platform across multiple messaging channels
+- **Smart Business Tools**: Seamlessly integrate with your existing tools - from shipping cost checks to Google Forms, spreadsheets, and custom API integrations
+- **Instant Responses**: Provide 24/7 customer support, qualify leads automatically, and handle routine inquiries while your team focuses on high-value conversations
+- **Scalable Solution**: Perfect for both small businesses and large enterprises, with the ability to manage multiple channels and teams from one dashboard
+
+**Special Offer**: Herobot is completely FREE until July 1st, 2025! 🚀
 
 ## Setup Guide
 
@@ -30,7 +39,7 @@ To set up the Herobot App locally, follow these steps:
        -u "$(id -u):$(id -g)" \
        -v "$(pwd):/var/www/html" \
        -w /var/www/html \
-       laravelsail/php83-composer:latest \
+       laravelsail/php84-composer:latest \
        composer install --ignore-platform-reqs
      ```
 
