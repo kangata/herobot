@@ -81,3 +81,11 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     //     ->name('billing.webhook')
     //     ->withoutMiddleware(['auth:sanctum', 'web', 'verified', 'verify_csrf_token']);
 });
+
+Route::get('/terms', function () {
+    return Inertia::render('Terms');
+})->name('terms');
+
+Route::get('/privacy', function () {
+    return Inertia::render('Privacy');
+})->name('privacy');

@@ -128,6 +128,12 @@ const submit = () => {
                     <span>Log in <span aria-hidden="true">→</span></span>
                 </Link>
             </div>
+            <div class="mt-4 text-center text-xs text-gray-600">
+                By submitting this form, you agree to our 
+                <Link href="/terms" class="text-blue-600 hover:underline">Terms of Service</Link>
+                and
+                <Link href="/privacy" class="text-blue-600 hover:underline">Privacy Policy</Link>
+            </div>
         </footer>
     </AuthenticationCard>
 </template> 
