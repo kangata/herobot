@@ -6,6 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use App\Services\WhatsApp\WhatsAppService;
 use App\Services\TelegramService;
 use Illuminate\Support\Facades\URL;
+use Inertia\Inertia;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -35,5 +36,9 @@ class AppServiceProvider extends ServiceProvider
         if (config('app.force_https')) {
             URL::forceScheme('https');
         }
+
+        Inertia::share([
+            'environment' => fn () => app()->environment(),
+        ]);
     }
 }

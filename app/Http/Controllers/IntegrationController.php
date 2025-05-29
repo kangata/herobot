@@ -63,7 +63,7 @@ class IntegrationController extends Controller
             'integration' => $integration,
             'whatsapp' => Inertia::lazy(
                 fn () => WhatsApp::status($integration->id) ?? null
-            ),
+            )
         ]);
     }
 

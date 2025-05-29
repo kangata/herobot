@@ -19,6 +19,23 @@
 
         <hr class="mb-4" />
 
+        <div v-if="!whatsapp.status" class="rounded-md bg-red-50 p-4 mb-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-red-800">Connection Error</h3>
+                    <div class="mt-2 text-sm text-red-700">
+                        <p v-if="$page.props.environment !== 'local'">Failed to connect to WhatsApp server. Please try again later.</p>
+                        <p v-else>Failed to connect to WhatsApp server. Please run <code class="bg-red-100 px-2 py-0.5 rounded">php artisan whatsapp:start</code> on your server.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div v-if="!integration.is_connected" class="flex justify-between items-center max-w-4xl mx-auto">
             <div class="w-1/2 pr-8 flex flex-col justify-center">
                 <h2 class="text-2xl font-semibold mb-4">Connect WhatsApp to Your Bot</h2>

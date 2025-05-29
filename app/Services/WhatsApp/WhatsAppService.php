@@ -24,7 +24,11 @@ class WhatsAppService
 
     public function status(string $integrationId): array
     {
-        $response = Http::get("{$this->baseUrl}/status/{$integrationId}");
+        try {
+            $response = Http::get("{$this->baseUrl}/status/{$integrationId}");
+        } catch (\Exception $e) {
+            return [];
+        }
 
         return $response->json();
     }
