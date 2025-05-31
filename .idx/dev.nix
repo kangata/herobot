@@ -52,7 +52,6 @@
     # Default files to open
     default.openFiles = [
       "README.md"
-      ".env"
     ];
   };
 } 
