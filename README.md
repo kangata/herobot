@@ -2,6 +2,21 @@
 
 Herobot is your 24/7 customer service assistant that helps you manage multi-channel customer conversations effortlessly. With support for WhatsApp, WhatsApp Business, Instagram, Facebook Messenger, and TikTok (coming soon), Herobot enables businesses of all sizes to provide instant responses and superior customer service at scale.
 
+<a href="https://studio.firebase.google.com/import?url=https://github.com/dihak/app.herobot.id">
+  <picture>
+    <source
+      media="(prefers-color-scheme: dark)"
+      srcset="https://cdn.firebasestudio.dev/btn/try_dark_32.svg">
+    <source
+      media="(prefers-color-scheme: light)"
+      srcset="https://cdn.firebasestudio.dev/btn/try_light_32.svg">
+    <img
+      height="32"
+      alt="Try in Firebase Studio"
+      src="https://cdn.firebasestudio.dev/btn/try_blue_32.svg">
+  </picture>
+</a>
+
 ## Key Features
 
 - **Multi-Channel Support**: Manage all your customer conversations from a single platform across multiple messaging channels
