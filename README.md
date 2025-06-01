@@ -12,7 +12,7 @@ Herobot is an open-source project that offers flexible deployment options to sui
 
 Both options provide the same powerful features, letting you choose the deployment that best fits your requirements and privacy needs.
 
-<a href="https://studio.firebase.google.com/import?url=https://github.com/dihak/app.herobot.id">
+<a href="https://studio.firebase.google.com/import?url=https://github.com/herobot-id/herobot">
   <picture>
     <source
       media="(prefers-color-scheme: dark)"
@@ -26,7 +26,7 @@ Both options provide the same powerful features, letting you choose the deployme
       src="https://cdn.firebasestudio.dev/btn/try_blue_32.svg">
   </picture>
 </a>
-<a href="https://gitpod.io/#https://github.com/dihak/app.herobot.id">
+<a href="https://gitpod.io/#https://github.com/herobot-id/herobot">
   <img src="https://gitpod.io/button/open-in-gitpod.svg" alt="Open in Gitpod" height="32">
 </a>
 
@@ -44,7 +44,7 @@ To set up the Herobot App locally, follow these steps:
 1. **Clone the Repository**:
    - Clone the repository to your local machine using:
      ```sh
-     git clone git@github.com:dihak/app.herobot.id.git
+     git clone git@github.com:herobot-id/herobot.git
      ```
 
 2. **Set Up Environment Variables**:
