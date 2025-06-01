@@ -2,6 +2,8 @@
 
 Herobot is your 24/7 customer service assistant that helps you manage multi-channel customer conversations effortlessly. With support for WhatsApp, WhatsApp Business, Instagram, Facebook Messenger, and TikTok (coming soon), Herobot enables businesses of all sizes to provide instant responses and superior customer service at scale.
 
+❤️ **Support this project**: If you find Herobot helpful, consider [sponsoring the project on GitHub](https://github.com/sponsors/dihak)
+
 ## Deployment Options
 
 Herobot is an open-source project that offers flexible deployment options to suit your needs:
