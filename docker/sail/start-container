@@ -15,6 +15,13 @@ fi
 
 chmod -R ugo+rw /.composer
 
+# Run composer install first
+if [ "$SUPERVISOR_PHP_USER" = "root" ]; then
+    composer install
+else
+    gosu $WWWUSER composer install
+fi
+
 if [ $# -gt 0 ]; then
     if [ "$SUPERVISOR_PHP_USER" = "root" ]; then
         exec "$@"

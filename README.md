@@ -56,27 +56,10 @@ To set up the Herobot App locally, follow these steps:
      ```
    - Update the `DB_HOST` in the `.env` file to `mariadb` or your database host.
 
-3. **Install Dependencies**:
-   - Install the necessary Composer dependencies:
-     ```sh
-     composer install
-     ```
-   - Alternatively, you can use Docker to install Composer dependencies:
-     ```sh
-     docker run --rm \
-       -u "$(id -u):$(id -g)" \
-       -v "$(pwd):/var/www/html" \
-       -w /var/www/html \
-       laravelsail/php84-composer:latest \
-       composer install --ignore-platform-reqs
-     ```
-
-4. **Start Services**
+3. **Start Services**
    ```sh
    # Start Docker containers in detached mode
    docker compose up -d
-   # or
-   ./vendor/bin/sail up -d
 
    # Install NPM dependencies
    ./vendor/bin/sail npm install
@@ -91,14 +74,13 @@ To set up the Herobot App locally, follow these steps:
    ./vendor/bin/sail artisan whatsapp:start
    ```
 
-5. **Access the Application**:
+4. **Access the Application**:
    - The application will be accessible on port 80. Open your browser and navigate to `http://localhost`.
 
-
-6. **Stopping Services**:
+5. **Stopping Services**:
    ```sh
    # Stop Docker containers
-   ./vendor/bin/sail down
+   docker compose down
 
    # If you need to stop individual services:
    # Stop Vite development server: Ctrl+C in the terminal running npm run dev
