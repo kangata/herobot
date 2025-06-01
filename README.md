@@ -26,6 +26,9 @@ Both options provide the same powerful features, letting you choose the deployme
       src="https://cdn.firebasestudio.dev/btn/try_blue_32.svg">
   </picture>
 </a>
+<a href="https://gitpod.io/#https://github.com/dihak/app.herobot.id">
+  <img src="https://gitpod.io/button/open-in-gitpod.svg" alt="Open in Gitpod" height="32">
+</a>
 
 ## Key Features
 
