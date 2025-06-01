@@ -179,7 +179,7 @@ const navigation = [
     { name: 'Bot Management', href: route('bots.index'), icon: BotIcon, current: route().current('bots*') },
     { name: 'Knowledge', href: route('knowledges.index'), icon: DocumentDuplicateIcon, current: route().current('knowledges*') },
     // { name: 'Reports', href: route('reports'), icon: ChartPieIcon, current: route().current('reports*') },
-    { name: 'Integrations', href: route('integrations.index'), icon: LinkIcon, current: route().current('integrations*') },
+    { name: 'Channels', href: route('integrations.index'), icon: LinkIcon, current: route().current('integrations*') },
 ]
 
 const bottomNavigation = [
