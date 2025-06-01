@@ -8,7 +8,7 @@ Herobot is your 24/7 customer service assistant that helps you manage multi-chan
 
 Herobot is an open-source project that offers flexible deployment options to suit your needs:
 
-1. **Herobot Cloud (herobot.id)**: Get started quickly with our managed cloud solution at [herobot.id](https://herobot.id). Perfect for businesses that want a hassle-free setup with automatic updates and maintenance.
+1. **Herobot Cloud (herobot.id)**: Coming soon! Our managed cloud solution at [herobot.id](https://herobot.id) will provide a hassle-free setup with automatic updates and maintenance. Perfect for businesses that want to get started quickly without infrastructure management.
 
 2. **Self-Hosting**: Deploy Herobot on your own infrastructure for complete control and customization. Follow our setup guide below to host it on your servers.
 
@@ -54,7 +54,6 @@ To set up the Herobot App locally, follow these steps:
      ```sh
      cp .env.example .env
      ```
-   - Update the `DB_HOST` in the `.env` file to `mariadb` or your database host.
 
 3. **Start Services**
    ```sh
