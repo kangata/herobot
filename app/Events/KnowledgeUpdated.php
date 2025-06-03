@@ -3,9 +3,7 @@
 namespace App\Events;
 
 use App\Models\Knowledge;
-use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
@@ -30,15 +28,13 @@ class KnowledgeUpdated implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('team.' . $this->knowledge->team_id . '.knowledges'),
-            new PrivateChannel('team.' . $this->knowledge->team_id . '.knowledges.' . $this->knowledge->id),
+            new PrivateChannel('team.'.$this->knowledge->team_id.'.knowledges'),
+            new PrivateChannel('team.'.$this->knowledge->team_id.'.knowledges.'.$this->knowledge->id),
         ];
     }
 
     /**
      * Get the data to broadcast.
-     *
-     * @return array
      */
     public function broadcastWith(): array
     {
@@ -51,4 +47,4 @@ class KnowledgeUpdated implements ShouldBroadcast
             'updated_at' => $this->knowledge->updated_at,
         ];
     }
-} 
+}

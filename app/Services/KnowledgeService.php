@@ -29,7 +29,7 @@ class KnowledgeService
 
             // Extract all texts for batch processing
             $texts = array_column($chunks, 'content');
-            
+
             // Create embeddings for all chunks at once
             $vectors = $this->openAIService->createEmbedding($texts);
 
@@ -37,7 +37,7 @@ class KnowledgeService
             foreach ($chunks as $index => $chunk) {
                 $knowledge->vectors()->create([
                     'text' => $chunk['content'],
-                    'vector' => $vectors[$index]
+                    'vector' => $vectors[$index],
                 ]);
             }
 
@@ -48,9 +48,9 @@ class KnowledgeService
 
             return true;
         } catch (\Exception $e) {
-            Log::error('Failed to index knowledge: ' . $e->getMessage());
+            Log::error('Failed to index knowledge: '.$e->getMessage());
             $knowledge->update(['status' => 'failed']);
             throw $e;
         }
     }
-} 
+}

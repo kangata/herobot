@@ -1,10 +1,10 @@
 <?php
 
+use App\Http\Controllers\WhatsAppMessageController;
+use App\Http\Controllers\WhatsAppWebhookController;
+use App\Http\Middleware\WhatsAppServerAuth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\WhatsAppWebhookController;
-use App\Http\Controllers\WhatsAppMessageController;
-use App\Http\Middleware\WhatsAppServerAuth;
 
 /*
 |--------------------------------------------------------------------------

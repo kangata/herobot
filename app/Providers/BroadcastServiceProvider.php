@@ -2,8 +2,6 @@
 
 namespace App\Providers;
 
-use App\Models\Integration;
-use App\Models\User;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\ServiceProvider;
 

@@ -16,4 +16,4 @@ class EarlyAccess extends Model
         'organization_type',
         'description',
     ];
-} 
+}

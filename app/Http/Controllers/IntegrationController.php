@@ -3,12 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Facades\WhatsApp;
-use App\Models\Integration;
-use App\Events\QrCodeUpdated;
 use App\Models\Bot;
+use App\Models\Integration;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Broadcast;
 use Inertia\Inertia;
 
 class IntegrationController extends Controller
@@ -23,7 +20,7 @@ class IntegrationController extends Controller
         $integrations = $request->user()->integrations()->all();
 
         return inertia('Integrations/Index', [
-            'integrations' => $integrations
+            'integrations' => $integrations,
         ]);
     }
 
@@ -51,6 +48,7 @@ class IntegrationController extends Controller
         if ($request->has('bot_id') && $bot = Bot::find($request->bot_id)) {
             $this->authorize('update', $bot);
             $bot->integrations()->attach($integration->id);
+
             return redirect()->route('bots.show', $bot)->with('success', 'Integration created and connected successfully.');
         }
 
@@ -63,7 +61,7 @@ class IntegrationController extends Controller
             'integration' => $integration,
             'whatsapp' => Inertia::lazy(
                 fn () => WhatsApp::status($integration->id) ?? null
-            )
+            ),
         ]);
     }
 
@@ -95,6 +93,7 @@ class IntegrationController extends Controller
 
         if ($result['success']) {
             $integration->update(['is_connected' => false, 'phone' => null]);
+
             return redirect()->route('integrations.show', $integration)->with('success', 'WhatsApp disconnected successfully.');
         }
 

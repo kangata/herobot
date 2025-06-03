@@ -9,7 +9,7 @@ class KnowledgeVector extends Model
     protected $fillable = [
         'knowledge_id',
         'text',
-        'vector'
+        'vector',
     ];
 
     protected $casts = [
@@ -20,4 +20,4 @@ class KnowledgeVector extends Model
     {
         return $this->belongsTo(Knowledge::class);
     }
-} 
+}

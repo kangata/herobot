@@ -10,7 +10,7 @@ class Bot extends Model
 {
     use HasFactory, SoftDeletes;
 
-    const DEFAULT_PROMPT = "You are a helpful AI assistant. You aim to provide accurate, helpful, and concise responses while being friendly and professional.";
+    const DEFAULT_PROMPT = 'You are a helpful AI assistant. You aim to provide accurate, helpful, and concise responses while being friendly and professional.';
 
     protected $fillable = ['team_id', 'name', 'description', 'prompt'];
 

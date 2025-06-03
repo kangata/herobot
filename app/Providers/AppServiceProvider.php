@@ -2,10 +2,10 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use App\Services\WhatsApp\WhatsAppService;
 use App\Services\TelegramService;
+use App\Services\WhatsApp\WhatsAppService;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\ServiceProvider;
 use Inertia\Inertia;
 
 class AppServiceProvider extends ServiceProvider
@@ -22,7 +22,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(TelegramService::class, function ($app) {
-            return new TelegramService();
+            return new TelegramService;
         });
     }
 

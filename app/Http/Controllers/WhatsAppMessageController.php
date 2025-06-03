@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Integration;
 use App\Models\ChatHistory;
+use App\Models\Integration;
+use App\Models\Transaction;
 use App\Services\OpenAIService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use App\Models\Transaction;
 
 class WhatsAppMessageController extends Controller
 {
@@ -29,7 +29,7 @@ class WhatsAppMessageController extends Controller
         $bot = $integration->bots->first();
         $team = $integration->team;
 
-        if (!$bot) {
+        if (! $bot) {
             return response()->json(['error' => 'No bot found for this integration'], 404);
         }
 
@@ -59,7 +59,7 @@ class WhatsAppMessageController extends Controller
             $totalResponses = ($latestTransaction->amount / 150) + 1;
             $latestTransaction->update([
                 'amount' => $latestTransaction->amount + 150,
-                'description' => 'AI Response Credits Usage (Total responses: ' . $totalResponses . ')'
+                'description' => 'AI Response Credits Usage (Total responses: '.$totalResponses.')',
             ]);
         } else {
             // Create new transaction
@@ -68,7 +68,7 @@ class WhatsAppMessageController extends Controller
                 'amount' => 150,
                 'type' => 'usage',
                 'description' => 'AI Response Credits Usage (Total responses: 1)',
-                'status' => 'completed'
+                'status' => 'completed',
             ]);
         }
 
@@ -109,10 +109,10 @@ class WhatsAppMessageController extends Controller
             ...$chatHistory->map(function ($ch) {
                 return [
                     ['role' => 'user', 'content' => $ch->message],
-                    ['role' => 'assistant', 'content' => $ch->response]
+                    ['role' => 'assistant', 'content' => $ch->response],
                 ];
             })->flatten(1)->toArray(),
-            ['role' => 'user', 'content' => $message]
+            ['role' => 'user', 'content' => $message],
         ];
 
         try {
@@ -120,13 +120,13 @@ class WhatsAppMessageController extends Controller
                 'Authorization' => "Bearer {$apiKey}",
                 'HTTP-Referer' => $siteUrl,
                 'X-Title' => $siteName,
-                'Content-Type' => 'application/json'
+                'Content-Type' => 'application/json',
             ])->post('https://openrouter.ai/api/v1/chat/completions', [
                 'model' => $model,
-                'messages' => $messages
+                'messages' => $messages,
             ])->json();
 
-            Log::info('OpenRouter: ' . json_encode([
+            Log::info('OpenRouter: '.json_encode([
                 'model' => $model,
                 'messages' => $messages,
                 'response' => $response,
@@ -139,7 +139,7 @@ class WhatsAppMessageController extends Controller
 
             return $response;
         } catch (\Exception $e) {
-            Log::error('Failed to generate response: ' . $e->getMessage());
+            Log::error('Failed to generate response: '.$e->getMessage());
 
             return false;
         }
@@ -177,7 +177,7 @@ class WhatsAppMessageController extends Controller
             'integration_id' => $integrationId,
             'sender' => $sender,
             'message' => $message,
-            'response' => $response
+            'response' => $response,
         ]);
     }
 }

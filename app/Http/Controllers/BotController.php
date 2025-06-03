@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Bot;
 use App\Models\Integration;
 use App\Models\Knowledge;
+use Illuminate\Http\Request;
 
 class BotController extends Controller
 {
@@ -21,7 +21,7 @@ class BotController extends Controller
             ->get();
 
         return inertia('Bots/Index', [
-            'bots' => $bots
+            'bots' => $bots,
         ]);
     }
 
@@ -70,7 +70,7 @@ class BotController extends Controller
     public function edit(Bot $bot)
     {
         return inertia('Bots/Edit', [
-            'bot' => $bot
+            'bot' => $bot,
         ]);
     }
 

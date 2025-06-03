@@ -9,7 +9,7 @@ class CosineSimilarityBenchmark
 {
     private function generateRandomVector($size)
     {
-        return array_map(function() {
+        return array_map(function () {
             return mt_rand() / mt_getrandmax();
         }, range(1, $size));
     }
@@ -19,13 +19,13 @@ class CosineSimilarityBenchmark
         $vectorSize = 300;
         $vectorTotal = 1000;
         $vector1 = $this->generateRandomVector($vectorSize);
-        
+
         $vectors = [];
         for ($i = 0; $i < $vectorTotal; $i++) {
             $vectors[] = $this->generateRandomVector($vectorSize);
         }
-        
-        $service = new OpenAIService();
+
+        $service = new OpenAIService;
 
         return Benchmark::measure([
             'Fast Cosine Similarity' => function () use ($vector1, $vectors) {
@@ -42,4 +42,4 @@ class CosineSimilarityBenchmark
             },
         ]);
     }
-} 
+}

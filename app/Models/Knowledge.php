@@ -19,7 +19,7 @@ class Knowledge extends Model
         'filepath',
         'filename',
         'size',
-        'status'
+        'status',
     ];
 
     protected $casts = [
