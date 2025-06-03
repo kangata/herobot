@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\EarlyAccess\StoreRequest;
+use App\Http\Requests\EarlyAccessStoreRequest as StoreRequest;
 use App\Mail\EarlyAccessConfirmation;
 use App\Models\EarlyAccess;
 use App\Services\TelegramService;
