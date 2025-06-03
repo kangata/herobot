@@ -5,10 +5,11 @@ const { Boom } = require('@hapi/boom')
 const qrcode = require('qrcode')
 const pino = require('pino')
 const dotenv = require('dotenv');
+
 dotenv.config();
 
 const app = express()
-const port = 3000
+const port = process.env.WHATSAPP_SERVER_PORT || 3000
 
 const logger = pino({
     level: 'error'
@@ -37,7 +38,7 @@ const MYSQL_CONFIG = {
 
 async function startAllConnections() {
     console.log('MySQL-based authentication initialized. Checking for existing sessions...');
-    
+
     try {
         // Get all existing sessions from MySQL
         const mysql = require('mysql2/promise');
@@ -64,14 +65,14 @@ async function startAllConnections() {
 
         if (rows.length > 0) {
             console.log(`Found ${rows.length} existing sessions. Starting connections...`);
-            
+
             for (const row of rows) {
                 const sessionId = row.session;
                 try {
                     // Start connection for each existing session
                     await connectionPool.getConnection(sessionId);
                     console.log(`Started connection for existing session: ${sessionId}`);
-                    
+
                     // Add a small delay between connections to avoid overwhelming the system
                     await new Promise(resolve => setTimeout(resolve, 1000));
                 } catch (error) {
@@ -92,10 +93,10 @@ async function connectToWhatsApp(integrationId) {
         session: integrationId,
         ...MYSQL_CONFIG
     })
-    
+
     // Store the creds functions for later use
     credsSavers.set(integrationId, { saveCreds, removeCreds })
-    
+
     const sock = makeWASocket({
         auth: {
             creds: state.creds,
@@ -115,7 +116,7 @@ async function connectToWhatsApp(integrationId) {
             connections.delete(integrationId)
             connectionPool.connections.delete(integrationId)
             qrCodes.delete(integrationId)
-            
+
             // Remove MySQL auth data
             const credsHandler = credsSavers.get(integrationId)
             if (credsHandler && credsHandler.removeCreds) {
