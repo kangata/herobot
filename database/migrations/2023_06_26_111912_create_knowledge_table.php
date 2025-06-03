@@ -26,7 +26,7 @@ return new class extends Migration
             $table->enum('status', ['pending', 'indexing', 'completed', 'failed'])->default('pending');
             $table->timestamps();
         });
-        
+
         Schema::create('knowledge_vectors', function (Blueprint $table) {
             $table->id();
             $table->foreignId('knowledge_id')->constrained();

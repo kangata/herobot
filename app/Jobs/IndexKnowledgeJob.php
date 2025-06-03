@@ -27,9 +27,9 @@ class IndexKnowledgeJob implements ShouldQueue
         try {
             $knowledgeService->indexKnowledge($this->knowledge);
         } catch (\Exception $e) {
-            Log::error('Failed to index knowledge in job: ' . $e->getMessage());
+            Log::error('Failed to index knowledge in job: '.$e->getMessage());
             $this->knowledge->update(['status' => 'failed']);
             throw $e;
         }
     }
-} 
+}

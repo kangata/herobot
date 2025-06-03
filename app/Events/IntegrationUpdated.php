@@ -5,7 +5,6 @@ namespace App\Events;
 use App\Models\Integration;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
@@ -22,6 +21,6 @@ class IntegrationUpdated implements ShouldBroadcast
 
     public function broadcastOn(): Channel
     {
-        return new PrivateChannel('integration.' . $this->integration->id);
+        return new PrivateChannel('integration.'.$this->integration->id);
     }
 }

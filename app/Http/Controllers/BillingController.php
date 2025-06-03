@@ -4,11 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Balance;
 use App\Models\Transaction;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
 use App\Services\XenditService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Inertia\Inertia;
 
 class BillingController extends Controller
 {
@@ -29,7 +29,7 @@ class BillingController extends Controller
             ->get()
             ->map(function ($transaction) {
                 $currentStatus = $this->determineStatus($transaction);
-                
+
                 return [
                     'id' => $transaction->id,
                     'created_at' => $transaction->created_at,
@@ -71,11 +71,12 @@ class BillingController extends Controller
 
     private function determineStatus($transaction)
     {
-        if ($transaction->status === 'pending' && 
-            $transaction->expired_at && 
+        if ($transaction->status === 'pending' &&
+            $transaction->expired_at &&
             now()->isAfter($transaction->expired_at)) {
             return 'expired';
         }
+
         return $transaction->status;
     }
 
@@ -96,7 +97,7 @@ class BillingController extends Controller
         ]);
 
         $team = $request->user()->currentTeam;
-        $externalId = 'topup_' . $team->id . '_' . time();
+        $externalId = 'topup_'.$team->id.'_'.time();
 
         $transaction = Transaction::create([
             'team_id' => $team->id,
@@ -112,14 +113,14 @@ class BillingController extends Controller
             'amount' => $request->amount,
             'payer_email' => $request->user()->email,
             'customer_name' => $request->user()->name,
-            'description' => 'Top up credits for ' . $team->name,
+            'description' => 'Top up credits for '.$team->name,
             'success_redirect_url' => route('billing.topup.success', ['transaction' => $transaction->id]),
             'failure_redirect_url' => route('billing.topup.failure', ['transaction' => $transaction->id]),
         ];
 
         try {
             $invoice = $this->xenditService->createInvoice($params);
-            
+
             $transaction->update([
                 'payment_id' => $invoice['id'],
                 'payment_details' => $invoice,
@@ -131,8 +132,9 @@ class BillingController extends Controller
             $transaction->update(['status' => 'failed']);
             Log::error('Xendit invoice creation failed', [
                 'error' => $e->getMessage(),
-                'transaction_id' => $transaction->id
+                'transaction_id' => $transaction->id,
             ]);
+
             return redirect()->back()->with('error', 'Unable to process payment. Please try again.');
         }
     }
@@ -140,7 +142,7 @@ class BillingController extends Controller
     public function topupSuccess(Request $request)
     {
         $transaction = Transaction::findOrFail($request->transaction);
-        
+
         if ($transaction->status !== 'completed') {
             return redirect()->route('billing.index')
                 ->with('error', 'Payment is still being processed. Please wait for confirmation.');
@@ -153,14 +155,14 @@ class BillingController extends Controller
     public function topupFailure(Request $request)
     {
         $transaction = Transaction::findOrFail($request->transaction);
-        
+
         if ($transaction->status === 'completed') {
             return redirect()->route('billing.index')
                 ->with('success', 'Payment has been completed successfully.');
         }
 
         $transaction->update(['status' => 'failed']);
-        
+
         return redirect()->route('billing.index')
             ->with('error', 'Payment failed. Please try again or contact support if the issue persists.');
     }
@@ -168,8 +170,9 @@ class BillingController extends Controller
     public function handleWebhook(Request $request)
     {
         $callbackToken = $request->header('x-callback-token');
-        if ($callbackToken === null || !$this->xenditService->validateCallback($callbackToken)) {
+        if ($callbackToken === null || ! $this->xenditService->validateCallback($callbackToken)) {
             Log::warning('Invalid or missing Xendit webhook token');
+
             return response()->json(['error' => 'Invalid token', 'token' => $callbackToken], 401);
         }
 
@@ -184,10 +187,11 @@ class BillingController extends Controller
                         ->where('status', 'pending')
                         ->first();
 
-                    if (!$transaction) {
+                    if (! $transaction) {
                         Log::info('Transaction not found or not in pending status', [
-                            'external_id' => $payload['external_id']
+                            'external_id' => $payload['external_id'],
                         ]);
+
                         return;
                     }
 
@@ -195,8 +199,9 @@ class BillingController extends Controller
                     if ($transaction->expired_at && now()->isAfter($transaction->expired_at)) {
                         $transaction->update(['status' => 'expired']);
                         Log::info('Transaction marked as expired', [
-                            'transaction_id' => $transaction->id
+                            'transaction_id' => $transaction->id,
                         ]);
+
                         return;
                     }
 
@@ -204,7 +209,7 @@ class BillingController extends Controller
                         $transaction->update([
                             'status' => 'completed',
                             'payment_method' => $payload['payment_method'],
-                            'payment_details' => array_merge($transaction->payment_details ?? [], $payload)
+                            'payment_details' => array_merge($transaction->payment_details ?? [], $payload),
                         ]);
 
                         $balance = Balance::firstOrCreate(
@@ -216,15 +221,16 @@ class BillingController extends Controller
 
                         Log::info('Successfully processed Xendit payment', [
                             'transaction_id' => $transaction->id,
-                            'amount' => $payload['amount']
+                            'amount' => $payload['amount'],
                         ]);
                     }
                 });
             } catch (\Exception $e) {
                 Log::error('Error processing Xendit webhook', [
                     'error' => $e->getMessage(),
-                    'payload' => $payload
+                    'payload' => $payload,
                 ]);
+
                 return response()->json(['error' => 'Processing error'], 500);
             }
 

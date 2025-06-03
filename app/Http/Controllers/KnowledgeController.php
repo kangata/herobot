@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Knowledge;
-use App\Models\Bot;
-use App\Services\KnowledgeService;
-use App\Jobs\IndexKnowledgeJob;
 use App\Events\KnowledgeUpdated;
+use App\Jobs\IndexKnowledgeJob;
+use App\Models\Bot;
+use App\Models\Knowledge;
+use App\Services\KnowledgeService;
 use Illuminate\Http\Request;
 
 class KnowledgeController extends Controller
@@ -56,7 +56,7 @@ class KnowledgeController extends Controller
             'name' => $validatedData['name'],
             'type' => 'text',
             'text' => $validatedData['text'],
-            'status' => 'pending'
+            'status' => 'pending',
         ]);
 
         // Dispatch the indexing job
@@ -66,6 +66,7 @@ class KnowledgeController extends Controller
         if ($request->has('bot_id') && $bot = Bot::find($request->bot_id)) {
             $this->authorize('update', $bot);
             $bot->knowledge()->attach($knowledge->id);
+
             return redirect()->route('bots.show', $bot)->with('success', 'Knowledge created and indexing started.');
         }
 
@@ -93,7 +94,7 @@ class KnowledgeController extends Controller
             'name' => $validatedData['name'],
             'type' => $validatedData['type'],
             'text' => $validatedData['text'],
-            'status' => 'pending'
+            'status' => 'pending',
         ]);
 
         // Dispatch the indexing job

@@ -1,12 +1,12 @@
 <?php
 
 use App\Http\Controllers\Auth\LogoutController;
-use App\Http\Controllers\BotController;
-use App\Http\Controllers\IntegrationController;
-use App\Http\Controllers\KnowledgeController;
 use App\Http\Controllers\BillingController;
+use App\Http\Controllers\BotController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EarlyAccessController;
+use App\Http\Controllers\IntegrationController;
+use App\Http\Controllers\KnowledgeController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;

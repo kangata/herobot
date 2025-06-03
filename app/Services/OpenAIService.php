@@ -8,15 +8,16 @@ use Illuminate\Support\Facades\Log;
 class OpenAIService
 {
     protected $apiKey;
+
     protected $model;
 
     public function __construct()
     {
         $this->apiKey = config('services.openai.api_key');
         $this->model = config('services.openai.model', 'gpt-3.5-turbo');
-        
+
         // Check if the C extension is available
-        if (!function_exists('fast_cosine_similarity')) {
+        if (! function_exists('fast_cosine_similarity')) {
             Log::warning('Vector search C extension not available. Using PHP implementation.');
         }
     }
@@ -26,53 +27,53 @@ class OpenAIService
         // Split text into paragraphs (sections separated by blank lines)
         $paragraphs = preg_split('/\n\s*\n/', $text, -1, PREG_SPLIT_NO_EMPTY);
         $chunks = [];
-        
+
         foreach ($paragraphs as $paragraph) {
             $paragraph = trim($paragraph);
-            
+
             // Skip empty paragraphs
             if (empty($paragraph)) {
                 continue;
             }
-            
+
             // Extract the first line as title (if it exists)
             $lines = explode("\n", $paragraph);
             $title = trim($lines[0]);
             $content = $paragraph;
-            
+
             // If the paragraph is longer than maxChunkSize, split it into smaller chunks
             if (strlen($content) > $maxChunkSize) {
                 $sentences = preg_split('/(?<=[.!?])\s+/', $content, -1, PREG_SPLIT_NO_EMPTY);
                 $currentChunk = '';
-                
+
                 foreach ($sentences as $sentence) {
                     if (strlen($currentChunk) + strlen($sentence) <= $maxChunkSize) {
-                        $currentChunk .= ($currentChunk ? ' ' : '') . $sentence;
+                        $currentChunk .= ($currentChunk ? ' ' : '').$sentence;
                     } else {
                         if ($currentChunk) {
                             $chunks[] = [
                                 'title' => $title,
-                                'content' => trim($currentChunk)
+                                'content' => trim($currentChunk),
                             ];
                         }
                         $currentChunk = $sentence;
                     }
                 }
-                
+
                 if ($currentChunk) {
                     $chunks[] = [
                         'title' => $title,
-                        'content' => trim($currentChunk)
+                        'content' => trim($currentChunk),
                     ];
                 }
             } else {
                 $chunks[] = [
                     'title' => $title,
-                    'content' => $content
+                    'content' => $content,
                 ];
             }
         }
-        
+
         return $chunks;
     }
 
@@ -85,20 +86,20 @@ class OpenAIService
 
         try {
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Authorization' => 'Bearer '.$this->apiKey,
                 'Content-Type' => 'application/json',
             ])->post('https://api.openai.com/v1/embeddings', [
                 'model' => 'text-embedding-3-small',
-                'input' => $text
+                'input' => $text,
             ]);
 
             if ($response->successful()) {
                 return $response->json()['data'][0]['embedding'];
             }
 
-            throw new \Exception('Failed to create embedding: ' . $response->body());
+            throw new \Exception('Failed to create embedding: '.$response->body());
         } catch (\Exception $e) {
-            Log::error('Error creating embedding: ' . $e->getMessage());
+            Log::error('Error creating embedding: '.$e->getMessage());
             throw $e;
         }
     }
@@ -107,11 +108,11 @@ class OpenAIService
     {
         try {
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Authorization' => 'Bearer '.$this->apiKey,
                 'Content-Type' => 'application/json',
             ])->post('https://api.openai.com/v1/embeddings', [
                 'model' => 'text-embedding-3-small',
-                'input' => $texts
+                'input' => $texts,
             ]);
 
             if ($response->successful()) {
@@ -122,9 +123,9 @@ class OpenAIService
                     ->all();
             }
 
-            throw new \Exception('Failed to create batch embeddings: ' . $response->body());
+            throw new \Exception('Failed to create batch embeddings: '.$response->body());
         } catch (\Exception $e) {
-            Log::error('Error creating batch embeddings: ' . $e->getMessage());
+            Log::error('Error creating batch embeddings: '.$e->getMessage());
             throw $e;
         }
     }
@@ -155,7 +156,8 @@ class OpenAIService
                 ->values();
 
         } catch (\Exception $e) {
-            Log::error('Error searching similar knowledge: ' . $e->getMessage());
+            Log::error('Error searching similar knowledge: '.$e->getMessage());
+
             return collect();
         }
     }
@@ -165,7 +167,7 @@ class OpenAIService
         if (function_exists('fast_cosine_similarity')) {
             return fast_cosine_similarity($vector1, $vector2);
         }
-        
+
         // Fallback to PHP implementation
         return $this->cosineSimilarity($vector1, $vector2);
     }
@@ -187,4 +189,4 @@ class OpenAIService
 
         return $dotProduct / ($norm1 * $norm2);
     }
-} 
+}

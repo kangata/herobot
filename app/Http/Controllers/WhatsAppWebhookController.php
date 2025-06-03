@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Integration;
 use App\Events\IntegrationUpdated;
+use App\Models\Integration;
 use Illuminate\Http\Request;
 
 class WhatsAppWebhookController extends Controller
@@ -24,7 +24,7 @@ class WhatsAppWebhookController extends Controller
         if (isset($data['status'])) {
             $updateData['is_connected'] = $data['status'] === 'connected';
 
-            if (!$updateData['is_connected']) {
+            if (! $updateData['is_connected']) {
                 $updateData['phone'] = null;
             }
         }

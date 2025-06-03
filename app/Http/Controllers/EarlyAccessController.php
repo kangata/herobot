@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Mail\EarlyAccessConfirmation;
 use App\Models\EarlyAccess;
 use App\Services\TelegramService;
-use App\Mail\EarlyAccessConfirmation;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
@@ -41,10 +41,10 @@ class EarlyAccessController extends Controller
             // Log the error but don't stop the process
             Log::error('Failed to send confirmation email', [
                 'error' => $e->getMessage(),
-                'application_id' => $application->id
+                'application_id' => $application->id,
             ]);
         }
 
         return back()->with('success', 'Your application has been submitted successfully. We will contact you soon!');
     }
-} 
+}

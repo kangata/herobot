@@ -20,7 +20,7 @@ class EarlyAccessConfirmation extends Mailable
 
     public function build()
     {
-        return $this->subject('Welcome to ' . config('app.name') . ' Early Access Program!')
-                    ->text('emails.early-access.confirmation-plain');
+        return $this->subject('Welcome to '.config('app.name').' Early Access Program!')
+            ->text('emails.early-access.confirmation-plain');
     }
 }

@@ -3,9 +3,8 @@
 namespace App\Services;
 
 use Xendit\Configuration;
-use Xendit\Invoice\InvoiceApi;
 use Xendit\Invoice\CreateInvoiceRequest;
-use Xendit\Invoice\GetInvoiceRequest;
+use Xendit\Invoice\InvoiceApi;
 use Xendit\XenditSdkException;
 
 class XenditService
@@ -15,7 +14,7 @@ class XenditService
     public function __construct()
     {
         Configuration::setXenditKey(config('services.xendit.secret_key'));
-        $this->apiInstance = new InvoiceApi();
+        $this->apiInstance = new InvoiceApi;
     }
 
     public function createInvoice(array $params)
@@ -23,7 +22,7 @@ class XenditService
         try {
             $createInvoiceRequest = new CreateInvoiceRequest([
                 'external_id' => $params['external_id'],
-                'description' => $params['description'], 
+                'description' => $params['description'],
                 'amount' => $params['amount'],
                 'invoice_duration' => 86400, // 24 hours
                 'currency' => 'IDR',
@@ -35,7 +34,7 @@ class XenditService
                 'customer' => [
                     'email' => $params['payer_email'],
                     'given_names' => $params['customer_name'] ?? null,
-                ]
+                ],
             ]);
 
             return $this->apiInstance->createInvoice($createInvoiceRequest);
