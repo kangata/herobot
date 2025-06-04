@@ -226,6 +226,8 @@ async function handleIncomingMessage(sock, integrationId, m) {
         // Stop typing indicator
         await sock.sendPresenceUpdate('paused', sender)
 
+        if (response.status === 404) return;
+
         // Send the response back to the sender
         if (responseData.response) {
             await sock.sendMessage(sender, { text: responseData.response })
