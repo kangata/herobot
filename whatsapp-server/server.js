@@ -9,7 +9,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const app = express()
-const port = process.env.WHATSAPP_SERVER_PORT || 3000
+const port = process.env.WA_PORT || 3000
 
 const logger = pino({
     level: 'error'

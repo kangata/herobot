@@ -37,7 +37,7 @@ return [
     ],
 
     'whatsapp' => [
-        'base_url' => env('WHATSAPP_SERVER_HOST', 'http://localhost').':'.env('WHATSAPP_SERVER_PORT', '3000'),
+        'base_url' => env('WHATSAPP_SERVER_URL', 'http://localhost:3000'),
         'token' => env('WHATSAPP_SERVER_TOKEN'),
     ],
 
