@@ -58,14 +58,14 @@ class User extends Authenticatable
         'profile_photo_url',
     ];
 
-    public function currentTeamBots()
-    {
-        return $this->currentTeam->bots;
-    }
-
     public function knowledges()
     {
         return $this->currentTeam->hasMany(Knowledge::class, 'team_id');
+    }
+
+    public function bots()
+    {
+        return $this->currentTeam->bots;
     }
 
     public function integrations()
