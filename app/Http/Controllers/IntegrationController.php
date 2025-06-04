@@ -6,6 +6,7 @@ use App\Facades\WhatsApp;
 use App\Models\Bot;
 use App\Models\Integration;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class IntegrationController extends Controller
@@ -100,7 +101,7 @@ class IntegrationController extends Controller
         return redirect()->route('integrations.show', $integration)->with('error', 'Failed to disconnect WhatsApp.');
     }
 
-    public function destroy(Integration $integration)
+    public function destroy(Request $request, Integration $integration)
     {
         if ($integration->type === 'whatsapp') {
             dispatch(function () use ($integration) {
@@ -108,7 +109,11 @@ class IntegrationController extends Controller
             });
         }
 
-        $integration->delete();
+        DB::transaction(function () use ($request, $integration) {
+            $request->user()->bots()->each(fn ($bot) => $bot->integrations()->detach($integration->id));
+
+            $integration->delete();
+        });
 
         return redirect()->route('integrations.index')->with('success', 'Integration deleted successfully.');
     }
