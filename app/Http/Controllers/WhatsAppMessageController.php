@@ -105,7 +105,19 @@ class WhatsAppMessageController extends Controller
         $geminiModel = config('services.gemini.model');
 
         // 4. Cari "knowledge" relevan (jika ada) menggunakan service vektor similarity
-        $relevantKnowledge = $this->openAIService->searchSimilarKnowledge($message, $bot, 3);
+        if (empty($geminiKey)) {
+            $relevantKnowledge = $this->openAIService->searchSimilarKnowledge($message, $bot, 3);
+            Log::info('Menggunakan OpenAI untuk mencari knowledge relevan');
+        } else {
+            $geminiService = new \App\Services\GeminiService();
+            $relevantKnowledge = $geminiService->searchSimilarKnowledge($message, $bot, 3);
+            Log::info('Menggunakan Gemini untuk mencari knowledge relevan');
+        }
+
+        Log::info('Relevan Knowledge ditemukan:', [
+            'knowledge_count' => $relevantKnowledge->count(),
+            'message'         => $message,
+        ]);
 
         // 5. Susun "system prompt" berdasar prompt bawaan bot + knowledge yang ditemukan
         $systemPrompt = $bot->prompt;
