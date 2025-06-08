@@ -2,10 +2,11 @@
 
 namespace App\Services;
 
+use App\Services\Contracts\EmbeddingServiceInterface;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class OpenAIService
+class OpenAIService implements EmbeddingServiceInterface
 {
     protected $apiKey;
 
@@ -77,7 +78,7 @@ class OpenAIService
         return $chunks;
     }
 
-    public function createEmbedding($text)
+    public function createEmbedding($text): array
     {
         // If text is an array, use batch processing
         if (is_array($text)) {
@@ -85,11 +86,13 @@ class OpenAIService
         }
 
         try {
+            $embeddingModel = config('services.openai.embedding_model', 'text-embedding-3-small');
+            
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer '.$this->apiKey,
                 'Content-Type' => 'application/json',
             ])->post('https://api.openai.com/v1/embeddings', [
-                'model' => 'text-embedding-3-small',
+                'model' => $embeddingModel,
                 'input' => $text,
             ]);
 
@@ -107,11 +110,13 @@ class OpenAIService
     public function createBatchEmbeddings(array $texts)
     {
         try {
+            $embeddingModel = config('services.openai.embedding_model', 'text-embedding-3-small');
+            
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer '.$this->apiKey,
                 'Content-Type' => 'application/json',
             ])->post('https://api.openai.com/v1/embeddings', [
-                'model' => 'text-embedding-3-small',
+                'model' => $embeddingModel,
                 'input' => $texts,
             ]);
 
@@ -168,7 +173,7 @@ class OpenAIService
             return fast_cosine_similarity($vector1, $vector2);
         }
 
-        // Fallback to PHP implementation
+        // Use PHP implementation
         return $this->cosineSimilarity($vector1, $vector2);
     }
 
