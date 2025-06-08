@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Events\KnowledgeUpdated;
 use App\Models\Knowledge;
+use App\Services\AIServiceFactory;
 use Illuminate\Support\Facades\Log;
 
 class KnowledgeService
@@ -18,37 +19,41 @@ class KnowledgeService
     public function indexKnowledge(Knowledge $knowledge)
     {
         try {
-            // Update status to indexing
             $knowledge->update(['status' => 'indexing']);
-
-            // Split the text into chunks
-            $chunks = $this->openAIService->splitTextIntoChunks($knowledge->text);
-
+            
+            // Extract and chunk content
+            $content = $knowledge->text;
+            $chunks = $this->openAIService->splitTextIntoChunks($content);
+            $texts = array_column($chunks, 'content');
+            
+            // Use configured embedding service
+            $embeddingService = AIServiceFactory::createEmbeddingService();
+            $vectors = $embeddingService->createEmbedding($texts);
+            
+            Log::info('Creating embeddings', [
+                'service' => get_class($embeddingService),
+                'knowledge_id' => $knowledge->id,
+                'chunk_count' => count($chunks),
+            ]);
+            
             // Delete existing vectors
             $knowledge->vectors()->delete();
-
-            // Extract all texts for batch processing
-            $texts = array_column($chunks, 'content');
-
-            // Create embeddings for all chunks at once
-            $vectors = $this->openAIService->createEmbedding($texts);
-
-            // Create vector records for each chunk with its corresponding embedding
+            
+            // Create vector records
             foreach ($chunks as $index => $chunk) {
                 $knowledge->vectors()->create([
                     'text' => $chunk['content'],
                     'vector' => $vectors[$index],
                 ]);
             }
-
-            // Update status to completed
+            
             $knowledge->update(['status' => 'completed']);
-
+            
             KnowledgeUpdated::dispatch($knowledge);
-
+            
             return true;
         } catch (\Exception $e) {
-            Log::error('Failed to index knowledge: '.$e->getMessage());
+            Log::error('Failed to index knowledge: ' . $e->getMessage());
             $knowledge->update(['status' => 'failed']);
             throw $e;
         }

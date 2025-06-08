@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ChatHistory;
 use App\Models\Integration;
 use App\Models\Transaction;
+use App\Services\AIServiceFactory;
 use App\Services\OpenAIService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -59,7 +60,7 @@ class WhatsAppMessageController extends Controller
             $totalResponses = ($latestTransaction->amount / 150) + 1;
             $latestTransaction->update([
                 'amount' => $latestTransaction->amount + 150,
-                'description' => 'AI Response Credits Usage (Total responses: '.$totalResponses.')',
+                'description' => 'AI Response Credits Usage (Total responses: ' . $totalResponses . ')',
             ]);
         } else {
             // Create new transaction
@@ -80,70 +81,71 @@ class WhatsAppMessageController extends Controller
         return response()->json(['response' => $response]);
     }
 
+    /**
+     * Generate response using configured AI services.
+     *
+     * @param  object                                   $bot         Instance model bot (memiliki properti "prompt")
+     * @param  string                                   $message     Pesan terbaru dari pengguna
+     * @param  \Illuminate\Support\Collection           $chatHistory Koleksi objek riwayat obrolan (memiliki properti "message" dan "response")
+     * @return string|bool  String berisi jawaban terformat, atau false kalau gagal
+     */
     private function generateResponse($bot, $message, $chatHistory)
     {
-        $siteUrl = config('app.url');
-        $siteName = config('app.name');
-        [
-            'api_key' => $apiKey,
-            'model' => $model
-        ] = config('services.openrouter');
-
-        // Find the most relevant knowledge using vector similarity
-        $relevantKnowledge = $this->openAIService->searchSimilarKnowledge($message, $bot, 3);
-
-        // Use bot's custom prompt or fallback to default
-        $systemPrompt = $bot->prompt;
-
-        if ($relevantKnowledge->isNotEmpty()) {
-            $systemPrompt .= "\n\nGunakan informasi berikut untuk menjawab pertanyaan:\n\n";
-            foreach ($relevantKnowledge as $knowledge) {
-                $systemPrompt .= "{$knowledge['text']}\n\n";
-            }
-        } else {
-            $systemPrompt .= "\n\nTidak ada informasi spesifik yang ditemukan dalam basis pengetahuan. Tawarkan untuk menghubungkan dengan staf yang dapat membantu lebih lanjut.";
-        }
-
-        $messages = [
-            ['role' => 'system', 'content' => $systemPrompt],
-            ...$chatHistory->map(function ($ch) {
-                return [
-                    ['role' => 'user', 'content' => $ch->message],
-                    ['role' => 'assistant', 'content' => $ch->response],
-                ];
-            })->flatten(1)->toArray(),
-            ['role' => 'user', 'content' => $message],
-        ];
-
         try {
-            $response = Http::withHeaders([
-                'Authorization' => "Bearer {$apiKey}",
-                'HTTP-Referer' => $siteUrl,
-                'X-Title' => $siteName,
-                'Content-Type' => 'application/json',
-            ])->post('https://openrouter.ai/api/v1/chat/completions', [
-                'model' => $model,
-                'messages' => $messages,
-            ])->json();
-
-            Log::info('OpenRouter: '.json_encode([
-                'model' => $model,
-                'messages' => $messages,
-                'response' => $response,
-            ]));
-
-            $response = $response['choices'][0]['message']['content'];
-
-            // Convert markdown to WhatsApp formatting
-            $response = $this->convertMarkdownToWhatsApp($response);
-
-            return $response;
+            // Get separately configured services
+            $chatService = AIServiceFactory::createChatService();
+            $embeddingService = AIServiceFactory::createEmbeddingService();
+            
+            Log::info('Using AI services', [
+                'chat_service' => get_class($chatService),
+                'embedding_service' => get_class($embeddingService),
+            ]);
+            
+            // Search for relevant knowledge using embedding service
+            $relevantKnowledge = $embeddingService->searchSimilarKnowledge($message, $bot, 3);
+            
+            Log::info('Relevant Knowledge found:', [
+                'knowledge_count' => $relevantKnowledge->count(),
+                'message' => $message,
+            ]);
+            
+            // Build system prompt
+            $systemPrompt = $bot->prompt;
+            if ($relevantKnowledge->isNotEmpty()) {
+                $systemPrompt .= "\n\nGunakan informasi berikut untuk menjawab pertanyaan:\n\n";
+                foreach ($relevantKnowledge as $knowledge) {
+                    $systemPrompt .= "{$knowledge['text']}\n\n";
+                }
+            } else {
+                $systemPrompt .= "\n\nTidak ada informasi spesifik yang ditemukan dalam basis pengetahuan.";
+            }
+            
+            // Build messages array
+            $messages = [
+                ['role' => 'system', 'content' => $systemPrompt],
+                ...$chatHistory
+                    ->map(function ($ch) {
+                        return [
+                            ['role' => 'user', 'content' => $ch->message],
+                            ['role' => 'assistant', 'content' => $ch->response],
+                        ];
+                    })
+                    ->flatten(1)
+                    ->toArray(),
+                ['role' => 'user', 'content' => $message],
+            ];
+            
+            // Generate response using chat service
+            $response = $chatService->generateResponse($messages);
+            
+            return $this->convertMarkdownToWhatsApp($response);
+            
         } catch (\Exception $e) {
-            Log::error('Failed to generate response: '.$e->getMessage());
-
+            Log::error('Failed to generate response: ' . $e->getMessage());
             return false;
         }
     }
+
 
     private function convertMarkdownToWhatsApp($text)
     {
