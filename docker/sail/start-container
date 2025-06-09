@@ -22,6 +22,22 @@ else
     gosu $WWWUSER composer install
 fi
 
+# Run npm install
+echo "Installing NPM dependencies..."
+if [ "$SUPERVISOR_PHP_USER" = "root" ]; then
+    npm install
+else
+    gosu $WWWUSER npm install
+fi
+
+# Run migrations and seeders
+echo "Running migrations and seeders..."
+if [ "$SUPERVISOR_PHP_USER" = "root" ]; then
+    php artisan migrate --seed
+else
+    gosu $WWWUSER php artisan migrate --seed
+fi
+
 if [ $# -gt 0 ]; then
     if [ "$SUPERVISOR_PHP_USER" = "root" ]; then
         exec "$@"

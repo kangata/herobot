@@ -52,48 +52,39 @@ For a quick and easy setup without local installation, try these cloud-based opt
 To set up the Herobot App locally, follow these steps:
 
 1. **Clone the Repository**:
-   - Clone the repository to your local machine using:
-     ```sh
-     git clone git@github.com:herobot-id/herobot.git
-     ```
+    ```sh
+    git clone git@github.com:herobot-id/herobot.git
+    ```
 
 2. **Set Up Environment Variables**:
-   - Copy the `.env.example` file to `.env`:
-     ```sh
-     cp .env.example .env
-     ```
+    ```sh
+    cp .env.example .env
+    ```
 
 3. **Start Services**
    ```sh
-   # Start Docker containers in detached mode
+   # Start all services (this will automatically install dependencies and start all required services)
    docker compose up -d
-
-   # Install NPM dependencies
-   ./vendor/bin/sail npm install
-
-   # Start Vite development server
-   ./vendor/bin/sail npm run dev
-
-   # Start Reverb WebSocket server
-   ./vendor/bin/sail artisan reverb:start
-
-   # Start WhatsApp server
-   ./vendor/bin/sail artisan whatsapp:start
    ```
+   
+   This single command will automatically:
+   - Install Composer dependencies
+   - Install NPM dependencies
+   - Start the Laravel application
+   - Start the Vite development server
+   - Start the Reverb WebSocket server
+   - Start the WhatsApp server
 
 4. **Access the Application**:
    - The application will be accessible on port 80. Open your browser and navigate to `http://localhost`.
 
 5. **Stopping Services**:
    ```sh
-   # Stop Docker containers
+   # Stop all Docker containers and services
    docker compose down
-
-   # If you need to stop individual services:
-   # Stop Vite development server: Ctrl+C in the terminal running npm run dev
-   # Stop Reverb WebSocket server: Ctrl+C in the terminal running reverb:start
-   # Stop WhatsApp server: Ctrl+C in the terminal running whatsapp:start
    ```
+   
+   This will automatically stop all services including the Laravel application, Vite development server, Reverb WebSocket server, and WhatsApp server.
 
 By following these steps, you will have the Herobot App up and running on your local machine, ready for development and testing.
 

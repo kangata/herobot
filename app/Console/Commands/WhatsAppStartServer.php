@@ -16,7 +16,6 @@ class WhatsAppStartServer extends Command
         $storagePath = storage_path('app/whatsapp-auth');
 
         Process::forever()
-            ->tty()
             ->run(['node', base_path('whatsapp-server/server.js'), $storagePath]);
     }
 }
