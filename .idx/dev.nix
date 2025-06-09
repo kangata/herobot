@@ -19,7 +19,7 @@
           cp .env.example .env
         fi
 
-        sed -i "s/^APP_URL=.*/APP_URL=https:\/\/$WEB_HOST/" .env
+        sed -i "s/^APP_URL=.*/APP_URL=https:\/\/8888-$WEB_HOST/" .env
 
         echo "APP_PORT=8888" >> .env
         
