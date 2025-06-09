@@ -64,7 +64,7 @@ To set up the Herobot App locally, follow these steps:
 3. **Start Services**
    ```sh
    # Start all services (this will automatically install dependencies and start all required services)
-   docker compose up -d
+   docker compose up
    ```
    
    This single command will automatically:
