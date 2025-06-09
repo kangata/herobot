@@ -3,7 +3,7 @@
 namespace App\Events;
 
 use App\Models\Channel;
-use Illuminate\Broadcasting\Channel;
+use Illuminate\Broadcasting\Channel as BroadcastingChannel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
@@ -19,7 +19,7 @@ class ChannelUpdated implements ShouldBroadcast
         public string $status,
     ) {}
 
-    public function broadcastOn(): Channel
+    public function broadcastOn(): BroadcastingChannel
     {
         return new PrivateChannel('channel.'.$this->channel->id);
     }

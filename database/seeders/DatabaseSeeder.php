@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -14,11 +14,19 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        // \App\Models\User::factory(10)->create();
-
-        \App\Models\User::factory()->withPersonalTeam()->firstOrCreate(
+        $user = \App\Models\User::firstOrCreate(
             ['email' => 'user@example.com'],
-            ['name' => 'Test User']
+            [
+                'name' => 'User Example',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+                'remember_token' => \Illuminate\Support\Str::random(10),
+            ]
+        );
+
+        \App\Models\Team::firstOrCreate(
+            ['name' => 'User Example\'s Team'],
+            ['user_id' => $user->id, 'personal_team' => true]
         );
     }
 }
