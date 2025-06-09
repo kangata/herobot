@@ -2,11 +2,11 @@
 
 namespace App\Policies;
 
-use App\Models\Integration;
+use App\Models\Channel;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class IntegrationPolicy
+class ChannelPolicy
 {
     use HandlesAuthorization;
 
@@ -25,9 +25,9 @@ class IntegrationPolicy
      *
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function view(User $user, Integration $integration)
+    public function view(User $user, Channel $channel)
     {
-        return $user->currentTeam->id === $integration->team_id;
+        return $user->currentTeam->id === $channel->team_id;
     }
 
     /**
@@ -45,9 +45,9 @@ class IntegrationPolicy
      *
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function update(User $user, Integration $integration)
+    public function update(User $user, Channel $channel)
     {
-        return $user->currentTeam->id === $integration->team_id;
+        return $user->currentTeam->id === $channel->team_id;
     }
 
     /**
@@ -55,9 +55,9 @@ class IntegrationPolicy
      *
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function delete(User $user, Integration $integration)
+    public function delete(User $user, Channel $channel)
     {
-        return $user->currentTeam->id === $integration->team_id;
+        return $user->currentTeam->id === $channel->team_id;
     }
 
     /**
@@ -65,9 +65,9 @@ class IntegrationPolicy
      *
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function restore(User $user, Integration $integration)
+    public function restore(User $user, Channel $channel)
     {
-        return $user->currentTeam->id === $integration->team_id;
+        return $user->currentTeam->id === $channel->team_id;
     }
 
     /**
@@ -75,8 +75,8 @@ class IntegrationPolicy
      *
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function forceDelete(User $user, Integration $integration)
+    public function forceDelete(User $user, Channel $channel)
     {
-        return $user->currentTeam->id === $integration->team_id;
+        return $user->currentTeam->id === $channel->team_id;
     }
 }

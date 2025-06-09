@@ -43,14 +43,14 @@
                     <div class="flex justify-between gap-x-4 py-3">
                         <dt class="text-gray-900">Integrated</dt>
                         <dd class="flex flex-wrap items-start gap-x-2">
-                            <template v-for="(integration, index) in bot.integrations" :key="index">
+                            <template v-for="(channel, index) in bot.channels" :key="index">
                                 <div
-                                    :class="[statuses[integration.is_connected ? 'Connected' : 'Disconnected'], 'rounded-md py-1 px-2 text-xs font-medium ring-1 ring-inset']">
-                                    {{ integration.name }} ({{ integration.is_connected ? 'Connected' : 'Disconnected' }})</div>
+                                    :class="[statuses[channel.is_connected ? 'Connected' : 'Disconnected'], 'rounded-md py-1 px-2 text-xs font-medium ring-1 ring-inset']">
+                                    {{ channel.name }} ({{ channel.is_connected ? 'Connected' : 'Disconnected' }})</div>
                             </template>
-                            <template v-if="bot.integrations.length === 0">
+                            <template v-if="bot.channels.length === 0">
                                 <div class="text-gray-400">
-                                    No integrations found.
+                                    No channels found.
                                 </div>
                             </template>
                         </dd>

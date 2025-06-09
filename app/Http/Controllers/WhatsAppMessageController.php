@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ChatHistory;
-use App\Models\Integration;
+use App\Models\Channel;
 use App\Models\Transaction;
 use App\Services\AIServiceFactory;
 use App\Services\OpenAIService;
@@ -22,16 +22,16 @@ class WhatsAppMessageController extends Controller
 
     public function handleIncomingMessage(Request $request)
     {
-        $integrationId = $request->input('integrationId');
+        $channelId = $request->input('channelId');
         $sender = $request->input('sender');
         $messageContent = $request->input('message');
 
-        $integration = Integration::with(['bots', 'team.balance'])->findOrFail($integrationId);
-        $bot = $integration->bots->first();
-        $team = $integration->team;
+        $channel = Channel::with(['bots', 'team.balance'])->findOrFail($channelId);
+        $bot = $channel->bots->first();
+        $team = $channel->team;
 
         if (! $bot) {
-            return response()->json(['error' => 'No bot found for this integration'], 404);
+            return response()->json(['error' => 'No bot found for this channel'], 404);
         }
 
         // // Check if team has enough credits (150 per response)
@@ -44,7 +44,7 @@ class WhatsAppMessageController extends Controller
             ->latest()
             ->first();
 
-        $chatHistory = ChatHistory::where('integration_id', $integrationId)
+        $chatHistory = ChatHistory::where('channel_id', $channelId)
             ->where('sender', $sender)
             ->latest()
             ->take(5)
@@ -76,7 +76,7 @@ class WhatsAppMessageController extends Controller
         // Deduct credits from team's balance
         $team->balance->decrement('amount', 150);
 
-        $this->saveChatHistory($integrationId, $sender, $messageContent, $response);
+        $this->saveChatHistory($channelId, $sender, $messageContent, $response);
 
         return response()->json(['response' => $response]);
     }
@@ -173,10 +173,10 @@ class WhatsAppMessageController extends Controller
         return $text;
     }
 
-    private function saveChatHistory($integrationId, $sender, $message, $response)
+    private function saveChatHistory($channelId, $sender, $message, $response)
     {
         ChatHistory::create([
-            'integration_id' => $integrationId,
+            'channel_id' => $channelId,
             'sender' => $sender,
             'message' => $message,
             'response' => $response,

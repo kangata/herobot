@@ -15,12 +15,12 @@ class DashboardController extends Controller
         $team = $request->user()->currentTeam;
 
         // Get total messages for last 30 days
-        $totalMessages = ChatHistory::whereHas('integration', function ($query) use ($team) {
+        $totalMessages = ChatHistory::whereHas('channel', function ($query) use ($team) {
             $query->where('team_id', $team->id);
         })->where('created_at', '>=', now()->subDays(30))->count();
 
         // Get total conversations (unique chat histories grouped by sender)
-        $totalConversations = ChatHistory::whereHas('integration', function ($query) use ($team) {
+        $totalConversations = ChatHistory::whereHas('channel', function ($query) use ($team) {
             $query->where('team_id', $team->id);
         })
             ->where('created_at', '>=', now()->subDays(30))
@@ -41,7 +41,7 @@ class DashboardController extends Controller
         }
 
         // Get daily message counts
-        $dailyMessageStats = ChatHistory::whereHas('integration', function ($query) use ($team) {
+        $dailyMessageStats = ChatHistory::whereHas('channel', function ($query) use ($team) {
             $query->where('team_id', $team->id);
         })
             ->where('created_at', '>=', $startDate)
@@ -52,7 +52,7 @@ class DashboardController extends Controller
             ->pluck('count', 'date');
 
         // Get daily conversation counts (unique senders per day)
-        $dailyConversationStats = ChatHistory::whereHas('integration', function ($query) use ($team) {
+        $dailyConversationStats = ChatHistory::whereHas('channel', function ($query) use ($team) {
             $query->where('team_id', $team->id);
         })
             ->where('created_at', '>=', $startDate)

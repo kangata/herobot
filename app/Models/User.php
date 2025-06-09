@@ -68,8 +68,8 @@ class User extends Authenticatable
         return $this->currentTeam->bots;
     }
 
-    public function integrations()
+    public function channels()
     {
-        return $this->currentTeam->integrations;
+        return $this->currentTeam->channels;
     }
 }

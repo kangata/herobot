@@ -1,10 +1,10 @@
 <template>
-    <AppLayout title="Integration Create">
+    <AppLayout title="Channel Create">
         <form @submit.prevent="submit" class="w-full max-w-xl">
             <div class="space-y-12">
                 <div class="mb-6">
-                    <h2 class="text-base font-semibold leading-7 text-gray-900">Create a new integration</h2>
-                    <p class="mt-1 text-sm leading-6 text-gray-600">This information will be used to create your integration.</p>
+                    <h2 class="text-base font-semibold leading-7 text-gray-900">Create a new channel</h2>
+                    <p class="mt-1 text-sm leading-6 text-gray-600">This information will be used to create your channel.</p>
                 </div>
             </div>
 
@@ -23,11 +23,11 @@
             </div>
 
             <div class="flex flex-row text-right">
-                <SecondaryButton class="mr-2" :href="route('integrations.index')">
+                <SecondaryButton class="mr-2" @click="goBack">
                     Cancel
                 </SecondaryButton>
                 <PrimaryButton :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
-                    Save
+                    Create
                 </PrimaryButton>
             </div>
         </form>
@@ -45,18 +45,23 @@ import SecondaryButton from '@/Components/SecondaryButton.vue';
 import RadioInput from '@/Components/RadioInput.vue';
 
 const props = defineProps({
-    integration: {
-        type: Object,
-        required: true,
+    bot_id: {
+        type: [String, Number],
+        default: null,
     }
 });
 
 const form = useForm({
-    name: props.integration.name,
-    type: props.integration.type,
+    name: '',
+    type: 'whatsapp',
+    bot_id: props.bot_id,
 });
 
 const submit = () => {
-    form.put(route('integrations.update', props.integration.id));
+    form.post(route('channels.store'));
+};
+
+const goBack = () => {
+    history.back();
 };
 </script>

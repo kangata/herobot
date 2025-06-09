@@ -1,17 +1,17 @@
 <template>
-    <AppLayout :title="integration.name">
+    <AppLayout :title="channel.name">
         <div class="space-y-12">
             <div class="sm:flex sm:items-center mb-4">
                 <div class="sm:flex-auto">
-                    <h1 class="text-xl font-semibold leading-6 text-gray-900">{{ integration.name }}</h1>
+                    <h1 class="text-xl font-semibold leading-6 text-gray-900">{{ channel.name }}</h1>
                     <div class="mt-2">
-                        <div class="bg-green-500 text-white inline-block py-1 px-2 text-xs rounded capitalize">{{ integration.type }}</div>
+                        <div class="bg-green-500 text-white inline-block py-1 px-2 text-xs rounded capitalize">{{ channel.type }}</div>
                     </div>
                 </div>
                 <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
-                    <PrimaryButton :href="route('integrations.edit', integration.id)">
+                    <PrimaryButton :href="route('channels.edit', channel.id)">
                         <PencilIcon class="-ml-0.5 mr-1.5 h-5 w-5" aria-hidden="true" />
-                        Edit integration
+                        Edit channel
                     </PrimaryButton>
                 </div>
             </div>
@@ -19,7 +19,7 @@
 
         <hr class="mb-4" />
 
-        <div v-if="!integration.is_connected" class="flex justify-between items-center max-w-4xl mx-auto">
+        <div v-if="!channel.is_connected" class="flex justify-between items-center max-w-4xl mx-auto">
             <div class="w-1/2 pr-8 flex flex-col justify-center">
                 <h2 class="text-2xl font-semibold mb-4">Connect WhatsApp to Your Bot</h2>
                 <p class="mb-6 text-gray-600">Follow these steps to link your WhatsApp account with our bot system:</p>
@@ -34,7 +34,7 @@
                 <div class="bg-white p-4 rounded-lg shadow-md relative">
                     <img 
                         :src="whatsapp.qr" 
-                        alt="WhatsApp Integration QR Code" 
+                        alt="WhatsApp Channel QR Code" 
                         class="w-full h-auto transition-all duration-300"
                         :class="{ 'blur-sm': isQRExpired }"
                     />
@@ -89,7 +89,7 @@
                             <div class="sm:flex sm:items-center">
                                 <PhoneIcon class="h-8 w-8 text-gray-400" aria-hidden="true" />
                                 <div class="ml-3">
-                                    <h4 class="text-lg font-medium text-gray-900">{{ $filters.formatPhoneNumber(integration.phone) }}</h4>
+                                    <h4 class="text-lg font-medium text-gray-900">{{ $filters.formatPhoneNumber(channel.phone) }}</h4>
                                 </div>
                             </div>
                         </div>
@@ -125,7 +125,7 @@ import { router } from '@inertiajs/vue3';
 import { PencilIcon, CheckCircleIcon, PhoneIcon } from "@heroicons/vue/24/outline";
 
 const props = defineProps({
-    integration: Object,
+    channel: Object,
     whatsapp: {
         type: Object,
         default: () => ({
@@ -142,20 +142,20 @@ onMounted(() => {
         ]
     });
 
-    window.Echo.private(`integration.${props.integration.id}`)
-        .listen('IntegrationUpdated', ({ status }) => {
+    window.Echo.private(`channel.${props.channel.id}`)
+        .listen('ChannelUpdated', ({ status }) => {
             if (status === 'qr_expired') {
                 isQRExpired.value = true;
                 router.reload({
                     only: [
-                        'integration'
+                        'channel'
                     ],
                 });
             } else {
                 isQRExpired.value = false;
                 router.reload({
                     only: [
-                        'integration',
+                        'channel',
                         'whatsapp'
                     ],
                 });
@@ -164,7 +164,7 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-    window.Echo.leave(`integration.${props.integration.id}`);
+    window.Echo.leave(`channel.${props.channel.id}`);
 });
 
 const isDisconnecting = ref(false);
@@ -173,7 +173,7 @@ const isQRExpired = ref(false);
 
 const disconnectWhatsApp = () => {
     isDisconnecting.value = true;
-    router.post(route('integrations.disconnect', props.integration.id), {}, {
+    router.post(route('channels.disconnect', props.channel.id), {}, {
         preserveState: true,
         preserveScroll: true,
         onFinish: () => {

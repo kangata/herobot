@@ -19,9 +19,9 @@ class Bot extends Model
         return $this->belongsTo(Team::class);
     }
 
-    public function integrations()
+    public function channels()
     {
-        return $this->morphedByMany(Integration::class, 'connectable', 'bot_connections');
+        return $this->morphedByMany(Channel::class, 'connectable', 'bot_connections');
     }
 
     public function knowledge()

@@ -52,9 +52,9 @@ class Team extends JetstreamTeam
         return $this->hasMany(Knowledge::class);
     }
 
-    public function integrations()
+    public function channels()
     {
-        return $this->hasMany(Integration::class);
+        return $this->hasMany(Channel::class);
     }
 
     public function transactions()

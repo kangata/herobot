@@ -5,7 +5,7 @@ use App\Http\Controllers\BillingController;
 use App\Http\Controllers\BotController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EarlyAccessController;
-use App\Http\Controllers\IntegrationController;
+use App\Http\Controllers\ChannelController;
 use App\Http\Controllers\KnowledgeController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -55,9 +55,9 @@ Route::middleware([
     Route::resource('knowledges', KnowledgeController::class);
 
     // Integrations
-    Route::resource('integrations', IntegrationController::class);
-    Route::get('/integrations/{integration}/qr', [IntegrationController::class, 'getQR'])->name('integrations.qr');
-    Route::post('/integrations/{integration}/disconnect', [IntegrationController::class, 'disconnect'])->name('integrations.disconnect');
+    Route::resource('channels', ChannelController::class);
+    Route::get('/channels/{channel}/qr', [ChannelController::class, 'getQR'])->name('channels.qr');
+    Route::post('/channels/{channel}/disconnect', [ChannelController::class, 'disconnect'])->name('channels.disconnect');
 
     Route::get('/reports', function () {
         return Inertia::render('Reports/Index');
@@ -67,8 +67,8 @@ Route::middleware([
 });
 
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
-    Route::post('/bots/{bot}/connect-integration', [BotController::class, 'connectIntegration'])->name('bots.connect-integration');
-    Route::delete('/bots/{bot}/disconnect-integration', [BotController::class, 'disconnectIntegration'])->name('bots.disconnect-integration');
+    Route::post('/bots/{bot}/connect-channel', [BotController::class, 'connectChannel'])->name('bots.connect-channel');
+    Route::delete('/bots/{bot}/disconnect-channel', [BotController::class, 'disconnectChannel'])->name('bots.disconnect-channel');
     Route::post('/bots/{bot}/connect-knowledge', [BotController::class, 'connectKnowledge'])->name('bots.connect-knowledge');
     Route::delete('/bots/{bot}/disconnect-knowledge', [BotController::class, 'disconnectKnowledge'])->name('bots.disconnect-knowledge');
 

@@ -10,14 +10,14 @@ class ChatHistory extends Model
     use HasFactory;
 
     protected $fillable = [
-        'integration_id',
+        'channel_id',
         'sender',
         'message',
         'response',
     ];
 
-    public function integration()
+    public function channel()
     {
-        return $this->belongsTo(Integration::class);
+        return $this->belongsTo(Channel::class);
     }
 }

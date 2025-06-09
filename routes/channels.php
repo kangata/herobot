@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\Integration;
+use App\Models\Channel;
 use App\Models\Knowledge;
 use Illuminate\Support\Facades\Broadcast;
 
@@ -19,8 +19,8 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 });
 
-Broadcast::channel('integration.{id}', function ($user, $id) {
-    return $user->current_team_id === Integration::find($id)->team_id;
+Broadcast::channel('channel.{id}', function ($user, $id) {
+    return $user->current_team_id === Channel::find($id)->team_id;
 });
 
 Broadcast::channel('team.{id}.knowledges', function ($user, $id) {

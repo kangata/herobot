@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\IntegrationUpdated;
-use App\Models\Integration;
+use App\Events\ChannelUpdated;
+use App\Models\Channel;
 use Illuminate\Http\Request;
 
 class WhatsAppWebhookController extends Controller
@@ -11,9 +11,9 @@ class WhatsAppWebhookController extends Controller
     public function handle(Request $request)
     {
         $data = $request->all();
-        $integrationId = $data['integrationId'];
+        $channelId = $data['channelId'];
 
-        $integration = Integration::findOrFail($integrationId);
+        $channel = Channel::findOrFail($channelId);
 
         $updateData = [];
 
@@ -29,10 +29,10 @@ class WhatsAppWebhookController extends Controller
             }
         }
 
-        $integration->update($updateData);
+        $channel->update($updateData);
 
         // Broadcast the general update
-        IntegrationUpdated::dispatch($integration, $data['status'] ?? 'unknown');
+        ChannelUpdated::dispatch($channel, $data['status'] ?? 'unknown');
 
         return response()->json(['message' => 'Webhook processed successfully']);
     }

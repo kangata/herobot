@@ -88,14 +88,14 @@ async function startAllConnections() {
     }
 }
 
-async function connectToWhatsApp(integrationId) {
+async function connectToWhatsApp(channelId) {
     const { state, saveCreds, removeCreds } = await useMySQLAuthState({
-        session: integrationId,
+        session: channelId,
         ...MYSQL_CONFIG
     })
 
     // Store the creds functions for later use
-    credsSavers.set(integrationId, { saveCreds, removeCreds })
+    credsSavers.set(channelId, { saveCreds, removeCreds })
 
     const sock = makeWASocket({
         auth: {
@@ -105,31 +105,31 @@ async function connectToWhatsApp(integrationId) {
         logger: logger
     })
 
-    console.log('Starting connection for integration:', integrationId)
+    console.log('Starting connection for channel:', channelId)
 
     let connectionTimeout = setTimeout(async () => {
-        console.log('Connection timeout for integration:', integrationId, sock.user)
+        console.log('Connection timeout for channel:', channelId, sock.user)
         if (sock.user == null) {
             sock.ev.removeAllListeners('connection.update')
             sock.ev.removeAllListeners('creds.update')
             sock.ev.removeAllListeners('messages.upsert')
-            connections.delete(integrationId)
-            connectionPool.connections.delete(integrationId)
-            qrCodes.delete(integrationId)
+            connections.delete(channelId)
+            connectionPool.connections.delete(channelId)
+            qrCodes.delete(channelId)
 
             // Remove MySQL auth data
-            const credsHandler = credsSavers.get(integrationId)
+            const credsHandler = credsSavers.get(channelId)
             if (credsHandler && credsHandler.removeCreds) {
                 try {
                     await credsHandler.removeCreds()
-                    console.log('Removed MySQL auth data for integration:', integrationId)
+                    console.log('Removed MySQL auth data for channel:', channelId)
                 } catch (error) {
                     console.error('Failed to remove MySQL auth data:', error)
                 }
             }
-            credsSavers.delete(integrationId)
+            credsSavers.delete(channelId)
 
-            sendWebSocketUpdate(integrationId, { status: 'qr_expired' })
+            sendWebSocketUpdate(channelId, { status: 'qr_expired' })
         }
     }, 2 * 60 * 1000) // 2 minutes timeout
 
@@ -142,36 +142,36 @@ async function connectToWhatsApp(integrationId) {
 
                 if (isLoggedOut) {
                     // Remove MySQL auth data
-                    const credsHandler = credsSavers.get(integrationId)
+                    const credsHandler = credsSavers.get(channelId)
                     if (credsHandler && credsHandler.removeCreds) {
                         try {
                             await credsHandler.removeCreds()
-                            console.log('Removed MySQL auth data for logged out integration:', integrationId)
+                            console.log('Removed MySQL auth data for logged out channel:', channelId)
                         } catch (error) {
                             console.error('Failed to remove MySQL auth data:', error)
                         }
                     }
-                    credsSavers.delete(integrationId)
-                    sendWebSocketUpdate(integrationId, { status: 'disconnected' })
+                    credsSavers.delete(channelId)
+                    sendWebSocketUpdate(channelId, { status: 'disconnected' })
                 }
 
                 clearTimeout(connectionTimeout)
-                connectToWhatsApp(integrationId);
+                connectToWhatsApp(channelId);
             }
         } else if (connection === 'open') {
-            qrCodes.delete(integrationId) // Clear QR code once connected
+            qrCodes.delete(channelId) // Clear QR code once connected
 
             clearTimeout(connectionTimeout) // Clear the timeout when connected
 
             const phone = sock.user.id.split(':')[0]
-            sendWebSocketUpdate(integrationId, { status: 'connected', phone })
+            sendWebSocketUpdate(channelId, { status: 'connected', phone })
         }
 
         if (qr) {
             qrcode.toDataURL(qr)
                 .then(qrImage => {
-                    qrCodes.set(integrationId, qrImage)
-                    sendWebSocketUpdate(integrationId, { status: 'waiting_for_qr_scan', qr: qrImage })
+                    qrCodes.set(channelId, qrImage)
+                    sendWebSocketUpdate(channelId, { status: 'waiting_for_qr_scan', qr: qrImage })
                 })
                 .catch(err => console.error('Failed to generate QR code:', err))
         }
@@ -180,13 +180,13 @@ async function connectToWhatsApp(integrationId) {
     sock.ev.on('creds.update', saveCreds)
 
     sock.ev.on('messages.upsert', async (m) => {
-        await handleIncomingMessage(sock, integrationId, m)
+        await handleIncomingMessage(sock, channelId, m)
     })
 
-    connections.set(integrationId, sock)
+    connections.set(channelId, sock)
 }
 
-async function handleIncomingMessage(sock, integrationId, m) {
+async function handleIncomingMessage(sock, channelId, m) {
     const message = m.messages[0]
     if (message.key.fromMe) return // Ignore outgoing messages
 
@@ -207,7 +207,7 @@ async function handleIncomingMessage(sock, integrationId, m) {
                 'X-WhatsApp-Server-Token': WHATSAPP_SERVER_TOKEN
             },
             body: JSON.stringify({
-                integrationId,
+                channelId,
                 sender,
                 message: messageContent
             })
@@ -217,7 +217,7 @@ async function handleIncomingMessage(sock, integrationId, m) {
 
         // Logging
         console.log('Incoming Message:', {
-            integrationId,
+            channelId,
             sender,
             message: messageContent
         });
@@ -239,8 +239,8 @@ async function handleIncomingMessage(sock, integrationId, m) {
     }
 }
 
-function sendWebSocketUpdate(integrationId, data) {
-    console.log('sendWebSocketUpdate', integrationId, data)
+function sendWebSocketUpdate(channelId, data) {
+    console.log('sendWebSocketUpdate', channelId, data)
     return fetch(`${LARAVEL_API_URL}/api/whatsapp/webhook`, {
         method: 'POST',
         headers: {
@@ -248,7 +248,7 @@ function sendWebSocketUpdate(integrationId, data) {
             'X-WhatsApp-Server-Token': WHATSAPP_SERVER_TOKEN
         },
         body: JSON.stringify({
-            integrationId,
+            channelId,
             ...data
         })
     })
@@ -258,37 +258,37 @@ function sendWebSocketUpdate(integrationId, data) {
 const connectionPool = {
     maxConnections: 50,
     connections: new Map(),
-    async getConnection(integrationId) {
-        if (!this.connections.has(integrationId) && this.connections.size < this.maxConnections) {
-            await connectToWhatsApp(integrationId)
-            this.connections.set(integrationId, connections.get(integrationId))
+    async getConnection(channelId) {
+        if (!this.connections.has(channelId) && this.connections.size < this.maxConnections) {
+            await connectToWhatsApp(channelId)
+            this.connections.set(channelId, connections.get(channelId))
         }
-        return this.connections.get(integrationId)
+        return this.connections.get(channelId)
     }
 }
 
 // API endpoints
 app.post('/connect', async (req, res) => {
-    const { integrationId } = req.body
-    if (!integrationId) {
-        return res.status(400).json({ error: 'Integration ID is required' })
+    const { channelId } = req.body
+    if (!channelId) {
+        return res.status(400).json({ error: 'channel ID is required' })
     }
 
     try {
-        await connectionPool.getConnection(integrationId)
+        await connectionPool.getConnection(channelId)
         res.json({ success: true, message: 'Connection initiated or already exists' })
     } catch (error) {
         res.status(500).json({ error: 'Failed to establish connection' })
     }
 })
 
-app.get('/status/:integrationId', async (req, res) => {
-    const { integrationId } = req.params
-    await connectionPool.getConnection(integrationId)
+app.get('/status/:channelId', async (req, res) => {
+    const { channelId } = req.params
+    await connectionPool.getConnection(channelId)
 
     setTimeout(async () => {
-        const qrCode = qrCodes.get(integrationId)
-        const connection = connections.get(integrationId)
+        const qrCode = qrCodes.get(channelId)
+        const connection = connections.get(channelId)
         let status = 'disconnected'
 
         if (connection && connection.user) {
@@ -305,9 +305,9 @@ app.get('/status/:integrationId', async (req, res) => {
 })
 
 app.post('/send-message', async (req, res) => {
-    const { integrationId, recipient, message } = req.body
+    const { channelId, recipient, message } = req.body
     try {
-        const sock = await connectionPool.getConnection(integrationId)
+        const sock = await connectionPool.getConnection(channelId)
         if (!sock) {
             return res.status(404).json({ error: 'Connection not found' })
         }
@@ -320,35 +320,35 @@ app.post('/send-message', async (req, res) => {
 })
 
 app.post('/disconnect', async (req, res) => {
-    const { integrationId } = req.body
-    if (!integrationId) {
-        return res.status(400).json({ error: 'Integration ID is required' })
+    const { channelId } = req.body
+    if (!channelId) {
+        return res.status(400).json({ error: 'channel ID is required' })
     }
 
     try {
         // Remove MySQL auth data
-        const credsHandler = credsSavers.get(integrationId)
+        const credsHandler = credsSavers.get(channelId)
         if (credsHandler && credsHandler.removeCreds) {
             try {
                 await credsHandler.removeCreds()
-                console.log('Removed MySQL auth data for integration:', integrationId)
+                console.log('Removed MySQL auth data for channel:', channelId)
             } catch (error) {
                 console.error('Failed to remove MySQL auth data:', error)
             }
         }
-        credsSavers.delete(integrationId)
+        credsSavers.delete(channelId)
 
-        const connection = connections.get(integrationId)
+        const connection = connections.get(channelId)
         if (connection) {
             connection.logout()
             connection.end(true)
-            connections.delete(integrationId)
-            connectionPool.connections.delete(integrationId)
+            connections.delete(channelId)
+            connectionPool.connections.delete(channelId)
         }
 
-        qrCodes.delete(integrationId)
+        qrCodes.delete(channelId)
 
-        sendWebSocketUpdate(integrationId, { status: 'disconnected' })
+        sendWebSocketUpdate(channelId, { status: 'disconnected' })
 
         res.json({ success: true, message: 'Disconnected successfully' })
     } catch (error) {

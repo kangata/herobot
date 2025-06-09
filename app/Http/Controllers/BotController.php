@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bot;
-use App\Models\Integration;
+use App\Models\Channel;
 use App\Models\Knowledge;
 use Illuminate\Http\Request;
 
@@ -16,7 +16,7 @@ class BotController extends Controller
 
     public function index(Request $request)
     {
-        $bots = Bot::with('integrations')
+        $bots = Bot::with('channels')
             ->where('team_id', $request->user()->currentTeam->id)
             ->get();
 
@@ -50,10 +50,10 @@ class BotController extends Controller
 
     public function show(Bot $bot)
     {
-        $bot->load('integrations', 'knowledge');
+        $bot->load('channels', 'knowledge');
 
-        $availableIntegrations = Integration::where('team_id', $bot->team_id)
-            ->whereNotIn('id', $bot->integrations->pluck('id'))
+        $availableChannels = Channel::where('team_id', $bot->team_id)
+            ->whereNotIn('id', $bot->channels->pluck('id'))
             ->get();
 
         $availableKnowledge = Knowledge::where('team_id', $bot->team_id)
@@ -62,7 +62,7 @@ class BotController extends Controller
 
         return inertia('Bots/Show', [
             'bot' => $bot,
-            'availableIntegrations' => $availableIntegrations,
+            'availableChannels' => $availableChannels,
             'availableKnowledge' => $availableKnowledge,
         ]);
     }
@@ -98,26 +98,26 @@ class BotController extends Controller
         return redirect()->route('bots.index')->with('success', 'Bot deleted successfully.');
     }
 
-    public function connectIntegration(Request $request, Bot $bot)
+    public function connectChannel(Request $request, Bot $bot)
     {
         $validated = $request->validate([
-            'integration_id' => 'required|exists:integrations,id',
+            'channel_id' => 'required|exists:channels,id',
         ]);
 
-        $bot->integrations()->attach($validated['integration_id']);
+        $bot->channels()->attach($validated['channel_id']);
 
-        return back()->with('success', 'Integration connected successfully.');
+        return back()->with('success', 'Channel connected successfully.');
     }
 
-    public function disconnectIntegration(Request $request, Bot $bot)
+    public function disconnectChannel(Request $request, Bot $bot)
     {
         $validated = $request->validate([
-            'integration_id' => 'required|exists:integrations,id',
+            'channel_id' => 'required|exists:channels,id',
         ]);
 
-        $bot->integrations()->detach($validated['integration_id']);
+        $bot->channels()->detach($validated['channel_id']);
 
-        return back()->with('success', 'Integration disconnected successfully.');
+        return back()->with('success', 'Channel disconnected successfully.');
     }
 
     public function connectKnowledge(Request $request, Bot $bot)

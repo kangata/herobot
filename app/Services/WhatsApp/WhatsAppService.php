@@ -13,19 +13,19 @@ class WhatsAppService
         $this->baseUrl = $baseUrl;
     }
 
-    public function connect(string $integrationId): array
+    public function connect(string $channelId): array
     {
         $response = Http::post("{$this->baseUrl}/connect", [
-            'integrationId' => $integrationId,
+            'channelId' => $channelId,
         ]);
 
         return $response->json();
     }
 
-    public function status(string $integrationId): array
+    public function status(string $channelId): array
     {
         try {
-            $response = Http::get("{$this->baseUrl}/status/{$integrationId}");
+            $response = Http::get("{$this->baseUrl}/status/{$channelId}");
         } catch (\Exception $e) {
             return [];
         }
@@ -33,10 +33,10 @@ class WhatsAppService
         return $response->json();
     }
 
-    public function sendMessage(string $integrationId, string $recipient, string $message): array
+    public function sendMessage(string $channelId, string $recipient, string $message): array
     {
         $response = Http::post("{$this->baseUrl}/send-message", [
-            'integrationId' => $integrationId,
+            'channelId' => $channelId,
             'recipient' => $recipient,
             'message' => $message,
         ]);
@@ -44,10 +44,10 @@ class WhatsAppService
         return $response->json();
     }
 
-    public function disconnect(string $integrationId): array
+    public function disconnect(string $channelId): array
     {
         $response = Http::post("{$this->baseUrl}/disconnect", [
-            'integrationId' => $integrationId,
+            'channelId' => $channelId,
         ]);
 
         return $response->json();
