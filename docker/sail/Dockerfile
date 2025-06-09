@@ -2,6 +2,7 @@ FROM ubuntu:22.04
 
 LABEL maintainer="Taylor Otwell"
 
+ARG WWWUSER
 ARG WWWGROUP
 ARG NODE_VERSION=20
 ARG POSTGRES_VERSION=15
@@ -54,7 +55,7 @@ RUN apt-get update \
 RUN setcap "cap_net_bind_service=+ep" /usr/bin/php8.4
 
 RUN groupadd --force -g $WWWGROUP sail
-RUN useradd -ms /bin/bash --no-user-group -g $WWWGROUP -u 1337 sail
+RUN useradd -ms /bin/bash --no-user-group -g $WWWGROUP -u $WWWUSER sail
 
 # Add compilation of vector search extension
 COPY extensions/vector_search.c /tmp/vector_search.c
