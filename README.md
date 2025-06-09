@@ -4,6 +4,8 @@ Herobot is your 24/7 customer service assistant that helps you manage multi-chan
 
 ❤️ **Support this project**: If you find Herobot helpful, consider [sponsoring the project on GitHub](https://github.com/sponsors/dihak)
 
+![Image](https://github.com/user-attachments/assets/0e5d0d9a-8aea-4501-90e3-d5396f173104)
+
 ## Deployment Options
 
 Herobot is an open-source project that offers flexible deployment options to suit your needs:
@@ -13,6 +15,19 @@ Herobot is an open-source project that offers flexible deployment options to sui
 2. **Self-Hosting**: Deploy Herobot on your own infrastructure for complete control and customization. Follow our setup guide below to host it on your servers.
 
 Both options provide the same powerful features, letting you choose the deployment that best fits your requirements and privacy needs.
+
+## Key Features
+
+- **Multi-Channel Support**: Manage all your customer conversations from a single platform across multiple messaging channels
+- **Smart Business Tools**: Seamlessly integrate with your existing tools - from shipping cost checks to Google Forms, spreadsheets, and custom API integrations
+- **Instant Responses**: Provide 24/7 customer support, qualify leads automatically, and handle routine inquiries while your team focuses on high-value conversations
+- **Scalable Solution**: Perfect for both small businesses and large enterprises, with the ability to manage multiple channels and teams from one dashboard
+
+## Setup Guide
+
+### Quick Start Options
+
+For a quick and easy setup without local installation, try these cloud-based options:
 
 <a href="https://studio.firebase.google.com/import?url=https://github.com/herobot-id/herobot">
   <picture>
@@ -32,14 +47,7 @@ Both options provide the same powerful features, letting you choose the deployme
   <img src="https://gitpod.io/button/open-in-gitpod.svg" alt="Open in Gitpod" height="32">
 </a>
 
-## Key Features
-
-- **Multi-Channel Support**: Manage all your customer conversations from a single platform across multiple messaging channels
-- **Smart Business Tools**: Seamlessly integrate with your existing tools - from shipping cost checks to Google Forms, spreadsheets, and custom API integrations
-- **Instant Responses**: Provide 24/7 customer support, qualify leads automatically, and handle routine inquiries while your team focuses on high-value conversations
-- **Scalable Solution**: Perfect for both small businesses and large enterprises, with the ability to manage multiple channels and teams from one dashboard
-
-## Setup Guide
+### Local Development Setup
 
 To set up the Herobot App locally, follow these steps:
 
