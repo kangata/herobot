@@ -191,7 +191,42 @@ async function handleIncomingMessage(sock, channelId, m) {
     if (message.key.fromMe) return // Ignore outgoing messages
 
     const sender = message.key.remoteJid
-    const messageContent = message.message.conversation || message.message.extendedTextMessage?.text || ''
+
+    // If it's a group chat, we need to check if the bot was mentioned
+    if (sender?.endsWith('@g.us')) {
+        const botJid = sock.user.id.replace(/:\d+/, "");
+
+        // 1. Check if the bot was mentioned
+        const mentionedJids = message.message?.extendedTextMessage?.contextInfo?.mentionedJid
+            || msg?.message?.extendedTextMessage?.contextInfo?.participant
+            || [];
+        const isBotMentioned = mentionedJids.includes(botJid);
+
+        // 2. Check if the message is a reply to the bot's own message
+        const quotedMessage = message.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+        const quotedParticipant = message.message?.extendedTextMessage?.contextInfo?.participant; // JID of the sender of the quoted message
+
+        // A message is a reply to the bot if it quotes a message and the quoted message's sender is the bot
+        const isReplyingToBotMessage = quotedMessage && quotedParticipant === botJid;
+
+        if (!isBotMentioned && !isReplyingToBotMessage) {
+            console.log(`[Group Message] Bot not mentioned and not replied to in group chat (${sender}). Ignoring message.`);
+            return;
+        } else if (isBotMentioned) {
+            console.log(`[Group Message] Bot was mentioned in group chat (${sender}). Processing message.`);
+        } else if (isReplyingToBotMessage) {
+            console.log(`[Group Message] Bot's message was replied to in group chat (${sender}). Processing message.`);
+        }
+    }
+
+    // get message from several source
+    const messageContent =
+        message.message?.conversation ||
+        message.message?.extendedTextMessage?.text ||
+        message.message?.imageMessage?.caption ||
+        message.message?.videoMessage?.caption ||
+        message.message?.documentMessage?.caption ||
+        ''
 
     try {
         // Send read receipt
