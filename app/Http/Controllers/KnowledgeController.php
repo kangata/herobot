@@ -8,6 +8,7 @@ use App\Models\Bot;
 use App\Models\Knowledge;
 use App\Services\KnowledgeService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class KnowledgeController extends Controller
 {
@@ -108,7 +109,11 @@ class KnowledgeController extends Controller
 
     public function destroy(Knowledge $knowledge)
     {
-        $knowledge->delete();
+        DB::transaction(function () use ($knowledge) {
+            $knowledge->bots()->detach();
+            $knowledge->vectors()->delete();
+            $knowledge->delete();
+        });
 
         return redirect()->route('knowledges.index')->with('success', 'Knowledge deleted successfully.');
     }

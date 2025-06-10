@@ -6,6 +6,7 @@ use App\Models\Bot;
 use App\Models\Channel;
 use App\Models\Knowledge;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class BotController extends Controller
 {
@@ -93,7 +94,11 @@ class BotController extends Controller
 
     public function destroy(Bot $bot)
     {
-        $bot->delete();
+        DB::transaction(function () use ($bot) {
+            $bot->channels()->detach();
+            $bot->knowledge()->detach();
+            $bot->delete();
+        });
 
         return redirect()->route('bots.index')->with('success', 'Bot deleted successfully.');
     }

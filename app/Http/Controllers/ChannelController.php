@@ -109,9 +109,9 @@ class ChannelController extends Controller
             });
         }
 
-        DB::transaction(function () use ($request, $channel) {
-            $request->user()->bots()->each(fn ($bot) => $bot->channels()->detach($channel->id));
-
+        DB::transaction(function () use ($channel) {
+            $channel->bots()->detach();
+            $channel->chatHistories()->delete();
             $channel->delete();
         });
 
