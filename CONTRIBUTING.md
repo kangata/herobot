@@ -1,6 +1,6 @@
-# Contributing to Herobot Enterprise Application
+# Contributing to Herobot Application
 
-Thank you for your interest in contributing to the Herobot Enterprise Application! This guide will help you get started with development and ensure consistency across the codebase.
+Thank you for your interest in contributing to the Herobot Application! This guide will help you get started with development and ensure consistency across the codebase.
 
 ## 🚀 Quick Start
 
@@ -314,4 +314,4 @@ This project is licensed under the BSD 3-Clause License. By contributing, you ag
 
 ---
 
-Thank you for contributing to the Herobot Enterprise Application! 🎉 
+Thank you for contributing to the Herobot Application! 🎉 
