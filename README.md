@@ -20,7 +20,7 @@ Both options provide the same powerful features, letting you choose the deployme
 
 - **Multi-Channel Support**: Manage all your customer conversations from a single platform across multiple messaging channels
 - **Smart Business Tools**: Seamlessly integrate with your existing tools - from shipping cost checks to Google Forms, spreadsheets, and custom API integrations
-- **Instant Responses**: Provide 24/7 customer support, qualify leads automatically, and handle routine inquiries while your team focuses on high-value conversations
+- **Instant Responses**: Provide 24/7 customer support, qualify lead automatically, and handle routine inquiries while your team focuses on high-value conversations
 - **Scalable Solution**: Perfect for both small businesses and large enterprises, with the ability to manage multiple channels and teams from one dashboard
 
 ## Setup Guide
@@ -88,3 +88,15 @@ To set up the Herobot App locally, follow these steps:
 
 By following these steps, you will have the Herobot App up and running on your local machine, ready for development and testing.
 
+## Contributing
+
+We welcome contributions from the community! Whether you're fixing bugs, adding new features, or improving documentation, your help is appreciated.
+
+Please read our [Contributing Guide](CONTRIBUTING.md) for detailed information on:
+- Development setup and workflow
+- Code standards and best practices
+- Testing requirements
+- Pull request process
+- Channel integration guidelines
+
+For bug reports and feature requests, please [open an issue](https://github.com/herobot-id/herobot/issues) on GitHub.
