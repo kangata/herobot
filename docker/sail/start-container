@@ -44,7 +44,7 @@ if [ -z "$APP_KEY" ]; then
         gosu "${WWWUSER}" php artisan key:generate
     fi
 else
-    echo "APP_KEY already exist!"
+    echo "APP_KEY already exists!"
 fi
 
 

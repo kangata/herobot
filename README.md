@@ -62,8 +62,8 @@ To set up the Herobot App locally, follow these steps:
     ```
    | Variable | Value | Notes |
    |----------|-------|-------|
-   | `CHAT_SERVICE` | `gemini / openai / openrouter` | Set to **gemini** for Google Gemini chat (free tier). but if you have OpenAI, You can use OpenAI as well, or if you want to use openrouter, you can choose it as well. |
-   | `EMBEDDING_SERVICE` | `gemini / openai` | Set to **gemini** for embedding generation (free tier). but if you have OpenAI, You can use OpenAI as well. (openrouter doesn't have embedding models) |
+   | `CHAT_SERVICE` | `gemini / openai / openrouter` | Set to **gemini** for Google Gemini chat (free tier). but if you have OpenAI, you can use OpenAI as well, or if you want to use openrouter, you can choose it as well. |
+   | `EMBEDDING_SERVICE` | `gemini / openai` | Set to **gemini** for embedding generation (free tier). but if you have OpenAI, you can use OpenAI as well. (openrouter doesn't have embedding models) |
    | `GEMINI_API_KEY` | `<your-api-key>` | Get an API-key at <https://aistudio.google.com/apikey>. |
    | `OPENAI_API_KEY` | `<your-api-key>` | Get an API-key at <https://platform.openai.com/account/api-keys> |
    | `OPENROUTER_API_KEY` | `<your-api-key>` | Get an API-key at <https://openrouter.ai/settings/keys> |
