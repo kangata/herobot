@@ -30,6 +30,14 @@ else
     gosu $WWWUSER npm install
 fi
 
+#Run key Generate
+echo "Generating application key..."
+if ["${SUPERVISOR_PHP_USER}" = "root"]; then
+    php artisan key:generate
+else
+    gosu $WWWUSER php artisan key:generate
+fi
+
 # Run migrations and seeders
 echo "Running migrations and seeders..."
 if [ "$SUPERVISOR_PHP_USER" = "root" ]; then
