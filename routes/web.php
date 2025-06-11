@@ -31,10 +31,6 @@ Route::get('/', function () {
     ]);
 });
 
-Route::get('/register', function () {
-    return redirect()->route('early-access');
-})->name('register');
-
 Route::get('/early-access', function () {
     return Inertia::render('EarlyAccess');
 })->name('early-access');
