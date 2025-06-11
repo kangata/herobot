@@ -30,13 +30,23 @@ else
     gosu $WWWUSER npm install
 fi
 
-#Run key Generate
-echo "Generating application key..."
-if ["${SUPERVISOR_PHP_USER}" = "root"]; then
-    php artisan key:generate
-else
-    gosu $WWWUSER php artisan key:generate
+# Generate application key
+echo "Check APP_KEY..."
+if [ -f .env ]; then
+    export $(grep -v '^#' .env | xargs)
 fi
+if [ -z "$APP_KEY" ]; then
+    echo "there is no APP_KEY. run php artisan key:generate..."
+    
+    if ["$SUPERVISOR_PHP_USER" = "root"]; then
+        php artisan key:generate
+    else
+        gosu "${WWWUSER}" php artisan key:generate
+    fi
+else
+    echo "APP_KEY already exist!"
+fi
+
 
 # Run migrations and seeders
 echo "Running migrations and seeders..."
