@@ -23,26 +23,33 @@ class GeminiChatService implements ChatServiceInterface
     {
         $model = $model ?? $this->model;
         
-        // Extract system prompt and user prompt from messages
+        // Extract system prompt and conversation messages
         $systemPrompt = '';
-        $userPrompt = '';
+        $contents = [];
         
         foreach ($messages as $message) {
             if ($message['role'] === 'system') {
                 $systemPrompt = $message['content'];
-            } elseif ($message['role'] === 'user') {
-                $userPrompt = $message['content']; // Get the last user message
+            } elseif (in_array($message['role'], ['user', 'assistant'])) {
+                // Convert 'assistant' role to 'model' for Gemini API
+                $role = $message['role'] === 'assistant' ? 'model' : 'user';
+                $contents[] = [
+                    'role' => $role,
+                    'parts' => [['text' => $message['content']]]
+                ];
             }
         }
 
         $payload = [
-            'system_instruction' => [
-                'parts' => [['text' => $systemPrompt]]
-            ],
-            'contents' => [
-                ['parts' => [['text' => $userPrompt]]]
-            ]
+            'contents' => $contents
         ];
+
+        // Only add system instruction if it exists
+        if (!empty($systemPrompt)) {
+            $payload['system_instruction'] = [
+                'parts' => [['text' => $systemPrompt]]
+            ];
+        }
 
         $url = "{$this->baseUrl}/{$model}:generateContent?key={$this->apiKey}";
 
