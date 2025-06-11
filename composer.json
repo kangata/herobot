@@ -1,10 +1,10 @@
 {
-    "name": "herobot.id/app.herobot.id",
+    "name": "herobot.id/herobot",
     "version": "1.0",
     "type": "project",
     "description": "The Herobot Enterprise Application",
     "keywords": ["herobot"],
-    "license": "MIT",
+    "license": "BSD-3-Clause",
     "require": {
         "php": "^8.4",
         "guzzlehttp/guzzle": "^7.2",
