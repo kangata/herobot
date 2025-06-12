@@ -24,7 +24,13 @@ class WhatsAppMessageController extends Controller
     {
         $channelId = $request->input('channelId');
         $sender = $request->input('sender');
-        $messageContent = $request->input('message');
+        $messageContent = $request->input('message', '');
+        $messageType = $request->input('messageType', 'text');
+        $media = $request->input('media');
+
+        if (empty($messageContent) && $media) {
+            $messageContent = 'Tolong Jelaskan media yang saya kirimkan.';
+        }
 
         $channel = Channel::with(['bots', 'team.balance'])->findOrFail($channelId);
         $bot = $channel->bots->first();
@@ -52,7 +58,16 @@ class WhatsAppMessageController extends Controller
             ->reverse()
             ->values();
 
-        $response = $this->generateResponse($bot, $messageContent, $chatHistory);
+        // Log pesan yang masuk beserta medianya jika ada
+        Log::info('Incoming WhatsApp message', [
+            'channelId' => $channelId,
+            'sender' => $sender,
+            'messageType' => $messageType,
+            'hasMedia' => !is_null($media),
+            'messageContent' => $messageContent
+        ]);
+
+        $response = $this->generateResponse($bot, $messageContent, $chatHistory, $media);
 
         // Create or update transaction record
         if ($latestTransaction && $latestTransaction->type == 'usage' && $latestTransaction->created_at->isToday()) {
@@ -89,7 +104,7 @@ class WhatsAppMessageController extends Controller
      * @param  \Illuminate\Support\Collection           $chatHistory Koleksi objek riwayat obrolan (memiliki properti "message" dan "response")
      * @return string|bool  String berisi jawaban terformat, atau false kalau gagal
      */
-    private function generateResponse($bot, $message, $chatHistory)
+    private function generateResponse($bot, $message, $chatHistory, $media = null)
     {
         try {
             // Get separately configured services
@@ -134,9 +149,10 @@ class WhatsAppMessageController extends Controller
                     ->toArray(),
                 ['role' => 'user', 'content' => $message],
             ];
+
             
             // Generate response using chat service
-            $response = $chatService->generateResponse($messages);
+            $response = $chatService->generateResponse($messages, null, $media ? $media['data'] : null);
             
             return $this->convertMarkdownToWhatsApp($response);
             

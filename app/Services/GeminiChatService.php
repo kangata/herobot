@@ -19,24 +19,40 @@ class GeminiChatService implements ChatServiceInterface
         $this->baseUrl = "https://generativelanguage.googleapis.com/v1beta/models";
     }
 
-    public function generateResponse(array $messages, ?string $model = null): string
+    public function generateResponse(array $messages, ?string $model = null, ?string $media = null): string
     {
         $model = $model ?? $this->model;
         
-        // Extract system prompt and conversation messages
         $systemPrompt = '';
         $contents = [];
         
-        foreach ($messages as $message) {
-            if ($message['role'] === 'system') {
-                $systemPrompt = $message['content'];
-            } elseif (in_array($message['role'], ['user', 'assistant'])) {
-                // Convert 'assistant' role to 'model' for Gemini API
-                $role = $message['role'] === 'assistant' ? 'model' : 'user';
-                $contents[] = [
-                    'role' => $role,
-                    'parts' => [['text' => $message['content']]]
-                ];
+        if ($media) {
+            $media = preg_replace('/^data:image\/[a-zA-Z]+;base64,/', '', $media);
+            $contents[] = [
+                'parts' => [
+                    [
+                        'inline_data' => [
+                            'mime_type' => 'image/jpeg',
+                            'data' => $media
+                        ]
+                    ],
+                    [
+                        'text' => $messages[count($messages) - 1]['content']
+                    ]
+                ]
+            ];
+        } else {
+            foreach ($messages as $message) {
+                if ($message['role'] === 'system') {
+                    $systemPrompt = $message['content'];
+                } elseif (in_array($message['role'], ['user', 'assistant'])) {
+                    // Convert 'assistant' role to 'model' for Gemini API
+                    $role = $message['role'] === 'assistant' ? 'model' : 'user';
+                    $contents[] = [
+                        'role' => $role,
+                        'parts' => [['text' => $message['content']]]
+                    ];
+                }
             }
         }
 
@@ -44,8 +60,8 @@ class GeminiChatService implements ChatServiceInterface
             'contents' => $contents
         ];
 
-        // Only add system instruction if it exists
-        if (!empty($systemPrompt)) {
+        // Only add system instruction if it exists and tidak ada image
+        if (!empty($systemPrompt) && !$media) {
             $payload['system_instruction'] = [
                 'parts' => [['text' => $systemPrompt]]
             ];
@@ -58,6 +74,10 @@ class GeminiChatService implements ChatServiceInterface
         ])->post($url, $payload);
 
         if (!$response->successful()) {
+            Log::error('Gemini API Error', [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
             throw new \Exception('Gemini chat request failed: ' . $response->body());
         }
 

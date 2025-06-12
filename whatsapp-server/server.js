@@ -1,10 +1,11 @@
-const { default: makeWASocket, DisconnectReason, makeCacheableSignalKeyStore } = require('@whiskeysockets/baileys')
+const { default: makeWASocket, DisconnectReason, makeCacheableSignalKeyStore, downloadMediaMessage } = require('@whiskeysockets/baileys')
 const { useMySQLAuthState } = require('mysql-baileys')
 const express = require('express')
 const { Boom } = require('@hapi/boom')
 const qrcode = require('qrcode')
 const pino = require('pino')
 const dotenv = require('dotenv');
+const fs = require('fs');
 
 dotenv.config();
 
@@ -35,6 +36,18 @@ const MYSQL_CONFIG = {
     retryRequestDelayMs: parseInt(process.env.WA_DB_RETRY_DELAY) || 200,
     maxtRetries: parseInt(process.env.WA_DB_MAX_RETRIES) || 10
 };
+
+// Fungsi untuk logging
+function logMessage(message) {
+    const timestamp = new Date().toISOString();
+    const logMessage = `[${timestamp}] ${message}\n`;
+    
+    // Log ke console
+    console.log(logMessage);
+    
+    // Log ke file
+    fs.appendFileSync('whatsapp.log', logMessage);
+}
 
 async function startAllConnections() {
     console.log('MySQL-based authentication initialized. Checking for existing sessions...');
@@ -176,7 +189,7 @@ async function connectToWhatsApp(channelId) {
                 .catch(err => console.error('Failed to generate QR code:', err))
         }
     })
-
+ 
     sock.ev.on('creds.update', saveCreds)
 
     sock.ev.on('messages.upsert', async (m) => {
@@ -191,49 +204,51 @@ async function handleIncomingMessage(sock, channelId, m) {
     if (message.key.fromMe) return // Ignore outgoing messages
 
     const sender = message.key.remoteJid
-
-    // If it's a group chat, we need to check if the bot was mentioned
-    if (sender?.endsWith('@g.us')) {
-        const botJid = sock.user.id.replace(/:\d+/, "");
-
-        // 1. Check if the bot was mentioned
-        const mentionedJids = message.message?.extendedTextMessage?.contextInfo?.mentionedJid
-            || msg?.message?.extendedTextMessage?.contextInfo?.participant
-            || [];
-        const isBotMentioned = mentionedJids.includes(botJid);
-
-        // 2. Check if the message is a reply to the bot's own message
-        const quotedMessage = message.message?.extendedTextMessage?.contextInfo?.quotedMessage;
-        const quotedParticipant = message.message?.extendedTextMessage?.contextInfo?.participant; // JID of the sender of the quoted message
-
-        // A message is a reply to the bot if it quotes a message and the quoted message's sender is the bot
-        const isReplyingToBotMessage = quotedMessage && quotedParticipant === botJid;
-
-        if (!isBotMentioned && !isReplyingToBotMessage) {
-            console.log(`[Group Message] Bot not mentioned and not replied to in group chat (${sender}). Ignoring message.`);
-            return;
-        } else if (isBotMentioned) {
-            console.log(`[Group Message] Bot was mentioned in group chat (${sender}). Processing message.`);
-        } else if (isReplyingToBotMessage) {
-            console.log(`[Group Message] Bot's message was replied to in group chat (${sender}). Processing message.`);
-        }
-    }
-
-    // get message from several source
-    const messageContent =
-        message.message?.conversation ||
-        message.message?.extendedTextMessage?.text ||
-        message.message?.imageMessage?.caption ||
-        message.message?.videoMessage?.caption ||
-        message.message?.documentMessage?.caption ||
-        ''
+    let mediaBase64 = null;
+    let messageContent = message.message?.conversation || '';
+    let messageType = 'text';
 
     try {
+        // Handle media messages
+        if (message.message?.imageMessage) {
+            try {
+                const buffer = await downloadMediaMessage(
+                    message,
+                    'buffer',
+                    {},
+                    {
+                        logger: logger,
+                        reuploadRequest: sock.updateMediaMessage
+                    }
+                )
+                mediaBase64 = buffer.toString('base64');
+                messageType = 'image';
+                messageContent = message.message.imageMessage.caption || '';
+            } catch (error) {
+                console.error('Error downloading media:', error);
+            }
+        }
+
         // Send read receipt
         await sock.readMessages([message.key])
 
         // Send typing indicator
         await sock.sendPresenceUpdate('composing', sender)
+
+        const payload = {
+            channelId,
+            sender,
+            message: messageContent,
+            messageType: messageType
+        }
+
+        // Tambahkan media ke payload jika ada
+        if (mediaBase64) {
+            payload.media = {
+                data: mediaBase64,
+                mime_type: message.message.imageMessage.mimetype
+            }
+        }
 
         const response = await fetch(`${LARAVEL_API_URL}/api/whatsapp/incoming-message`, {
             method: 'POST',
@@ -241,22 +256,10 @@ async function handleIncomingMessage(sock, channelId, m) {
                 'Content-Type': 'application/json',
                 'X-WhatsApp-Server-Token': WHATSAPP_SERVER_TOKEN
             },
-            body: JSON.stringify({
-                channelId,
-                sender,
-                message: messageContent
-            })
+            body: JSON.stringify(payload)
         });
 
         const responseData = await response.json();
-
-        // Logging
-        console.log('Incoming Message:', {
-            channelId,
-            sender,
-            message: messageContent
-        });
-        console.log('Response:', responseData);
 
         // Stop typing indicator
         await sock.sendPresenceUpdate('paused', sender)
