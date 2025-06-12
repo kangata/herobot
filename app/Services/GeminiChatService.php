@@ -28,19 +28,29 @@ class GeminiChatService implements ChatServiceInterface
         
         if ($media) {
             $media = preg_replace('/^data:image\/[a-zA-Z]+;base64,/', '', $media);
-            $contents[] = [
-                'parts' => [
-                    [
-                        'inline_data' => [
-                            'mime_type' => 'image/jpeg',
-                            'data' => $media
-                        ]
-                    ],
-                    [
-                        'text' => $messages[count($messages) - 1]['content']
+
+            foreach ($messages as $message) {
+                if ($message['role'] === 'system') {
+                    $systemPrompt = $message['content'];
+                } elseif (in_array($message['role'], ['user', 'assistant'])) {
+                    $role = $message['role'] === 'assistant' ? 'model' : 'user';
+                    $contents[] = [
+                        'role' => $role,
+                        'parts' => [['text' => $message['content']]]
+                    ];
+                }
+            }
+
+            // Tambahkan media ke pesan terakhir
+            $lastIndex = count($contents) - 1;
+            if ($lastIndex >= 0) {
+                $contents[$lastIndex]['parts'][] = [
+                    'inline_data' => [
+                        'mime_type' => 'image/jpeg',
+                        'data' => $media
                     ]
-                ]
-            ];
+                ];
+            }
         } else {
             foreach ($messages as $message) {
                 if ($message['role'] === 'system') {
