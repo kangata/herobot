@@ -37,17 +37,6 @@ const MYSQL_CONFIG = {
     maxtRetries: parseInt(process.env.WA_DB_MAX_RETRIES) || 10
 };
 
-// Fungsi untuk logging
-function logMessage(message) {
-    const timestamp = new Date().toISOString();
-    const logMessage = `[${timestamp}] ${message}\n`;
-    
-    // Log ke console
-    console.log(logMessage);
-    
-    // Log ke file
-    fs.appendFileSync('whatsapp.log', logMessage);
-}
 
 async function startAllConnections() {
     console.log('MySQL-based authentication initialized. Checking for existing sessions...');
