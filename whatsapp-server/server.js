@@ -1,4 +1,4 @@
-const { default: makeWASocket, DisconnectReason, makeCacheableSignalKeyStore } = require('@whiskeysockets/baileys')
+const { default: makeWASocket, DisconnectReason, makeCacheableSignalKeyStore, downloadMediaMessage } = require('@whiskeysockets/baileys')
 const { useMySQLAuthState } = require('mysql-baileys')
 const express = require('express')
 const { Boom } = require('@hapi/boom')
@@ -35,6 +35,7 @@ const MYSQL_CONFIG = {
     retryRequestDelayMs: parseInt(process.env.WA_DB_RETRY_DELAY) || 200,
     maxtRetries: parseInt(process.env.WA_DB_MAX_RETRIES) || 10
 };
+
 
 async function startAllConnections() {
     console.log('MySQL-based authentication initialized. Checking for existing sessions...');
@@ -198,7 +199,7 @@ async function handleIncomingMessage(sock, channelId, m) {
 
         // 1. Check if the bot was mentioned
         const mentionedJids = message.message?.extendedTextMessage?.contextInfo?.mentionedJid
-            || msg?.message?.extendedTextMessage?.contextInfo?.participant
+            || message?.message?.extendedTextMessage?.contextInfo?.participant
             || [];
         const isBotMentioned = mentionedJids.includes(botJid);
 
@@ -219,21 +220,73 @@ async function handleIncomingMessage(sock, channelId, m) {
         }
     }
 
-    // get message from several source
-    const messageContent =
+    let mediaBase64 = null;
+    let messageContent =
         message.message?.conversation ||
         message.message?.extendedTextMessage?.text ||
         message.message?.imageMessage?.caption ||
         message.message?.videoMessage?.caption ||
-        message.message?.documentMessage?.caption ||
-        ''
+        message.message?.documentMessage?.caption || ''
+    let messageType = 'text';
 
     try {
+        // Handle media messages
+        if (message.message?.imageMessage) {
+            try {
+                const buffer = await downloadMediaMessage(
+                    message,
+                    'buffer',
+                    {},
+                    {
+                        logger: logger,
+                        reuploadRequest: sock.updateMediaMessage
+                    }
+                )
+                mediaBase64 = buffer.toString('base64');
+                messageType = 'image';
+                messageContent = message.message.imageMessage.caption || '';
+            } catch (error) {
+                console.error('Error downloading media:', error);
+            }
+        } else if (message.message?.audioMessage) {
+            try {
+                const buffer = await downloadMediaMessage(
+                    message,
+                    'buffer',
+                    {},
+                    {
+                        logger: logger,
+                        reuploadRequest: sock.updateMediaMessage
+                    }
+                )
+                mediaBase64 = buffer.toString('base64');
+                messageType = 'audio';
+                messageContent = '';
+            } catch (error) {
+                console.error('Error downloading audio:', error);
+            }
+        }
+
         // Send read receipt
         await sock.readMessages([message.key])
 
         // Send typing indicator
         await sock.sendPresenceUpdate('composing', sender)
+
+        const payload = {
+            channelId,
+            sender,
+            message: messageContent,
+            messageType: messageType
+        }
+
+        // Tambahkan media ke payload jika ada
+        if (mediaBase64) {
+            payload.media = {
+                data: mediaBase64,
+                mime_type: message.message.imageMessage?.mimetype || message.message.audioMessage?.mimetype
+            }
+        }
 
         const response = await fetch(`${LARAVEL_API_URL}/api/whatsapp/incoming-message`, {
             method: 'POST',
@@ -241,22 +294,10 @@ async function handleIncomingMessage(sock, channelId, m) {
                 'Content-Type': 'application/json',
                 'X-WhatsApp-Server-Token': WHATSAPP_SERVER_TOKEN
             },
-            body: JSON.stringify({
-                channelId,
-                sender,
-                message: messageContent
-            })
+            body: JSON.stringify(payload)
         });
 
         const responseData = await response.json();
-
-        // Logging
-        console.log('Incoming Message:', {
-            channelId,
-            sender,
-            message: messageContent
-        });
-        console.log('Response:', responseData);
 
         // Stop typing indicator
         await sock.sendPresenceUpdate('paused', sender)

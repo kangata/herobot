@@ -19,19 +19,17 @@ class GeminiChatService implements ChatServiceInterface
         $this->baseUrl = "https://generativelanguage.googleapis.com/v1beta/models";
     }
 
-    public function generateResponse(array $messages, ?string $model = null): string
+    public function generateResponse(array $messages, ?string $model = null, ?string $media = null, ?string $mimeType = null): string
     {
         $model = $model ?? $this->model;
         
-        // Extract system prompt and conversation messages
-        $systemPrompt = '';
         $contents = [];
-        
+        $systemPrompt = '';
+
         foreach ($messages as $message) {
             if ($message['role'] === 'system') {
                 $systemPrompt = $message['content'];
             } elseif (in_array($message['role'], ['user', 'assistant'])) {
-                // Convert 'assistant' role to 'model' for Gemini API
                 $role = $message['role'] === 'assistant' ? 'model' : 'user';
                 $contents[] = [
                     'role' => $role,
@@ -40,12 +38,37 @@ class GeminiChatService implements ChatServiceInterface
             }
         }
 
+        if ($media) {
+            $detectedMimeType = '';
+            Log::info('GeminiChatService: Detected media', [
+                'media_length' => strlen($media),
+                'mime_type' => $mimeType,
+            ]);
+            if ($mimeType) {
+                if (stripos($mimeType, 'audio') !== false) {
+                    $detectedMimeType = 'audio/mp3';
+                } else if (stripos($mimeType, 'image') !== false) {
+                    $detectedMimeType = 'image/jpeg';
+                }
+            }
+            $media = preg_replace('/^data:[a-zA-Z0-9\/\-\.]+;base64,/', '', $media);
+            $lastIndex = count($contents) - 1;
+            if ($lastIndex >= 0) {
+                $contents[$lastIndex]['parts'][] = [
+                    'inline_data' => [
+                        'mime_type' => $detectedMimeType,
+                        'data' => $media
+                    ]
+                ];
+            }
+        }
+
         $payload = [
             'contents' => $contents
         ];
 
-        // Only add system instruction if it exists
-        if (!empty($systemPrompt)) {
+        // Only add system instruction if it exists and no image is provided
+        if (!empty($systemPrompt) && !$media) {
             $payload['system_instruction'] = [
                 'parts' => [['text' => $systemPrompt]]
             ];
@@ -58,6 +81,10 @@ class GeminiChatService implements ChatServiceInterface
         ])->post($url, $payload);
 
         if (!$response->successful()) {
+            Log::error('Gemini API Error', [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
             throw new \Exception('Gemini chat request failed: ' . $response->body());
         }
 

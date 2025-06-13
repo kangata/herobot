@@ -19,7 +19,7 @@ class OpenAIChatService implements ChatServiceInterface
         $this->baseUrl = "https://api.openai.com/v1";
     }
 
-    public function generateResponse(array $messages, ?string $model = null): string
+    public function generateResponse(array $messages, ?string $model = null, ?string $media = null, ?string $mimeType = null): string
     {
         $model = $model ?? $this->model;
 
@@ -47,4 +47,4 @@ class OpenAIChatService implements ChatServiceInterface
 
         return $responseData['choices'][0]['message']['content'];
     }
-} 
+}
