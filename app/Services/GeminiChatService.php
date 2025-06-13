@@ -23,25 +23,25 @@ class GeminiChatService implements ChatServiceInterface
     {
         $model = $model ?? $this->model;
         
-        $systemPrompt = '';
         $contents = [];
-        
+        $systemPrompt = '';
+
+        // Proses semua pesan untuk extract system prompt dan user/assistant
+        foreach ($messages as $message) {
+            if ($message['role'] === 'system') {
+                $systemPrompt = $message['content'];
+            } elseif (in_array($message['role'], ['user', 'assistant'])) {
+                $role = $message['role'] === 'assistant' ? 'model' : 'user';
+                $contents[] = [
+                    'role' => $role,
+                    'parts' => [['text' => $message['content']]]
+                ];
+            }
+        }
+
+        // Handle media attachment jika ada
         if ($media) {
             $media = preg_replace('/^data:image\/[a-zA-Z]+;base64,/', '', $media);
-
-            foreach ($messages as $message) {
-                if ($message['role'] === 'system') {
-                    $systemPrompt = $message['content'];
-                } elseif (in_array($message['role'], ['user', 'assistant'])) {
-                    $role = $message['role'] === 'assistant' ? 'model' : 'user';
-                    $contents[] = [
-                        'role' => $role,
-                        'parts' => [['text' => $message['content']]]
-                    ];
-                }
-            }
-
-            // Tambahkan media ke pesan terakhir
             $lastIndex = count($contents) - 1;
             if ($lastIndex >= 0) {
                 $contents[$lastIndex]['parts'][] = [
@@ -50,19 +50,6 @@ class GeminiChatService implements ChatServiceInterface
                         'data' => $media
                     ]
                 ];
-            }
-        } else {
-            foreach ($messages as $message) {
-                if ($message['role'] === 'system') {
-                    $systemPrompt = $message['content'];
-                } elseif (in_array($message['role'], ['user', 'assistant'])) {
-                    // Convert 'assistant' role to 'model' for Gemini API
-                    $role = $message['role'] === 'assistant' ? 'model' : 'user';
-                    $contents[] = [
-                        'role' => $role,
-                        'parts' => [['text' => $message['content']]]
-                    ];
-                }
             }
         }
 
