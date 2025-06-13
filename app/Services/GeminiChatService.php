@@ -19,14 +19,13 @@ class GeminiChatService implements ChatServiceInterface
         $this->baseUrl = "https://generativelanguage.googleapis.com/v1beta/models";
     }
 
-    public function generateResponse(array $messages, ?string $model = null, ?string $media = null): string
+    public function generateResponse(array $messages, ?string $model = null, ?string $media = null, ?string $mimeType = null): string
     {
         $model = $model ?? $this->model;
         
         $contents = [];
         $systemPrompt = '';
 
-        // Proses semua pesan untuk extract system prompt dan user/assistant
         foreach ($messages as $message) {
             if ($message['role'] === 'system') {
                 $systemPrompt = $message['content'];
@@ -39,14 +38,25 @@ class GeminiChatService implements ChatServiceInterface
             }
         }
 
-        // Handle media attachment jika ada
         if ($media) {
-            $media = preg_replace('/^data:image\/[a-zA-Z]+;base64,/', '', $media);
+            $detectedMimeType = '';
+            Log::info('GeminiChatService: Detected media', [
+                'media_length' => strlen($media),
+                'mime_type' => $mimeType,
+            ]);
+            if ($mimeType) {
+                if (stripos($mimeType, 'audio') !== false) {
+                    $detectedMimeType = 'audio/mp3';
+                } else if (stripos($mimeType, 'image') !== false) {
+                    $detectedMimeType = 'image/jpeg';
+                }
+            }
+            $media = preg_replace('/^data:[a-zA-Z0-9\/\-\.]+;base64,/', '', $media);
             $lastIndex = count($contents) - 1;
             if ($lastIndex >= 0) {
                 $contents[$lastIndex]['parts'][] = [
                     'inline_data' => [
-                        'mime_type' => 'image/jpeg',
+                        'mime_type' => $detectedMimeType,
                         'data' => $media
                     ]
                 ];

@@ -29,7 +29,12 @@ class WhatsAppMessageController extends Controller
         $media = $request->input('media');
 
         if (empty($messageContent) && $media) {
-            $messageContent = 'Tolong Jelaskan media yang saya kirimkan.';
+            if($messageType == 'image') {
+                $messageContent = 'Tolong Jelaskan media yang saya kirimkan.';
+            }
+            else if($messageType == 'audio') {
+                $messageContent = 'balas audio ini';
+            }
         }
 
         $channel = Channel::with(['bots', 'team.balance'])->findOrFail($channelId);
@@ -58,16 +63,7 @@ class WhatsAppMessageController extends Controller
             ->reverse()
             ->values();
 
-        // Log pesan yang masuk beserta medianya jika ada
-        Log::info('Incoming WhatsApp message', [
-            'channelId' => $channelId,
-            'sender' => $sender,
-            'messageType' => $messageType,
-            'hasMedia' => !is_null($media),
-            'messageContent' => $messageContent
-        ]);
-
-        $response = $this->generateResponse($bot, $messageContent, $chatHistory, $media);
+        $response = $this->generateResponse($bot, $messageContent, $chatHistory, $media, $messageType);
 
         // Create or update transaction record
         if ($latestTransaction && $latestTransaction->type == 'usage' && $latestTransaction->created_at->isToday()) {
@@ -104,7 +100,7 @@ class WhatsAppMessageController extends Controller
      * @param  \Illuminate\Support\Collection           $chatHistory Koleksi objek riwayat obrolan (memiliki properti "message" dan "response")
      * @return string|bool  String berisi jawaban terformat, atau false kalau gagal
      */
-    private function generateResponse($bot, $message, $chatHistory, $media = null)
+    private function generateResponse($bot, $message, $chatHistory, $media = null, $messageType = 'text')
     {
         try {
             // Get separately configured services
@@ -152,7 +148,7 @@ class WhatsAppMessageController extends Controller
 
             
             // Generate response using chat service
-            $response = $chatService->generateResponse($messages, null, $media ? $media['data'] : null);
+            $response = $chatService->generateResponse($messages, null, $media ? $media['data'] : null, $media ? $messageType : null);
             
             return $this->convertMarkdownToWhatsApp($response);
             

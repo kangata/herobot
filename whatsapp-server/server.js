@@ -249,6 +249,23 @@ async function handleIncomingMessage(sock, channelId, m) {
             } catch (error) {
                 console.error('Error downloading media:', error);
             }
+        } else if (message.message?.audioMessage) {
+            try {
+                const buffer = await downloadMediaMessage(
+                    message,
+                    'buffer',
+                    {},
+                    {
+                        logger: logger,
+                        reuploadRequest: sock.updateMediaMessage
+                    }
+                )
+                mediaBase64 = buffer.toString('base64');
+                messageType = 'audio';
+                messageContent = '';
+            } catch (error) {
+                console.error('Error downloading audio:', error);
+            }
         }
 
         // Send read receipt
@@ -268,7 +285,7 @@ async function handleIncomingMessage(sock, channelId, m) {
         if (mediaBase64) {
             payload.media = {
                 data: mediaBase64,
-                mime_type: message.message.imageMessage.mimetype
+                mime_type: message.message.imageMessage?.mimetype || message.message.audioMessage?.mimetype
             }
         }
 
