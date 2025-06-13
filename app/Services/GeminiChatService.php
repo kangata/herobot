@@ -67,7 +67,7 @@ class GeminiChatService implements ChatServiceInterface
             'contents' => $contents
         ];
 
-        // Only add system instruction if it exists and tidak ada image
+        // Only add system instruction if it exists and no image is provided
         if (!empty($systemPrompt) && !$media) {
             $payload['system_instruction'] = [
                 'parts' => [['text' => $systemPrompt]]

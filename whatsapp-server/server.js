@@ -5,7 +5,6 @@ const { Boom } = require('@hapi/boom')
 const qrcode = require('qrcode')
 const pino = require('pino')
 const dotenv = require('dotenv');
-const fs = require('fs');
 
 dotenv.config();
 
