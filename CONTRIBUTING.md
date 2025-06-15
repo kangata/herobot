@@ -63,7 +63,7 @@ npm install
 php artisan serve          # Terminal 1: Laravel server
 npm run dev                # Terminal 2: Vite dev server
 php artisan reverb:start   # Terminal 3: WebSocket server
-cd whatsapp-server && npm start  # Terminal 4: WhatsApp server
+php artisan whatsapp:start  # Terminal 4: WhatsApp server
 ```
 
 ## 🏗️ Architecture Overview
