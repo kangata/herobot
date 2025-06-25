@@ -15,6 +15,14 @@ fi
 
 chmod -R ugo+rw /.composer
 
+# Fix line endings in .env files if they exist
+if [ -f .env ]; then
+    sed -i 's/\r$//' .env
+fi
+if [ -f .env.example ]; then
+    sed -i 's/\r$//' .env.example
+fi
+
 # Run composer install first
 if [ "$SUPERVISOR_PHP_USER" = "root" ]; then
     composer install

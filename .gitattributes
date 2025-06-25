@@ -6,8 +6,11 @@
 *.md diff=markdown
 *.php diff=php
 
-# Ensure shell scripts always use LF line endings
+# Ensure shell scripts and config files always use LF line endings
 docker/sail/start-container text eol=lf
+docker/sail/supervisord.conf text eol=lf
+docker/sail/php.ini text eol=lf
+.env* text eol=lf
 
 /.github export-ignore
 CHANGELOG.md export-ignore
