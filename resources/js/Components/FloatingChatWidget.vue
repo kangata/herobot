@@ -55,7 +55,7 @@
                             ? 'bg-indigo-500 text-white' 
                             : 'bg-white text-gray-800 border'"
                     >
-                        <div class="text-sm">{{ message.content }}</div>
+                        <div class="text-sm" v-html="message.content"></div>
                     </div>
                 </div>
 

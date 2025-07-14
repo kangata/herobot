@@ -15,9 +15,10 @@ class AIResponseService
      * @param  \Illuminate\Support\Collection           $chatHistory Koleksi objek riwayat obrolan
      * @param  array|null                               $media       Media data (optional)
      * @param  string                                   $messageType Message type (default: 'text')
+     * @param  string                                   $format      Output format: 'whatsapp' or 'html' (default: 'whatsapp')
      * @return string|bool  String berisi jawaban terformat, atau false kalau gagal
      */
-    public function generateResponse($bot, $message, $chatHistory, $media = null, $messageType = 'text')
+    public function generateResponse($bot, $message, $chatHistory, $media = null, $messageType = 'text', $format = 'whatsapp')
     {
         try {
             // Get separately configured services
@@ -45,14 +46,18 @@ class AIResponseService
             
             // Generate response using chat service
             $response = $chatService->generateResponse(
-                $messages, 
-                null, 
-                $media ? $media['data'] : null, 
+                $messages,
+                null,
+                $media ? $media['data'] : null,
                 $media ? $messageType : null
             );
-            
-            return $this->convertMarkdownToWhatsApp($response);
-            
+
+            // Format response based on the specified format
+            if ($format === 'html') {
+                return $this->convertMarkdownToHtml($response);
+            } else {
+                return $this->convertMarkdownToWhatsApp($response);
+            }
         } catch (\Exception $e) {
             Log::error('Failed to generate response: ' . $e->getMessage());
             return false;
@@ -104,6 +109,48 @@ class AIResponseService
         $messages[] = ['role' => 'user', 'content' => $message];
 
         return $messages;
+    }
+
+    /**
+     * Convert markdown formatting to HTML.
+     */
+    public function convertMarkdownToHtml($text)
+    {
+        // Convert headers: # text to <h1>text</h1>, ## text to <h2>text</h2>, etc.
+        $text = preg_replace_callback('/^(#{1,6})\s+(.*)$/m', function($matches) {
+            $level = strlen($matches[1]);
+            return "<h{$level}>{$matches[2]}</h{$level}>";
+        }, $text);
+
+        // Convert bold: **text** or __text__ to <strong>text</strong>
+        $text = preg_replace('/(\*\*|__)(.*?)\1/', '<strong>$2</strong>', $text);
+
+        // Convert italic: *text* or _text_ to <em>text</em>
+        $text = preg_replace('/(?<!\*)\*(?!\*)([^*]+?)(?<!\*)\*(?!\*)|_([^_]+?)_/', '<em>$1$2</em>', $text);
+
+        // Convert strikethrough: ~~text~~ to <del>text</del>
+        $text = preg_replace('/~~(.*?)~~/', '<del>$1</del>', $text);
+
+        // Convert inline code: `text` to <code>text</code>
+        $text = preg_replace('/`([^`]+)`/', '<code>$1</code>', $text);
+
+        // Convert bullet points: - text to <ul><li>text</li></ul>
+        $text = preg_replace_callback('/^- (.*)$/m', function($matches) {
+            return '<li>' . $matches[1] . '</li>';
+        }, $text);
+
+        // Wrap consecutive <li> elements in <ul> tags
+        $text = preg_replace_callback('/(<li>.*<\/li>)(?:\n<li>.*<\/li>)*/s', function($matches) {
+            return '<ul>' . $matches[0] . '</ul>';
+        }, $text);
+
+        // Convert links: [text](url) to <a href="url">text</a>
+        $text = preg_replace('/\[([^\]]+)\]\(([^\)]+)\)/', '<a href="$2">$1</a>', $text);
+
+        // Convert line breaks to <br> tags
+        $text = nl2br($text);
+
+        return $text;
     }
 
     /**

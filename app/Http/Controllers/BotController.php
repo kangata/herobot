@@ -166,15 +166,11 @@ class BotController extends Controller
             $response = $this->aiResponseService->generateResponse(
                 $bot,
                 $validated['message'],
-                collect($validated['chat_history'] ?? [])
+                collect($validated['chat_history'] ?? []),
+                null,
+                'text',
+                'html'
             );
-
-            // For debugging, let's also log the response
-            Log::info('Test response generated successfully', [
-                'bot_id' => $bot->id,
-                'message' => $validated['message'],
-                'response' => $response
-            ]);
 
             // Return back with flash data
             return back()->with('chatResponse', [
