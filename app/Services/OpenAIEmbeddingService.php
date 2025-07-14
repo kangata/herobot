@@ -3,22 +3,24 @@
 namespace App\Services;
 
 use App\Services\Contracts\EmbeddingServiceInterface;
+use App\Services\Traits\SimilarityCalculationTrait;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class OpenAIService implements EmbeddingServiceInterface
+class OpenAIEmbeddingService implements EmbeddingServiceInterface
 {
-    protected $apiKey;
+    use SimilarityCalculationTrait;
 
-    protected $model;
+    protected $apiKey;
+    protected $embeddingModel;
 
     public function __construct()
     {
         $this->apiKey = config('services.openai.api_key');
-        $this->model = config('services.openai.model', 'gpt-3.5-turbo');
+        $this->embeddingModel = config('services.openai.embedding_model', 'text-embedding-3-small');
 
         // Check if the C extension is available
-        if (! function_exists('fast_cosine_similarity')) {
+        if (!function_exists('fast_cosine_similarity')) {
             Log::warning('Vector search C extension not available. Using PHP implementation.');
         }
     }
@@ -86,13 +88,11 @@ class OpenAIService implements EmbeddingServiceInterface
         }
 
         try {
-            $embeddingModel = config('services.openai.embedding_model', 'text-embedding-3-small');
-            
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer '.$this->apiKey,
+                'Authorization' => 'Bearer ' . $this->apiKey,
                 'Content-Type' => 'application/json',
             ])->post('https://api.openai.com/v1/embeddings', [
-                'model' => $embeddingModel,
+                'model' => $this->embeddingModel,
                 'input' => $text,
             ]);
 
@@ -100,9 +100,9 @@ class OpenAIService implements EmbeddingServiceInterface
                 return $response->json()['data'][0]['embedding'];
             }
 
-            throw new \Exception('Failed to create embedding: '.$response->body());
+            throw new \Exception('Failed to create embedding: ' . $response->body());
         } catch (\Exception $e) {
-            Log::error('Error creating embedding: '.$e->getMessage());
+            Log::error('Error creating embedding: ' . $e->getMessage());
             throw $e;
         }
     }
@@ -110,13 +110,11 @@ class OpenAIService implements EmbeddingServiceInterface
     public function createBatchEmbeddings(array $texts)
     {
         try {
-            $embeddingModel = config('services.openai.embedding_model', 'text-embedding-3-small');
-            
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer '.$this->apiKey,
+                'Authorization' => 'Bearer ' . $this->apiKey,
                 'Content-Type' => 'application/json',
             ])->post('https://api.openai.com/v1/embeddings', [
-                'model' => $embeddingModel,
+                'model' => $this->embeddingModel,
                 'input' => $texts,
             ]);
 
@@ -128,9 +126,9 @@ class OpenAIService implements EmbeddingServiceInterface
                     ->all();
             }
 
-            throw new \Exception('Failed to create batch embeddings: '.$response->body());
+            throw new \Exception('Failed to create batch embeddings: ' . $response->body());
         } catch (\Exception $e) {
-            Log::error('Error creating batch embeddings: '.$e->getMessage());
+            Log::error('Error creating batch embeddings: ' . $e->getMessage());
             throw $e;
         }
     }
@@ -165,33 +163,5 @@ class OpenAIService implements EmbeddingServiceInterface
 
             return collect();
         }
-    }
-
-    private function calculateSimilarity($vector1, $vector2)
-    {
-        if (function_exists('fast_cosine_similarity')) {
-            return fast_cosine_similarity($vector1, $vector2);
-        }
-
-        // Use PHP implementation
-        return $this->cosineSimilarity($vector1, $vector2);
-    }
-
-    public function cosineSimilarity($vector1, $vector2)
-    {
-        $dotProduct = 0;
-        $norm1 = 0;
-        $norm2 = 0;
-
-        foreach ($vector1 as $i => $value) {
-            $dotProduct += $value * $vector2[$i];
-            $norm1 += $value * $value;
-            $norm2 += $vector2[$i] * $vector2[$i];
-        }
-
-        $norm1 = sqrt($norm1);
-        $norm2 = sqrt($norm2);
-
-        return $dotProduct / ($norm1 * $norm2);
     }
 }

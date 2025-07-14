@@ -58,13 +58,13 @@ class AIServiceFactory
         return app(GeminiChatService::class);
     }
     
-    private static function createOpenAIEmbeddingService(): OpenAIService
+    private static function createOpenAIEmbeddingService(): OpenAIEmbeddingService
     {
         $apiKey = config('services.openai.api_key');
         if (empty($apiKey)) {
             throw new InvalidArgumentException('OpenAI API key not configured');
         }
-        return app(OpenAIService::class);
+        return app(OpenAIEmbeddingService::class);
     }
     
     private static function createGeminiEmbeddingService(): GeminiEmbeddingService

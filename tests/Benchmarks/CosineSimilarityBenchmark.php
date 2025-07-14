@@ -2,11 +2,13 @@
 
 namespace Tests\Benchmarks;
 
-use App\Services\OpenAIService;
+use App\Services\Traits\SimilarityCalculationTrait;
 use Illuminate\Support\Benchmark;
 
 class CosineSimilarityBenchmark
 {
+    use SimilarityCalculationTrait;
+
     private function generateRandomVector($size)
     {
         return array_map(function () {
@@ -25,8 +27,6 @@ class CosineSimilarityBenchmark
             $vectors[] = $this->generateRandomVector($vectorSize);
         }
 
-        $service = new OpenAIService;
-
         return Benchmark::measure([
             'Fast Cosine Similarity' => function () use ($vector1, $vectors) {
                 if (function_exists('fast_cosine_similarity')) {
@@ -35,9 +35,9 @@ class CosineSimilarityBenchmark
                     }
                 }
             },
-            'PHP Cosine Similarity' => function () use ($vector1, $vectors, $service) {
+            'PHP Cosine Similarity' => function () use ($vector1, $vectors) {
                 foreach ($vectors as $vector2) {
-                    $service->cosineSimilarity($vector1, $vector2);
+                    $this->cosineSimilarity($vector1, $vector2);
                 }
             },
         ]);

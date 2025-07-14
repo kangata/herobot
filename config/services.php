@@ -42,8 +42,8 @@ return [
     ],
 
     'ai' => [
-        'chat_service' => env('CHAT_SERVICE', 'openrouter'),
-        'embedding_service' => env('EMBEDDING_SERVICE', 'openai'),
+        'chat_service' => env('CHAT_SERVICE', 'gemini'),
+        'embedding_service' => env('EMBEDDING_SERVICE', 'gemini'),
     ],
 
     'openai' => [
@@ -54,7 +54,7 @@ return [
 
     'openrouter' => [
         'api_key' => env('OPENROUTER_API_KEY'),
-        'model' => env('OPENROUTER_MODEL', 'meta-llama/llama-3.1-8b-instruct:free'),
+        'model' => env('OPENROUTER_MODEL', 'google/gemini-2.5-flash'),
     ],
 
     'telegram' => [
@@ -64,7 +64,7 @@ return [
 
     'gemini' => [
         'api_key' => env('GEMINI_API_KEY'),
-        'model' => env('GEMINI_MODEL', 'gemini-1.5-flash'),
+        'model' => env('GEMINI_MODEL', 'gemini-2.5-flash'),
         'embedding_model' => env('GEMINI_EMBEDDING_MODEL', 'text-embedding-004'),
     ],
 

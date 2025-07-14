@@ -6,20 +6,12 @@ use App\Models\ChatHistory;
 use App\Models\Channel;
 use App\Models\Transaction;
 use App\Services\AIServiceFactory;
-use App\Services\OpenAIService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class WhatsAppMessageController extends Controller
 {
-    protected $openAIService;
-
-    public function __construct(OpenAIService $openAIService)
-    {
-        $this->openAIService = $openAIService;
-    }
-
     public function handleIncomingMessage(Request $request)
     {
         $channelId = $request->input('channelId');
