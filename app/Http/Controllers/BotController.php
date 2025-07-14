@@ -5,16 +5,20 @@ namespace App\Http\Controllers;
 use App\Models\Bot;
 use App\Models\Channel;
 use App\Models\Knowledge;
-use App\Services\AIServiceFactory;
+use App\Services\AIResponseService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class BotController extends Controller
 {
-    public function __construct()
+    protected $aiResponseService;
+
+    public function __construct(AIResponseService $aiResponseService)
     {
         $this->authorizeResource(Bot::class);
+
+        $this->aiResponseService = $aiResponseService;
     }
 
     public function index(Request $request)
@@ -159,7 +163,7 @@ class BotController extends Controller
         ]);
 
         try {
-            $response = $this->generateTestResponse(
+            $response = $this->aiResponseService->generateResponse(
                 $bot,
                 $validated['message'],
                 collect($validated['chat_history'] ?? [])
@@ -191,82 +195,5 @@ class BotController extends Controller
                 'timestamp' => now()->toISOString(),
             ]);
         }
-    }
-
-    private function generateTestResponse($bot, $message, $chatHistory)
-    {
-        // Get separately configured services
-        $chatService = AIServiceFactory::createChatService();
-        $embeddingService = AIServiceFactory::createEmbeddingService();
-
-        Log::info('Using AI services for test', [
-            'chat_service' => get_class($chatService),
-            'embedding_service' => get_class($embeddingService),
-        ]);
-
-        // Search for relevant knowledge using embedding service
-        $relevantKnowledge = $embeddingService->searchSimilarKnowledge($message, $bot, 3);
-
-        Log::info('Relevant Knowledge found for test:', [
-            'knowledge_count' => $relevantKnowledge->count(),
-            'message' => $message,
-        ]);
-
-        // Build system prompt
-        $systemPrompt = $bot->prompt;
-        if ($relevantKnowledge->isNotEmpty()) {
-            $systemPrompt .= "\n\nGunakan informasi berikut untuk menjawab pertanyaan:\n\n";
-            foreach ($relevantKnowledge as $knowledge) {
-                $systemPrompt .= "{$knowledge['text']}\n\n";
-            }
-        } else {
-            $systemPrompt .= "\n\nTidak ada informasi spesifik yang ditemukan dalam basis pengetahuan.";
-        }
-
-        // Build messages array
-        $messages = [
-            ['role' => 'system', 'content' => $systemPrompt],
-            ...$chatHistory
-                ->map(function ($ch) {
-                    return [
-                        ['role' => 'user', 'content' => $ch['message']],
-                        ['role' => 'assistant', 'content' => $ch['response']],
-                    ];
-                })
-                ->flatten(1)
-                ->toArray(),
-            ['role' => 'user', 'content' => $message],
-        ];
-
-        // Generate response using chat service
-        $response = $chatService->generateResponse($messages);
-
-        return $this->convertMarkdownToWhatsApp($response);
-    }
-
-    private function convertMarkdownToWhatsApp($text)
-    {
-        // Convert italic: *text* or _text_ to _text_
-        $text = preg_replace('/(?<!\*)\*(?!\*)(\S+?)(?<!\*)\*(?!\*)|_(\S+?)_/', '_$1$2_', $text);
-
-        // Convert bold: **text** or __text__ to *text*
-        $text = preg_replace('/(\*\*|__)(.*?)\1/', '*$2*', $text);
-
-        // Convert strikethrough: ~~text~~ to ~text~
-        $text = preg_replace('/~~(.*?)~~/', '~$1~', $text);
-
-        // Convert inline code: `text` to ```text```
-        $text = preg_replace('/`([^`]+)`/', '```$1```', $text);
-
-        // Convert bullet points: - text to • text
-        $text = preg_replace('/^- /m', '• ', $text);
-
-        // Convert links: [text](url) to text: url
-        $text = preg_replace('/\[([^\]]+)\]\(([^\)]+)\)/', '$2', $text);
-
-        // Convert headers: # text to text
-        $text = preg_replace('/^#+\s+(.*)$/m', '*$1*', $text);
-
-        return $text;
     }
 }
