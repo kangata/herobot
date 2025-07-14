@@ -67,6 +67,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::delete('/bots/{bot}/disconnect-channel', [BotController::class, 'disconnectChannel'])->name('bots.disconnect-channel');
     Route::post('/bots/{bot}/connect-knowledge', [BotController::class, 'connectKnowledge'])->name('bots.connect-knowledge');
     Route::delete('/bots/{bot}/disconnect-knowledge', [BotController::class, 'disconnectKnowledge'])->name('bots.disconnect-knowledge');
+    Route::post('/bots/{bot}/test-message', [BotController::class, 'testMessage'])->name('bots.test-message');
 
     // Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
     // Route::post('/billing/topup', [BillingController::class, 'topup'])->name('billing.topup');

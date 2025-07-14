@@ -157,17 +157,21 @@
                 </SecondaryButton>
             </template>
         </DialogModal>
+
+        <!-- Floating Chat Widget -->
+        <FloatingChatWidget :bot="bot" />
     </AppLayout>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue';
+import { ref } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import { Link } from '@inertiajs/vue3';
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import SecondaryButton from "@/Components/SecondaryButton.vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import DialogModal from "@/Components/DialogModal.vue";
+import FloatingChatWidget from "@/Components/FloatingChatWidget.vue";
 import { PencilIcon, PlusIcon } from "@heroicons/vue/24/outline";
 
 const props = defineProps({
