@@ -3,7 +3,7 @@
         <!-- Chat Window -->
         <div
             v-show="showChat"
-            class="absolute bottom-16 right-0 w-80 h-96 bg-white rounded-lg shadow-xl border border-gray-200 flex flex-col transition-all duration-300 ease-in-out"
+            class="absolute bottom-16 right-0 w-[350px] h-[500px] bg-white rounded-lg shadow-xl border border-gray-200 flex flex-col transition-all duration-300 ease-in-out"
             :class="showChat ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-2'"
         >
             <!-- Chat Header -->
@@ -20,6 +20,17 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-2">
+                    <!-- Clear Chat Button -->
+                    <button
+                        @click="clearChat"
+                        class="text-blue-100 hover:text-white"
+                        title="Clear chat"
+                        :disabled="messages.length === 0"
+                        :class="{ 'opacity-50 cursor-not-allowed': messages.length === 0 }"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" data-slot="icon" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"></path></svg>
+                    </button>
+                    <!-- Close Chat Button -->
                     <button @click="showChat = false" class="text-blue-100 hover:text-white">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
@@ -150,6 +161,12 @@ const scrollToBottom = () => {
             chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
         }
     });
+};
+
+const clearChat = () => {
+    messages.value = [];
+    error.value = null;
+    isLoading.value = false;
 };
 
 const handleChatResponse = (response) => {
