@@ -4,13 +4,10 @@ namespace App\Services;
 
 use App\Services\Contracts\ChatServiceInterface;
 use App\Services\Contracts\EmbeddingServiceInterface;
-use App\Services\Traits\SimilarityCalculationTrait;
 use Illuminate\Support\Facades\Http;
 
 class OpenAIService implements ChatServiceInterface, EmbeddingServiceInterface
 {
-    use SimilarityCalculationTrait;
-
     protected $apiKey;
     protected $model;
     protected $embeddingModel;
@@ -23,15 +20,12 @@ class OpenAIService implements ChatServiceInterface, EmbeddingServiceInterface
         $this->apiKey = config('services.openai.api_key');
         $this->model = config('services.openai.model');
         $this->embeddingModel = config('services.openai.embedding_model', 'text-embedding-3-small');
-        $this->client = $this->client();
-    }
-
-    public function client()
-    {
-        return Http::withHeaders([
-            'Authorization' => 'Bearer ' . $this->apiKey,
-            'Content-Type' => 'application/json',
-        ])->timeout(30);
+        $this->client = Http::baseUrl($this->baseUrl)
+            ->withHeaders([
+                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Content-Type' => 'application/json',
+            ])
+            ->timeout(30);
     }
 
     public function generateResponse(array $messages, ?string $model = null, ?string $media = null, ?string $mimeType = null): string
@@ -45,7 +39,7 @@ class OpenAIService implements ChatServiceInterface, EmbeddingServiceInterface
             'max_tokens' => 1000,
         ];
 
-        $response = $this->client->post("{$this->baseUrl}/chat/completions", $payload);
+        $response = $this->client->post("chat/completions", $payload);
 
         if (!$response->successful()) {
             throw new \Exception('OpenAI chat request failed: ' . $response->body());
@@ -63,7 +57,7 @@ class OpenAIService implements ChatServiceInterface, EmbeddingServiceInterface
     public function createEmbedding(string|array $text): array
     {
         try {
-            $response = $this->client->post("{$this->baseUrl}/embeddings", [
+            $response = $this->client->post("embeddings", [
                 'model' => $this->embeddingModel,
                 'input' => $text,
             ]);
