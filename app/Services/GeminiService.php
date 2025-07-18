@@ -19,14 +19,12 @@ class GeminiService implements ChatServiceInterface, EmbeddingServiceInterface
     {
         $this->apiKey = config('services.gemini.api_key');
         $this->model = config('services.gemini.model');
-        $this->embeddingModel = config('services.gemini.embedding_model', 'gemini-embedding-exp-03-07');
-        $this->baseUrl = "https://generativelanguage.googleapis.com/v1beta/models";
+        $this->embeddingModel = config('services.gemini.embedding_model');
+        $this->baseUrl = "https://generativelanguage.googleapis.com/v1beta";
         $this->client = Http::baseUrl($this->baseUrl)
             ->withHeaders([
                 'Content-Type' => 'application/json',
-            ])
-            ->withQueryParameters([
-                'key' => $this->apiKey,
+                'x-goog-api-key' => $this->apiKey,
             ]);
     }
 
@@ -85,7 +83,7 @@ class GeminiService implements ChatServiceInterface, EmbeddingServiceInterface
             ];
         }
 
-        $response = $this->client->post("{$model}:generateContent", $payload);
+        $response = $this->client->post("models/{$model}:generateContent", $payload);
 
         if (!$response->successful()) {
             Log::error('Gemini API Error', [
@@ -107,23 +105,79 @@ class GeminiService implements ChatServiceInterface, EmbeddingServiceInterface
     public function createEmbedding(string|array $text): array
     {
         try {
-            $payload = [
-                'model' => $this->embeddingModel,
-                'content' => [
-                    'parts' => is_array($text) ? array_map(function ($t) {
-                        return ['text' => $t];
-                    }, $text) : [['text' => $text]]
-                ]
-            ];
-
-            $response = $this->client->post("{$this->embeddingModel}:embedContent", $payload);
-
-            if ($response->successful()) {
-                return $response->json()['embedding']['values'] ?? [];
+            if (is_array($text)) {
+                return $this->createBatchEmbeddings($text);
             }
 
-            throw new \Exception('Failed to create embedding: ' . $response->body());
+            $payload = [
+                'model' => "models/$this->embeddingModel",
+                'content' => ['parts' => [['text' => $text]]],
+                'output_dimensionality' => 768,
+            ];
+
+            $response = $this->client->post("models/{$this->embeddingModel}:embedContent", $payload);
+
+            if (!$response->successful()) {
+                Log::error('Gemini Embedding API Error', [
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+                throw new \Exception('Failed to create embedding: ' . $response->body());
+            }
+
+            $responseData = $response->json();
+            return $responseData['embedding']['values'] ?? [];
         } catch (\Exception $e) {
+            Log::error('Gemini Embedding Error', ['error' => $e->getMessage()]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Create embeddings for multiple texts in a single batch request
+     *
+     * @param array $texts Array of text strings to embed
+     * @return array Array of embedding vectors, indexed by input order
+     */
+    public function createBatchEmbeddings(array $texts): array
+    {
+        try {
+            $requests = [];
+
+            foreach ($texts as $text) {
+                $requests[] = [
+                    'model' => "models/$this->embeddingModel",
+                    'content' => [
+                        'parts' => [['text' => $text]]
+                    ],
+                    'output_dimensionality' => 768,
+                ];
+            }
+
+            $payload = ['requests' => $requests];
+
+            $response = $this->client->post("models/{$this->embeddingModel}:batchEmbedContents", $payload);
+
+            if (!$response->successful()) {
+                Log::error('Gemini Batch Embedding API Error', [
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+                throw new \Exception('Failed to create batch embeddings: ' . $response->body());
+            }
+
+            $responseData = $response->json();
+            $embeddings = [];
+
+            if (isset($responseData['embeddings'])) {
+                foreach ($responseData['embeddings'] as $embedding) {
+                    $embeddings[] = $embedding['values'] ?? [];
+                }
+            }
+
+            return $embeddings;
+        } catch (\Exception $e) {
+            Log::error('Gemini Batch Embedding Error', ['error' => $e->getMessage()]);
             throw $e;
         }
     }
