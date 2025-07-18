@@ -14,9 +14,9 @@ class OpenAIChatService implements ChatServiceInterface
 
     public function __construct()
     {
+        $this->baseUrl = config('services.openai.base_url', 'https://api.openai.com/v1');
         $this->apiKey = config('services.openai.api_key');
         $this->model = config('services.openai.model');
-        $this->baseUrl = "https://api.openai.com/v1";
     }
 
     public function generateResponse(array $messages, ?string $model = null, ?string $media = null, ?string $mimeType = null): string
