@@ -4,6 +4,5 @@ namespace App\Services\Contracts;
 
 interface EmbeddingServiceInterface
 {
-    public function createEmbedding($text): array;
-    public function searchSimilarKnowledge($query, $bot, int $limit = 3);
+    public function createEmbedding(string|array $text): array;
 } 

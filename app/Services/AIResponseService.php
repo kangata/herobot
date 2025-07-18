@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Services\AIServiceFactory;
+use App\Services\Contracts\EmbeddingServiceInterface;
 use Illuminate\Support\Facades\Log;
 
 class AIResponseService
@@ -31,7 +32,7 @@ class AIResponseService
             ]);
             
             // Search for relevant knowledge using embedding service
-            $relevantKnowledge = $embeddingService->searchSimilarKnowledge($message, $bot, 3);
+            $relevantKnowledge = $this->searchSimilarKnowledge($embeddingService, $message, $bot, 3);
             
             Log::info('Relevant Knowledge found:', [
                 'knowledge_count' => $relevantKnowledge->count(),
@@ -180,5 +181,70 @@ class AIResponseService
         $text = preg_replace('/^#+\s+(.*)$/m', '*$1*', $text);
 
         return $text;
+    }
+
+    public function searchSimilarKnowledge(EmbeddingServiceInterface $embeddingService, $query, $bot, int $limit = 3)
+    {
+        try {
+            // Create embedding for the query
+            $queryEmbedding = $embeddingService->createEmbedding($query);
+
+            // Get only necessary vectors with optimized query
+            $knowledgeVectors = $bot->knowledge()
+                ->where('status', 'completed')
+                ->with(['vectors:id,knowledge_id,text,vector'])
+                ->get()
+                ->flatMap(function ($knowledge) use ($queryEmbedding) {
+                    return $knowledge->vectors->map(function ($vector) use ($queryEmbedding) {
+                        return [
+                            'text' => $vector->text,
+                            'similarity' => $this->calculateSimilarity($queryEmbedding, $vector->vector),
+                        ];
+                    });
+                });
+
+            // Sort and limit results
+            return $knowledgeVectors->sortByDesc('similarity')
+                ->take($limit)
+                ->values();
+
+        } catch (\Exception $e) {
+            Log::error('Error searching similar knowledge: ' . $e->getMessage());
+            return collect();
+        }
+    }
+
+    /**
+     * Calculate similarity between two vectors using fast C extension if available,
+     * otherwise fallback to PHP implementation.
+     */
+    protected function calculateSimilarity($vector1, $vector2)
+    {
+        if (function_exists('fast_cosine_similarity')) {
+            return fast_cosine_similarity($vector1, $vector2);
+        }
+
+        return $this->cosineSimilarity($vector1, $vector2);
+    }
+
+    /**
+     * Calculate cosine similarity between two vectors using PHP implementation.
+     */
+    protected function cosineSimilarity($vector1, $vector2)
+    {
+        $dotProduct = 0;
+        $norm1 = 0;
+        $norm2 = 0;
+
+        foreach ($vector1 as $i => $value) {
+            $dotProduct += $value * $vector2[$i];
+            $norm1 += $value * $value;
+            $norm2 += $vector2[$i] * $vector2[$i];
+        }
+
+        $norm1 = sqrt($norm1);
+        $norm2 = sqrt($norm2);
+
+        return $dotProduct / ($norm1 * $norm2);
     }
 }

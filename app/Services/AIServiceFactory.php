@@ -13,8 +13,8 @@ class AIServiceFactory
         $service = config('services.ai.chat_service');
         
         return match($service) {
-            'openai' => self::createOpenAIChatService(),
-            'gemini' => self::createGeminiChatService(),
+            'openai' => self::createOpenAIService(),
+            'gemini' => self::createGeminiService(),
             default => throw new InvalidArgumentException("Unsupported chat service: {$service}")
         };
     }
@@ -24,45 +24,27 @@ class AIServiceFactory
         $service = config('services.ai.embedding_service');
         
         return match($service) {
-            'openai' => self::createOpenAIEmbeddingService(),
-            'gemini' => self::createGeminiEmbeddingService(),
+            'openai' => self::createOpenAIService(),
+            'gemini' => self::createGeminiService(),
             default => throw new InvalidArgumentException("Unsupported embedding service: {$service}")
         };
     }
     
-    private static function createOpenAIChatService(): OpenAIChatService
+    private static function createOpenAIService(): OpenAIService
     {
         $apiKey = config('services.openai.api_key');
         if (empty($apiKey)) {
             throw new InvalidArgumentException('OpenAI API key not configured');
         }
-        return app(OpenAIChatService::class);
+        return app(OpenAIService::class);
     }
     
-    private static function createGeminiChatService(): GeminiChatService
+    private static function createGeminiService(): GeminiService
     {
         $apiKey = config('services.gemini.api_key');
         if (empty($apiKey)) {
             throw new InvalidArgumentException('Gemini API key not configured');
         }
-        return app(GeminiChatService::class);
-    }
-    
-    private static function createOpenAIEmbeddingService(): OpenAIEmbeddingService
-    {
-        $apiKey = config('services.openai.api_key');
-        if (empty($apiKey)) {
-            throw new InvalidArgumentException('OpenAI API key not configured');
-        }
-        return app(OpenAIEmbeddingService::class);
-    }
-    
-    private static function createGeminiEmbeddingService(): GeminiEmbeddingService
-    {
-        $apiKey = config('services.gemini.api_key');
-        if (empty($apiKey)) {
-            throw new InvalidArgumentException('Gemini API key not configured');
-        }
-        return app(GeminiEmbeddingService::class);
+        return app(GeminiService::class);
     }
 } 
