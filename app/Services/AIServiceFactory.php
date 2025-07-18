@@ -13,7 +13,6 @@ class AIServiceFactory
         $service = config('services.ai.chat_service');
         
         return match($service) {
-            'openrouter' => self::createOpenRouterService(),
             'openai' => self::createOpenAIChatService(),
             'gemini' => self::createGeminiChatService(),
             default => throw new InvalidArgumentException("Unsupported chat service: {$service}")
@@ -29,15 +28,6 @@ class AIServiceFactory
             'gemini' => self::createGeminiEmbeddingService(),
             default => throw new InvalidArgumentException("Unsupported embedding service: {$service}")
         };
-    }
-    
-    private static function createOpenRouterService(): OpenRouterService
-    {
-        $apiKey = config('services.openrouter.api_key');
-        if (empty($apiKey)) {
-            throw new InvalidArgumentException('OpenRouter API key not configured');
-        }
-        return app(OpenRouterService::class);
     }
     
     private static function createOpenAIChatService(): OpenAIChatService
