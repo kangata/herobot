@@ -4,9 +4,10 @@ namespace App\Services;
 
 use App\Services\Contracts\ChatServiceInterface;
 use App\Services\Contracts\EmbeddingServiceInterface;
+use App\Services\Contracts\SpeechToTextServiceInterface;
 use Illuminate\Support\Facades\Http;
 
-class OpenAIService implements ChatServiceInterface, EmbeddingServiceInterface
+class OpenAIService implements ChatServiceInterface, EmbeddingServiceInterface, SpeechToTextServiceInterface
 {
     protected $apiKey;
     protected $model;
@@ -72,6 +73,78 @@ class OpenAIService implements ChatServiceInterface, EmbeddingServiceInterface
             throw new \Exception('Failed to create embedding: ' . $response->body());
         } catch (\Exception $e) {
             throw $e;
+        }
+    }
+
+    public function transcribe(string $audioData, string $mimeType, ?string $language = null): string
+    {
+        try {
+            // Remove data URL prefix if present
+            $audioData = preg_replace('/^data:[a-zA-Z0-9\/\-\.]+;base64,/', '', $audioData);
+
+            // Decode base64 audio data
+            $decodedAudio = base64_decode($audioData);
+
+            if ($decodedAudio === false) {
+                throw new \Exception('Invalid base64 audio data');
+            }
+
+            // Determine file extension from MIME type
+            $extension = match($mimeType) {
+                'audio/mp3', 'audio/mpeg' => 'mp3',
+                'audio/wav' => 'wav',
+                'audio/ogg' => 'ogg',
+                'audio/m4a' => 'm4a',
+                'audio/webm' => 'webm',
+                default => 'mp3' // Default fallback
+            };
+
+            // Create temporary file
+            $tempFile = tempnam(sys_get_temp_dir(), 'audio_') . '.' . $extension;
+            file_put_contents($tempFile, $decodedAudio);
+
+            try {
+                // Prepare multipart form data
+                $payload = [
+                    'model' => 'whisper-1',
+                    'file' => new \CURLFile($tempFile, $mimeType, 'audio.' . $extension),
+                ];
+
+                if ($language) {
+                    $payload['language'] = $language;
+                }
+
+                // Create a new HTTP client for multipart request
+                $response = Http::baseUrl($this->baseUrl)
+                    ->withHeaders([
+                        'Authorization' => 'Bearer ' . $this->apiKey,
+                    ])
+                    ->timeout(60) // Longer timeout for audio processing
+                    ->attach('file', $decodedAudio, 'audio.' . $extension)
+                    ->post('audio/transcriptions', [
+                        'model' => 'whisper-1',
+                        'language' => $language,
+                    ]);
+
+                if (!$response->successful()) {
+                    throw new \Exception('OpenAI transcription request failed: ' . $response->body());
+                }
+
+                $responseData = $response->json();
+
+                if (!isset($responseData['text'])) {
+                    throw new \Exception('Invalid OpenAI transcription response format');
+                }
+
+                return $responseData['text'];
+            } finally {
+                // Clean up temporary file
+                if (file_exists($tempFile)) {
+                    unlink($tempFile);
+                }
+            }
+        } catch (\Exception $e) {
+            throw new \Exception('Speech-to-text transcription failed: ' . $e->getMessage());
         }
     }
 }

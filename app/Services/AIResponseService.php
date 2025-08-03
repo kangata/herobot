@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Services\AIServiceFactory;
 use App\Services\Contracts\EmbeddingServiceInterface;
+use App\Models\ChatMedia;
 use Illuminate\Support\Facades\Log;
 
 class AIResponseService
@@ -14,30 +15,19 @@ class AIResponseService
      * @param  object                                   $bot         Instance model bot (memiliki properti "prompt")
      * @param  string                                   $message     Pesan terbaru dari pengguna
      * @param  \Illuminate\Support\Collection           $chatHistory Koleksi objek riwayat obrolan
-     * @param  array|null                               $media       Media data (optional)
-     * @param  string                                   $messageType Message type (default: 'text')
+     * @param  \App\Models\ChatMedia|null              $media       Media data (optional)
      * @param  string                                   $format      Output format: 'whatsapp' or 'html' (default: 'whatsapp')
      * @return string|bool  String berisi jawaban terformat, atau false kalau gagal
      */
-    public function generateResponse($bot, $message, $chatHistory, $media = null, $messageType = 'text', $format = 'whatsapp')
+    public function generateResponse($bot, $message, $chatHistory, ?ChatMedia $media, $format = 'whatsapp')
     {
         try {
             // Get separately configured services
             $chatService = AIServiceFactory::createChatService();
             $embeddingService = AIServiceFactory::createEmbeddingService();
             
-            Log::info('Using AI services', [
-                'chat_service' => get_class($chatService),
-                'embedding_service' => get_class($embeddingService),
-            ]);
-            
             // Search for relevant knowledge using embedding service
             $relevantKnowledge = $this->searchSimilarKnowledge($embeddingService, $message, $bot, 3);
-            
-            Log::info('Relevant Knowledge found:', [
-                'knowledge_count' => $relevantKnowledge->count(),
-                'message' => $message,
-            ]);
             
             // Build system prompt
             $systemPrompt = $this->buildSystemPrompt($bot, $relevantKnowledge);
@@ -49,8 +39,8 @@ class AIResponseService
             $response = $chatService->generateResponse(
                 $messages,
                 null,
-                $media ? $media['data'] : null,
-                $media ? $messageType : null
+                $media ? $media->getData() : null,
+                $media ? $media->mime_type : null
             );
 
             // Format response based on the specified format

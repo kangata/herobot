@@ -4,10 +4,11 @@ namespace App\Services;
 
 use App\Services\Contracts\ChatServiceInterface;
 use App\Services\Contracts\EmbeddingServiceInterface;
+use App\Services\Contracts\SpeechToTextServiceInterface;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class GeminiService implements ChatServiceInterface, EmbeddingServiceInterface
+class GeminiService implements ChatServiceInterface, EmbeddingServiceInterface, SpeechToTextServiceInterface
 {
     protected $apiKey;
     protected $model;
@@ -179,6 +180,54 @@ class GeminiService implements ChatServiceInterface, EmbeddingServiceInterface
         } catch (\Exception $e) {
             Log::error('Gemini Batch Embedding Error', ['error' => $e->getMessage()]);
             throw $e;
+        }
+    }
+
+    public function transcribe(string $audioData, string $mimeType, ?string $language = null): string
+    {
+        try {
+            // Remove data URL prefix if present
+            $audioData = preg_replace('/^data:[a-zA-Z0-9\/\-\.]+;base64,/', '', $audioData);
+
+            $contents = [
+                [
+                    'role' => 'user',
+                    'parts' => [
+                        ['text' => 'Please transcribe the audio content exactly as spoken. Return only the transcribed text without any additional commentary or formatting.'],
+                        [
+                            'inline_data' => [
+                                'mime_type' => $mimeType,
+                                'data' => $audioData
+                            ]
+                        ]
+                    ]
+                ]
+            ];
+
+            $payload = [
+                'contents' => $contents
+            ];
+
+            $response = $this->client->post("models/{$this->model}:generateContent", $payload);
+
+            if (!$response->successful()) {
+                Log::error('Gemini Transcription API Error', [
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+                throw new \Exception('Gemini transcription request failed: ' . $response->body());
+            }
+
+            $responseData = $response->json();
+
+            if (!isset($responseData['candidates'][0]['content']['parts'][0]['text'])) {
+                throw new \Exception('Invalid Gemini transcription response format');
+            }
+
+            return trim($responseData['candidates'][0]['content']['parts'][0]['text']);
+        } catch (\Exception $e) {
+            Log::error('Gemini Transcription Error', ['error' => $e->getMessage()]);
+            throw new \Exception('Speech-to-text transcription failed: ' . $e->getMessage());
         }
     }
 }
