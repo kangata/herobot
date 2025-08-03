@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Services\Contracts\ChatServiceInterface;
 use App\Services\Contracts\EmbeddingServiceInterface;
+use App\Services\Contracts\SpeechToTextServiceInterface;
 use InvalidArgumentException;
 
 class AIServiceFactory
@@ -19,14 +20,25 @@ class AIServiceFactory
         };
     }
     
-    public static function createEmbeddingService(): EmbeddingServiceInterface  
+    public static function createEmbeddingService(): EmbeddingServiceInterface
     {
         $service = config('services.ai.embedding_service');
-        
+
         return match($service) {
             'openai' => self::createOpenAIService(),
             'gemini' => self::createGeminiService(),
             default => throw new InvalidArgumentException("Unsupported embedding service: {$service}")
+        };
+    }
+
+    public static function createSpeechToTextService(): SpeechToTextServiceInterface
+    {
+        $service = config('services.ai.speech_to_text_service');
+
+        return match($service) {
+            'openai' => self::createOpenAIService(),
+            'gemini' => self::createGeminiService(),
+            default => throw new InvalidArgumentException("Unsupported speech-to-text service: {$service}")
         };
     }
     
@@ -47,4 +59,4 @@ class AIServiceFactory
         }
         return app(GeminiService::class);
     }
-} 
+}
