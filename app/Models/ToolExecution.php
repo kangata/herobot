@@ -16,11 +16,14 @@ class ToolExecution extends Model
         'input_parameters',
         'output',
         'error',
+        'duration',
+        'executed_at',
     ];
 
     protected $casts = [
         'input_parameters' => 'array',
         'output' => 'array',
+        'executed_at' => 'datetime',
     ];
 
     public function tool()

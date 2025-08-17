@@ -55,6 +55,7 @@ class ToolService
 
     public function executeTool(Tool $tool, array $parameters, ?int $chatHistoryId = null): ToolExecution
     {
+        $startTime = microtime(true);
         $execution = ToolExecution::create([
             'tool_id' => $tool->id,
             'chat_history_id' => $chatHistoryId,
@@ -65,12 +66,16 @@ class ToolService
         try {
             $toolInstance = $this->createToolInstance($tool);
             $output = $toolInstance->execute($parameters);
+            $durationMs = round((microtime(true) - $startTime) * 1000, 2);
             
             $execution->update([
                 'status' => 'completed',
                 'output' => $output,
+                'duration' => $durationMs,
             ]);
         } catch (\Throwable $e) {
+            $durationMs = round((microtime(true) - $startTime) * 1000, 2);
+
             Log::error('Tool execution failed', [
                 'tool_id' => $tool->id,
                 'error' => $e->getMessage(),
@@ -80,6 +85,7 @@ class ToolService
             $execution->update([
                 'status' => 'failed',
                 'error' => $e->getMessage(),
+                'duration' => $durationMs,
             ]);
         }
 

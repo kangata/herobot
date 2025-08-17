@@ -60,7 +60,7 @@ class AIResponseService
             // Handle tool calls if present in the response
             if (is_array($response) && isset($response['tool_calls']) && !empty($response['tool_calls'])) {
                 $toolResponses = $this->handleToolCalls($response['tool_calls'], $messages, $bot);
-                
+
                 // Add assistant message with tool calls
                 $messages[] = [
                     'role' => 'assistant', 
@@ -286,7 +286,7 @@ class AIResponseService
             return [
                 'type' => 'function',
                 'function' => [
-                    'name' => $tool->name,
+                    'name' => $this->sanitizeFunctionName($tool->id, $tool->name),
                     'description' => $tool->description,
                     'parameters' => $tool->parameters_schema,
                 ],
@@ -302,8 +302,19 @@ class AIResponseService
         $toolResponses = [];
         
         foreach ($toolCalls as $toolCall) {
-            $toolId = $toolCall['id'];
+            $toolCallId = $toolCall['id'];
             $toolName = $toolCall['function']['name'];
+
+            $toolId = preg_match('/_(\d+)$/', $toolName, $matches) ? $matches[1] : null;
+            if (!$toolId) {
+                $toolResponses[] = [
+                    'tool_call_id' => $toolCallId,
+                    'role' => 'tool',
+                    'name' => $toolName,
+                    'content' => 'Error: Invalid tool name format',
+                ];
+                continue;
+            }
             
             // Handle both string and array arguments
             $arguments = $toolCall['function']['arguments'];
@@ -311,7 +322,7 @@ class AIResponseService
                 $parameters = json_decode($arguments, true);
                 if (json_last_error() !== JSON_ERROR_NONE) {
                     $toolResponses[] = [
-                        'tool_call_id' => $toolId,
+                        'tool_call_id' => $toolCallId,
                         'role' => 'tool',
                         'name' => $toolName,
                         'content' => 'Error: Invalid JSON in tool arguments',
@@ -323,14 +334,14 @@ class AIResponseService
             }
             
             // Find the tool by name
-            $tool = Tool::where('name', $toolName)
+            $tool = Tool::where('id', $toolId)
                 ->where('team_id', $bot->team_id)
                 ->where('is_active', true)
                 ->first();
                 
             if (!$tool) {
                 $toolResponses[] = [
-                    'tool_call_id' => $toolId,
+                    'tool_call_id' => $toolCallId,
                     'role' => 'tool',
                     'name' => $toolName,
                     'content' => 'Error: Tool not found or inactive',
@@ -351,7 +362,7 @@ class AIResponseService
                 }
                 
                 $toolResponses[] = [
-                    'tool_call_id' => $toolId,
+                    'tool_call_id' => $toolCallId,
                     'role' => 'tool',
                     'name' => $toolName,
                     'content' => $content,
@@ -359,13 +370,13 @@ class AIResponseService
             } catch (\Exception $e) {
                 Log::error('Tool execution error', [
                     'tool_name' => $toolName,
-                    'tool_id' => $toolId,
+                    'tool_id' => $toolCallId,
                     'parameters' => $parameters,
                     'error' => $e->getMessage(),
                 ]);
                 
                 $toolResponses[] = [
-                    'tool_call_id' => $toolId,
+                    'tool_call_id' => $toolCallId,
                     'role' => 'tool',
                     'name' => $toolName,
                     'content' => 'Error: ' . $e->getMessage(),
@@ -374,5 +385,40 @@ class AIResponseService
         }
         
         return $toolResponses;
+    }
+
+    /**
+     * Sanitize function name to comply with Gemini API requirements:
+     * - Must start with a letter or underscore
+     * - Must be alphanumeric (a-z, A-Z, 0-9), underscores (_), dots (.) or dashes (-)
+     * - Maximum length of 64 characters
+     */
+    private function sanitizeFunctionName(int $id, string $name): string
+    {
+        // Replace spaces with underscores
+        $sanitized = str_replace(' ', '_', $name);
+        
+        // Remove any characters that are not alphanumeric, underscores, dots, or dashes
+        $sanitized = preg_replace('/[^a-zA-Z0-9_.-]/', '', $sanitized);
+        
+        // Limit to 64 characters
+        if (strlen($sanitized) > 64) {
+            $sanitized = substr($sanitized, 0, 64);
+        }
+        
+        // Fallback if name becomes empty
+        if (empty($sanitized)) {
+            $sanitized = 'function_' . uniqid();
+        }
+
+        // Ensure it starts with a letter or underscore
+        if (!preg_match('/^[a-zA-Z_]/', $sanitized)) {
+            $sanitized = '_' . $sanitized;
+        }
+
+        // Add id to the function name
+        $sanitized .= "_" . $id;
+
+        return $sanitized;
     }
 }

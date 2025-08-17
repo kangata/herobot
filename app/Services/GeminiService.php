@@ -274,20 +274,22 @@ class GeminiService implements ChatServiceInterface, EmbeddingServiceInterface, 
      */
     private function formatToolsForGemini(array $tools): array
     {
-        $formattedTools = [];
+        $functionDeclarations = [];
         
         foreach ($tools as $tool) {
             if ($tool['type'] === 'function') {
-                $formattedTools[] = [
-                    'function_declarations' => [[
-                        'name' => $tool['function']['name'],
-                        'description' => $tool['function']['description'],
-                        'parameters' => $tool['function']['parameters']
-                    ]]
+                $functionDeclarations[] = [
+                    'name' => $tool['function']['name'],
+                    'description' => $tool['function']['description'],
+                    'parameters' => $tool['function']['parameters']
                 ];
             }
         }
-        
-        return $formattedTools;
+
+        return [
+            [
+                'function_declarations' => $functionDeclarations
+            ]
+        ];
     }
 }

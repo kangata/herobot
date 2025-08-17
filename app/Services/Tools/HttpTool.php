@@ -66,7 +66,6 @@ class HttpTool extends BaseTool
             return [
                 'success' => true,
                 'status' => $response->status(),
-                'headers' => $response->headers(),
                 'body' => $response->json() ?? $response->body(),
                 'execution_time' => microtime(true),
             ];

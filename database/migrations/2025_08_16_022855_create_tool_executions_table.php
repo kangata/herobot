@@ -19,6 +19,8 @@ return new class extends Migration
             $table->json('input_parameters')->nullable();
             $table->json('output')->nullable();
             $table->text('error')->nullable();
+            $table->float('duration')->nullable();
+            $table->timestamp('executed_at')->nullable();
             $table->timestamps();
         });
     }

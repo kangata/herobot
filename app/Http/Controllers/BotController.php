@@ -196,7 +196,6 @@ class BotController extends Controller
                 $validated['message'],
                 collect($validated['chat_history'] ?? []),
                 null,
-                'text',
                 'html'
             );
 

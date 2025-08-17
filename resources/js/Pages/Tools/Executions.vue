@@ -90,8 +90,8 @@
                                         </h4>
                                         <pre class="bg-gray-50 p-3 rounded-md text-sm overflow-x-auto">{{ 
                                             execution.status === 'failed' 
-                                                ? execution.error_message 
-                                                : JSON.stringify(execution.result, null, 2) 
+                                                ? execution.error 
+                                                : JSON.stringify(execution.output, null, 2) 
                                         }}</pre>
                                     </div>
                                 </div>

@@ -138,4 +138,85 @@ class GeminiServiceTest extends TestCase
 
         $this->assertEquals('Hello world', $transcription);
     }
+
+    public function test_format_tools_for_gemini_creates_correct_structure()
+    {
+        Http::fake([
+            'generativelanguage.googleapis.com/*' => Http::response([
+                'candidates' => [[
+                    'content' => [
+                        'parts' => [
+                            ['text' => 'I need to check the weather for you.'],
+                            [
+                                'functionCall' => [
+                                    'name' => 'get_weather',
+                                    'args' => ['location' => 'Jakarta']
+                                ]
+                            ]
+                        ]
+                    ]
+                ]]
+            ], 200)
+        ]);
+
+        $geminiService = new GeminiService();
+
+        $messages = [
+            ['role' => 'user', 'content' => 'What is the weather in Jakarta?']
+        ];
+
+        $tools = [
+            [
+                'type' => 'function',
+                'function' => [
+                    'name' => 'get_weather',
+                    'description' => 'Get weather for a location',
+                    'parameters' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'location' => ['type' => 'string']
+                        ]
+                    ]
+                ]
+            ],
+            [
+                'type' => 'function',
+                'function' => [
+                    'name' => 'get_temperature',
+                    'description' => 'Get temperature for a location',
+                    'parameters' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'location' => ['type' => 'string'],
+                            'unit' => ['type' => 'string']
+                        ]
+                    ]
+                ]
+            ]
+        ];
+
+        // This should not throw an exception about invalid function names
+        $response = $geminiService->generateResponse($messages, null, null, null, $tools);
+
+        // Verify the request was made with correct tools structure
+        Http::assertSent(function ($request) {
+            $body = json_decode($request->body(), true);
+            
+            // Check that tools are properly formatted
+            $this->assertArrayHasKey('tools', $body);
+            $this->assertCount(1, $body['tools']); // Should be wrapped in single array
+            $this->assertArrayHasKey('function_declarations', $body['tools'][0]);
+            $this->assertCount(2, $body['tools'][0]['function_declarations']); // Two functions
+            
+            // Check function names are valid
+            $functions = $body['tools'][0]['function_declarations'];
+            $this->assertEquals('get_weather', $functions[0]['name']);
+            $this->assertEquals('get_temperature', $functions[1]['name']);
+            
+            return true;
+        });
+
+        $this->assertIsArray($response);
+        $this->assertArrayHasKey('tool_calls', $response);
+    }
 }

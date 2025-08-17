@@ -44,12 +44,18 @@ class ToolController extends Controller
         return redirect()->route('tools.show', $tool)->with('success', 'Tool created successfully.');
     }
 
-    public function show(Tool $tool)
+    public function show(Request $request, Tool $tool)
     {
-        $tool->load('executions');
+        $executionsPerPage = $request->get('executions_per_page', 10);
+        $executionsPage = $request->get('executions_page', 1);
+        
+        $executions = $tool->executions()
+            ->latest()
+            ->paginate($executionsPerPage, ['*'], 'executions_page', $executionsPage);
         
         return inertia('Tools/Show', [
             'tool' => $tool,
+            'executions' => $executions,
         ]);
     }
 
