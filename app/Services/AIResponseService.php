@@ -5,10 +5,18 @@ namespace App\Services;
 use App\Services\AIServiceFactory;
 use App\Services\Contracts\EmbeddingServiceInterface;
 use App\Models\ChatMedia;
+use App\Models\Tool;
 use Illuminate\Support\Facades\Log;
 
 class AIResponseService
 {
+    protected ToolService $toolService;
+    protected bool $toolCallingEnabled = true;
+
+    public function __construct(ToolService $toolService)
+    {
+        $this->toolService = $toolService;
+    }
     /**
      * Generate AI response for a bot with message and chat history.
      *
@@ -35,19 +43,46 @@ class AIResponseService
             // Build messages array
             $messages = $this->buildMessagesArray($systemPrompt, $chatHistory, $message);
             
+            // Get available tools for the bot if tool calling is enabled
+            $tools = $this->toolCallingEnabled 
+                ? $this->getAvailableToolsForBot($bot)
+                : [];
+            
             // Generate response using chat service
             $response = $chatService->generateResponse(
                 $messages,
-                null,
+                null, // model parameter
                 $media ? $media->getData() : null,
-                $media ? $media->mime_type : null
+                $media ? $media->mime_type : null,
+                $tools
             );
+
+            // Handle tool calls if present in the response
+            if (is_array($response) && isset($response['tool_calls']) && !empty($response['tool_calls'])) {
+                $toolResponses = $this->handleToolCalls($response['tool_calls'], $messages, $bot);
+                
+                // Add assistant message with tool calls
+                $messages[] = [
+                    'role' => 'assistant', 
+                    'content' => $response['content'] ?? null,
+                    'tool_calls' => $response['tool_calls']
+                ];
+                
+                // Add tool responses
+                $messages = array_merge($messages, $toolResponses);
+                
+                // Generate final response
+                $finalResponse = $chatService->generateResponse($messages, null, null, null, []);
+                $responseContent = is_array($finalResponse) ? ($finalResponse['content'] ?? '') : $finalResponse;
+            } else {
+                $responseContent = is_array($response) ? ($response['content'] ?? $response) : $response;
+            }
 
             // Format response based on the specified format
             if ($format === 'html') {
-                return $this->convertMarkdownToHtml($response);
+                return $this->convertMarkdownToHtml($responseContent);
             } else {
-                return $this->convertMarkdownToWhatsApp($response);
+                return $this->convertMarkdownToWhatsApp($responseContent);
             }
         } catch (\Exception $e) {
             Log::error('Failed to generate response: ' . $e->getMessage());
@@ -236,5 +271,108 @@ class AIResponseService
         $norm2 = sqrt($norm2);
 
         return $dotProduct / ($norm1 * $norm2);
+    }
+
+    /**
+     * Get available tools for a bot.
+     */
+    protected function getAvailableToolsForBot($bot): array
+    {
+        $tools = Tool::where('team_id', $bot->team_id)
+            ->where('is_active', true)
+            ->get();
+        
+        return $tools->map(function ($tool) {
+            return [
+                'type' => 'function',
+                'function' => [
+                    'name' => $tool->name,
+                    'description' => $tool->description,
+                    'parameters' => $tool->parameters_schema,
+                ],
+            ];
+        })->toArray();
+    }
+
+    /**
+     * Handle tool calls from AI response.
+     */
+    protected function handleToolCalls(array $toolCalls, array $messages, $bot): array
+    {
+        $toolResponses = [];
+        
+        foreach ($toolCalls as $toolCall) {
+            $toolId = $toolCall['id'];
+            $toolName = $toolCall['function']['name'];
+            
+            // Handle both string and array arguments
+            $arguments = $toolCall['function']['arguments'];
+            if (is_string($arguments)) {
+                $parameters = json_decode($arguments, true);
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    $toolResponses[] = [
+                        'tool_call_id' => $toolId,
+                        'role' => 'tool',
+                        'name' => $toolName,
+                        'content' => 'Error: Invalid JSON in tool arguments',
+                    ];
+                    continue;
+                }
+            } else {
+                $parameters = $arguments;
+            }
+            
+            // Find the tool by name
+            $tool = Tool::where('name', $toolName)
+                ->where('team_id', $bot->team_id)
+                ->where('is_active', true)
+                ->first();
+                
+            if (!$tool) {
+                $toolResponses[] = [
+                    'tool_call_id' => $toolId,
+                    'role' => 'tool',
+                    'name' => $toolName,
+                    'content' => 'Error: Tool not found or inactive',
+                ];
+                continue;
+            }
+            
+            try {
+                $execution = $this->toolService->executeTool($tool, $parameters);
+                
+                // Handle different execution statuses
+                if ($execution->status === 'completed') {
+                    $content = is_array($execution->output) ? json_encode($execution->output) : (string) $execution->output;
+                } elseif ($execution->status === 'failed') {
+                    $content = 'Error: ' . ($execution->error ?? 'Tool execution failed');
+                } else {
+                    $content = 'Error: Tool execution in unexpected state: ' . $execution->status;
+                }
+                
+                $toolResponses[] = [
+                    'tool_call_id' => $toolId,
+                    'role' => 'tool',
+                    'name' => $toolName,
+                    'content' => $content,
+                ];
+            } catch (\Exception $e) {
+                Log::error('Tool execution error', [
+                    'tool_name' => $toolName,
+                    'tool_id' => $toolId,
+                    'parameters' => $parameters,
+                    'error' => $e->getMessage(),
+                ]);
+                
+                $toolResponses[] = [
+                    'tool_call_id' => $toolId,
+                    'role' => 'tool',
+                    'name' => $toolName,
+                    'content' => 'Error: ' . $e->getMessage(),
+                ];
+            }
+        }
+        
+        return $toolResponses;
     }
 }

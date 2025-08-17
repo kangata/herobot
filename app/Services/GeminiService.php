@@ -29,7 +29,7 @@ class GeminiService implements ChatServiceInterface, EmbeddingServiceInterface, 
             ]);
     }
 
-    public function generateResponse(array $messages, ?string $model = null, ?string $media = null, ?string $mimeType = null): string
+    public function generateResponse(array $messages, ?string $model = null, ?string $media = null, ?string $mimeType = null, array $tools = []): array|string
     {
         $model = $model ?? $this->model;
 
@@ -84,6 +84,11 @@ class GeminiService implements ChatServiceInterface, EmbeddingServiceInterface, 
             ];
         }
 
+        // Add tools if provided
+        if (!empty($tools)) {
+            $payload['tools'] = $this->formatToolsForGemini($tools);
+        }
+
         $response = $this->client->post("models/{$model}:generateContent", $payload);
 
         if (!$response->successful()) {
@@ -96,11 +101,44 @@ class GeminiService implements ChatServiceInterface, EmbeddingServiceInterface, 
 
         $responseData = $response->json();
 
-        if (!isset($responseData['candidates'][0]['content']['parts'][0]['text'])) {
-            throw new \Exception('Invalid Gemini chat response format');
+        $candidate = $responseData['candidates'][0] ?? null;
+        if (!$candidate) {
+            throw new \Exception('Invalid Gemini chat response format: no candidates');
         }
 
-        return $responseData['candidates'][0]['content']['parts'][0]['text'];
+        // Check for function calls
+        if (isset($candidate['content']['parts'])) {
+            $functionCalls = [];
+            $textContent = '';
+            
+            foreach ($candidate['content']['parts'] as $part) {
+                if (isset($part['functionCall'])) {
+                    $functionCalls[] = [
+                        'id' => 'call_' . uniqid(),
+                        'type' => 'function',
+                        'function' => [
+                            'name' => $part['functionCall']['name'],
+                            'arguments' => json_encode($part['functionCall']['args'] ?? [])
+                        ]
+                    ];
+                } elseif (isset($part['text'])) {
+                    $textContent .= $part['text'];
+                }
+            }
+            
+            if (!empty($functionCalls)) {
+                return [
+                    'content' => $textContent,
+                    'tool_calls' => $functionCalls
+                ];
+            }
+            
+            if (!empty($textContent)) {
+                return $textContent;
+            }
+        }
+
+        throw new \Exception('Invalid Gemini chat response format: no content found');
     }
 
     public function createEmbedding(string|array $text): array
@@ -229,5 +267,27 @@ class GeminiService implements ChatServiceInterface, EmbeddingServiceInterface, 
             Log::error('Gemini Transcription Error', ['error' => $e->getMessage()]);
             throw new \Exception('Speech-to-text transcription failed: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Format tools array for Gemini API
+     */
+    private function formatToolsForGemini(array $tools): array
+    {
+        $formattedTools = [];
+        
+        foreach ($tools as $tool) {
+            if ($tool['type'] === 'function') {
+                $formattedTools[] = [
+                    'function_declarations' => [[
+                        'name' => $tool['function']['name'],
+                        'description' => $tool['function']['description'],
+                        'parameters' => $tool['function']['parameters']
+                    ]]
+                ];
+            }
+        }
+        
+        return $formattedTools;
     }
 }

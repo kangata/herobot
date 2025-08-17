@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Bot;
 use App\Models\Channel;
 use App\Models\Knowledge;
+use App\Models\Tool;
 use App\Services\AIResponseService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -57,7 +58,7 @@ class BotController extends Controller
 
     public function show(Bot $bot)
     {
-        $bot->load('channels', 'knowledge');
+        $bot->load('channels', 'knowledge', 'tools');
 
         $availableChannels = Channel::where('team_id', $bot->team_id)
             ->whereNotIn('id', $bot->channels->pluck('id'))
@@ -67,10 +68,15 @@ class BotController extends Controller
             ->whereNotIn('id', $bot->knowledge->pluck('id'))
             ->get();
 
+        $availableTools = Tool::where('team_id', $bot->team_id)
+            ->whereNotIn('id', $bot->tools->pluck('id'))
+            ->get();
+
         return inertia('Bots/Show', [
             'bot' => $bot,
             'availableChannels' => $availableChannels,
             'availableKnowledge' => $availableKnowledge,
+            'availableTools' => $availableTools,
         ]);
     }
 
@@ -151,6 +157,28 @@ class BotController extends Controller
         $bot->knowledge()->detach($validated['knowledge_id']);
 
         return back()->with('success', 'Knowledge disconnected successfully.');
+    }
+
+    public function connectTool(Request $request, Bot $bot)
+    {
+        $validated = $request->validate([
+            'tool_id' => 'required|exists:tools,id',
+        ]);
+
+        $bot->tools()->attach($validated['tool_id']);
+
+        return back()->with('success', 'Tool connected successfully.');
+    }
+
+    public function disconnectTool(Request $request, Bot $bot)
+    {
+        $validated = $request->validate([
+            'tool_id' => 'required|exists:tools,id',
+        ]);
+
+        $bot->tools()->detach($validated['tool_id']);
+
+        return back()->with('success', 'Tool disconnected successfully.');
     }
 
     public function testMessage(Request $request, Bot $bot)
