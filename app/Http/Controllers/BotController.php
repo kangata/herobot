@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Bot;
 use App\Models\Channel;
+use App\Models\ChatHistory;
 use App\Models\Knowledge;
 use App\Models\Tool;
 use App\Services\AIResponseService;
@@ -72,11 +73,17 @@ class BotController extends Controller
             ->whereNotIn('id', $bot->tools->pluck('id'))
             ->get();
 
+        $chatHistories = ChatHistory::where('bot_id', $bot->id)
+            ->where('sender', 'testing')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         return inertia('Bots/Show', [
             'bot' => $bot,
             'availableChannels' => $availableChannels,
             'availableKnowledge' => $availableKnowledge,
             'availableTools' => $availableTools,
+            'chatHistories' => $chatHistories,
         ]);
     }
 
@@ -185,9 +192,6 @@ class BotController extends Controller
     {
         $validated = $request->validate([
             'message' => 'required|string|max:1000',
-            'chat_history' => 'array',
-            'chat_history.*.message' => 'required|string',
-            'chat_history.*.response' => 'required|string',
         ]);
 
         try {
@@ -218,6 +222,25 @@ class BotController extends Controller
                 'error' => 'Failed to generate response. Please try again.',
                 'timestamp' => now()->toISOString(),
             ]);
+        }
+    }
+
+    public function clearChat(Bot $bot)
+    {
+        try {
+            // Delete all chat histories for this bot with sender 'testing'
+            ChatHistory::where('bot_id', $bot->id)
+                ->where('sender', 'testing')
+                ->delete();
+
+            return back()->with('success', 'Chat history cleared successfully.');
+        } catch (\Exception $e) {
+            Log::error('Failed to clear chat history: ' . $e->getMessage(), [
+                'bot_id' => $bot->id,
+                'exception' => $e->getTraceAsString()
+            ]);
+
+            return back()->with('error', 'Failed to clear chat history. Please try again.');
         }
     }
 }

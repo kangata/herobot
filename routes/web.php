@@ -79,6 +79,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('/bots/{bot}/connect-tool', [BotController::class, 'connectTool'])->name('bots.connect-tool');
     Route::delete('/bots/{bot}/disconnect-tool', [BotController::class, 'disconnectTool'])->name('bots.disconnect-tool');
     Route::post('/bots/{bot}/test-message', [BotController::class, 'testMessage'])->name('bots.test-message');
+    Route::delete('/bots/{bot}/clear-chat', [BotController::class, 'clearChat'])->name('bots.clear-chat');
 
     // Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
     // Route::post('/billing/topup', [BillingController::class, 'topup'])->name('billing.topup');

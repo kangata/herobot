@@ -222,7 +222,7 @@
         </DialogModal>
 
         <!-- Floating Chat Widget -->
-        <FloatingChatWidget :bot="bot" />
+        <FloatingChatWidget :bot="bot" :chatHistories="chatHistories" />
     </AppLayout>
 </template>
 
@@ -242,6 +242,7 @@ const props = defineProps({
     availableChannels: Array,
     availableKnowledge: Array,
     availableTools: Array,
+    chatHistories: Array,
 });
 
 const showChannelModal = ref(false);
