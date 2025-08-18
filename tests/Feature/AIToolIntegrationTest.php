@@ -75,7 +75,8 @@ class AIToolIntegrationTest extends TestCase
         $response = $aiService->generateResponse(
             $this->bot,
             "What's the weather in Jakarta?",
-            collect([]),
+            'user123',
+            null,
             null,
             'whatsapp'
         );
@@ -93,7 +94,6 @@ class AIToolIntegrationTest extends TestCase
         $mockChatService = Mockery::mock('App\Services\Contracts\ChatServiceInterface');
         $mockChatService->shouldReceive('generateResponse')
             ->once()
-            ->with(Mockery::type('array'), Mockery::any(), Mockery::any(), Mockery::any(), Mockery::type('array'))
             ->andReturn([
                 'content' => '',
                 'tool_calls' => [[
@@ -109,7 +109,6 @@ class AIToolIntegrationTest extends TestCase
         // Mock second call for final response
         $mockChatService->shouldReceive('generateResponse')
             ->once()
-            ->with(Mockery::type('array'), Mockery::any(), Mockery::any(), Mockery::any(), [])
             ->andReturn('The weather in Jakarta is 25°C with clear sky.');
 
         $mockEmbeddingService = Mockery::mock('App\Services\Contracts\EmbeddingServiceInterface');
@@ -134,7 +133,8 @@ class AIToolIntegrationTest extends TestCase
         $response = $aiService->generateResponse(
             $this->bot,
             "What's the weather in Jakarta?",
-            collect([]),
+            'user123',
+            null,
             null,
             'whatsapp'
         );
