@@ -194,7 +194,8 @@ class BotController extends Controller
             $response = $this->aiResponseService->generateResponse(
                 $bot,
                 $validated['message'],
-                collect($validated['chat_history'] ?? []),
+                'testing',
+                null, // no channel for testing
                 null,
                 'html'
             );

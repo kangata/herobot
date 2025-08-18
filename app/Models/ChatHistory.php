@@ -11,13 +11,31 @@ class ChatHistory extends Model
 
     protected $fillable = [
         'channel_id',
+        'bot_id',
         'sender',
         'message',
-        'response',
+        'role',
+        'media_data',
+        'tool_calls',
+        'metadata',
+        'message_type',
+        'raw_content',
+        'tool_call_id',
+    ];
+
+    protected $casts = [
+        'media_data' => 'array',
+        'tool_calls' => 'array',
+        'metadata' => 'array',
     ];
 
     public function channel()
     {
         return $this->belongsTo(Channel::class);
+    }
+
+    public function bot()
+    {
+        return $this->belongsTo(Bot::class);
     }
 }

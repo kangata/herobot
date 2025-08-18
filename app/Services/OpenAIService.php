@@ -6,6 +6,7 @@ use App\Services\Contracts\ChatServiceInterface;
 use App\Services\Contracts\EmbeddingServiceInterface;
 use App\Services\Contracts\SpeechToTextServiceInterface;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class OpenAIService implements ChatServiceInterface, EmbeddingServiceInterface, SpeechToTextServiceInterface
 {
@@ -49,10 +50,22 @@ class OpenAIService implements ChatServiceInterface, EmbeddingServiceInterface, 
         $response = $this->client->post("chat/completions", $payload);
 
         if (!$response->successful()) {
-            throw new \Exception('OpenAI chat request failed: ' . $response->body());
+            $body = $response->body();
+            Log::info('OpenAI API', [
+                'status' => $response->status(),
+                'request' => $payload,
+                'response' => $body
+            ]);
+            throw new \Exception('OpenAI chat request failed: ' . $body);
         }
 
         $responseData = $response->json();
+
+        Log::info('OpenAI API', [
+            'status' => $response->status(),
+            'request' => $payload,
+            'response' => $responseData
+        ]);
 
         $message = $responseData['choices'][0]['message'] ?? null;
         if (!$message) {

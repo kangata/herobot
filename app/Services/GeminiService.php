@@ -92,14 +92,22 @@ class GeminiService implements ChatServiceInterface, EmbeddingServiceInterface, 
         $response = $this->client->post("models/{$model}:generateContent", $payload);
 
         if (!$response->successful()) {
-            Log::error('Gemini API Error', [
+            $body = $response->body();
+            Log::error('Gemini API', [
                 'status' => $response->status(),
-                'body' => $response->body()
+                'request' => $payload,
+                'response' => $body
             ]);
-            throw new \Exception('Gemini chat request failed: ' . $response->body());
+            throw new \Exception('Gemini chat request failed: ' . $body);
         }
 
         $responseData = $response->json();
+
+        Log::info('Gemini API', [
+            'status' => $response->status(),
+            'request' => $payload,
+            'response' => $responseData
+        ]);
 
         $candidate = $responseData['candidates'][0] ?? null;
         if (!$candidate) {
@@ -157,11 +165,13 @@ class GeminiService implements ChatServiceInterface, EmbeddingServiceInterface, 
             $response = $this->client->post("models/{$this->embeddingModel}:embedContent", $payload);
 
             if (!$response->successful()) {
-                Log::error('Gemini Embedding API Error', [
+                $body = $response->body();
+                Log::error('Gemini Embedding API', [
                     'status' => $response->status(),
-                    'body' => $response->body()
+                    'request' => $payload,
+                    'response' => $body
                 ]);
-                throw new \Exception('Failed to create embedding: ' . $response->body());
+                throw new \Exception('Failed to create embedding: ' . $body);
             }
 
             $responseData = $response->json();
@@ -198,11 +208,13 @@ class GeminiService implements ChatServiceInterface, EmbeddingServiceInterface, 
             $response = $this->client->post("models/{$this->embeddingModel}:batchEmbedContents", $payload);
 
             if (!$response->successful()) {
-                Log::error('Gemini Batch Embedding API Error', [
+                $body = $response->body();
+                Log::error('Gemini Batch Embedding API', [
                     'status' => $response->status(),
-                    'body' => $response->body()
+                    'request' => $payload,
+                    'response' => $body
                 ]);
-                throw new \Exception('Failed to create batch embeddings: ' . $response->body());
+                throw new \Exception('Failed to create batch embeddings: ' . $body);
             }
 
             $responseData = $response->json();
@@ -249,11 +261,13 @@ class GeminiService implements ChatServiceInterface, EmbeddingServiceInterface, 
             $response = $this->client->post("models/{$this->model}:generateContent", $payload);
 
             if (!$response->successful()) {
-                Log::error('Gemini Transcription API Error', [
+                $body = $response->body();
+                Log::error('Gemini Transcription API', [
                     'status' => $response->status(),
-                    'body' => $response->body()
+                    'request' => $payload,
+                    'response' => $body
                 ]);
-                throw new \Exception('Gemini transcription request failed: ' . $response->body());
+                throw new \Exception('Gemini transcription request failed: ' . $body);
             }
 
             $responseData = $response->json();
