@@ -68,4 +68,9 @@ class Team extends JetstreamTeam
             'amount' => 0,
         ]);
     }
+
+    public function tools()
+    {
+        return $this->hasMany(Tool::class);
+    }
 }

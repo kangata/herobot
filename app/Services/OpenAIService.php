@@ -6,6 +6,7 @@ use App\Services\Contracts\ChatServiceInterface;
 use App\Services\Contracts\EmbeddingServiceInterface;
 use App\Services\Contracts\SpeechToTextServiceInterface;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class OpenAIService implements ChatServiceInterface, EmbeddingServiceInterface, SpeechToTextServiceInterface
 {
@@ -29,7 +30,7 @@ class OpenAIService implements ChatServiceInterface, EmbeddingServiceInterface, 
             ->timeout(30);
     }
 
-    public function generateResponse(array $messages, ?string $model = null, ?string $media = null, ?string $mimeType = null): string
+    public function generateResponse(array $messages, ?string $model = null, ?string $media = null, ?string $mimeType = null, array $tools = []): array|string
     {
         $model = $model ?? $this->model;
 
@@ -40,19 +41,51 @@ class OpenAIService implements ChatServiceInterface, EmbeddingServiceInterface, 
             'max_tokens' => 1000,
         ];
 
+        // Add tools if provided
+        if (!empty($tools)) {
+            $payload['tools'] = $tools;
+            $payload['tool_choice'] = 'auto';
+        }
+
         $response = $this->client->post("chat/completions", $payload);
 
         if (!$response->successful()) {
-            throw new \Exception('OpenAI chat request failed: ' . $response->body());
+            $body = $response->body();
+            Log::info('OpenAI API', [
+                'status' => $response->status(),
+                'request' => $payload,
+                'response' => $body
+            ]);
+            throw new \Exception('OpenAI chat request failed: ' . $body);
         }
 
         $responseData = $response->json();
 
-        if (!isset($responseData['choices'][0]['message']['content'])) {
-            throw new \Exception('Invalid OpenAI chat response format');
+        Log::info('OpenAI API', [
+            'status' => $response->status(),
+            'request' => $payload,
+            'response' => $responseData
+        ]);
+
+        $message = $responseData['choices'][0]['message'] ?? null;
+        if (!$message) {
+            throw new \Exception('Invalid OpenAI chat response format: no message');
         }
 
-        return $responseData['choices'][0]['message']['content'];
+        // Check for tool calls
+        if (isset($message['tool_calls']) && !empty($message['tool_calls'])) {
+            return [
+                'content' => $message['content'] ?? '',
+                'tool_calls' => $message['tool_calls']
+            ];
+        }
+
+        // Return content if available
+        if (isset($message['content'])) {
+            return $message['content'];
+        }
+
+        throw new \Exception('Invalid OpenAI chat response format: no content or tool calls');
     }
 
     public function createEmbedding(string|array $text): array

@@ -33,12 +33,15 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $session = collect($request->session()->all())
+            ->reject(fn ($value, $key) => 
+                str_starts_with($key, 'login_web_') ||
+                str_starts_with($key, 'password_hash_') ||
+                str_starts_with($key, '_')
+            );
+
         return array_merge(parent::share($request), [
-            'flash' => [
-                'error' => $request->session()->get('error'),
-                'success' => $request->session()->get('success'),
-                'chatResponse' => $request->session()->get('chatResponse')
-            ]
+            'flash' => $session->all(),
         ]);
     }
 }

@@ -86,6 +86,33 @@
             </div>
         </div>
 
+        <!-- Tools -->
+        <h3 class="text-lg font-medium leading-7 text-gray-900 mb-4 mt-6">
+            Tools
+        </h3>
+
+        <div class="grid grid-cols-4 gap-4">
+            <div v-for="tool in bot.tools" :key="tool.id" class="rounded-xl border border-gray-200 text-base">
+                <div class="p-6 border-b border-gray-900/5">
+                    <Link :href="route('tools.edit', tool.id)" class="font-medium">{{ tool.name }}</Link>
+                    <div class="text-sm text-gray-500 mt-2 capitalize">{{ tool.type }}</div>
+                </div>
+                <div class="px-6 py-3 flex text-xs">
+                    <button 
+                        @click="disconnectTool(tool.id)" 
+                        class="grow px-4 py-2 bg-red-500 text-white rounded-md disabled:opacity-50"
+                        :disabled="tool.isLoading"
+                    >
+                        {{ tool.isLoading ? 'Disconnecting...' : 'Disconnect' }}
+                    </button>
+                </div>
+            </div>
+            <div @click="openToolModal" class="rounded-xl border border-gray-200 flex items-center justify-center cursor-pointer h-44">
+                <PlusIcon class="h-6 w-6 text-gray-400" />
+                <span class="ml-2">Connect Tool</span>
+            </div>
+        </div>
+
         <!-- Channel Modal -->
         <DialogModal :show="showChannelModal" @close="closeChannelModal">
             <template #title>
@@ -158,8 +185,44 @@
             </template>
         </DialogModal>
 
+        <!-- Tool Modal -->
+        <DialogModal :show="showToolModal" @close="closeToolModal">
+            <template #title>
+                Connect Tool
+            </template>
+            <template #content>
+                <div class="space-y-4">
+                    <div v-if="availableTools.length === 0" class="text-center text-gray-500 py-4">
+                        No available tools to connect.
+                    </div>
+                    <div v-else v-for="tool in availableTools" :key="tool.id" class="mb-2">
+                        <button 
+                            @click="connectTool(tool.id)" 
+                            class="w-full text-left p-2 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                            :disabled="tool.isLoading"
+                        >
+                            {{ tool.isLoading ? 'Connecting...' : `${tool.name} (${tool.type})` }}
+                        </button>
+                    </div>
+                    <div class="border-t pt-4 mt-4">
+                        <Link :href="route('tools.create', { bot_id: bot.id })" class="w-full">
+                            <PrimaryButton class="w-full justify-center">
+                                <PlusIcon class="h-5 w-5 mr-2" />
+                                Create New Tool
+                            </PrimaryButton>
+                        </Link>
+                    </div>
+                </div>
+            </template>
+            <template #footer>
+                <SecondaryButton @click="closeToolModal" class="mr-2">
+                    Cancel
+                </SecondaryButton>
+            </template>
+        </DialogModal>
+
         <!-- Floating Chat Widget -->
-        <FloatingChatWidget :bot="bot" />
+        <FloatingChatWidget :bot="bot" :chatHistories="chatHistories" />
     </AppLayout>
 </template>
 
@@ -178,15 +241,20 @@ const props = defineProps({
     bot: Object,
     availableChannels: Array,
     availableKnowledge: Array,
+    availableTools: Array,
+    chatHistories: Array,
 });
 
 const showChannelModal = ref(false);
 const showKnowledgeModal = ref(false);
+const showToolModal = ref(false);
 
 const openChannelModal = () => showChannelModal.value = true;
 const closeChannelModal = () => showChannelModal.value = false;
 const openKnowledgeModal = () => showKnowledgeModal.value = true;
 const closeKnowledgeModal = () => showKnowledgeModal.value = false;
+const openToolModal = () => showToolModal.value = true;
+const closeToolModal = () => showToolModal.value = false;
 
 const connectChannel = (channelId) => {
     const channel = props.availableChannels.find(i => i.id === channelId);
@@ -258,6 +326,43 @@ const disconnectKnowledge = (knowledgeId) => {
         },
         onError: () => {
             knowledge.isLoading = false;
+        }
+    });
+};
+
+const connectTool = (toolId) => {
+    const tool = props.availableTools.find(t => t.id === toolId);
+    tool.isLoading = true;
+
+    useForm({
+        tool_id: toolId
+    }).post(route('bots.connect-tool', props.bot.id), {
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: () => {
+            closeToolModal();
+            tool.isLoading = false;
+        },
+        onError: () => {
+            tool.isLoading = false;
+        }
+    });
+};
+
+const disconnectTool = (toolId) => {
+    const tool = props.bot.tools.find(t => t.id === toolId);
+    tool.isLoading = true;
+
+    useForm({
+        tool_id: toolId
+    }).delete(route('bots.disconnect-tool', props.bot.id), {
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: () => {
+            tool.isLoading = false;
+        },
+        onError: () => {
+            tool.isLoading = false;
         }
     });
 };

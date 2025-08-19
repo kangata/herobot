@@ -50,31 +50,12 @@ class WhatsAppMessageController extends Controller
             return response()->json(['error' => 'No bot found for this channel'], 404);
         }
 
-        $chatHistory = ChatHistory::where('channel_id', $channelId)
-            ->where('sender', $sender)
-            ->latest()
-            ->take(5)
-            ->get()
-            ->reverse()
-            ->values();
-
-        $response = $this->aiResponseService->generateResponse($bot, $messageContent, $chatHistory, $media);
+        $response = $this->aiResponseService->generateResponse($bot, $messageContent, $sender, $channelId, $media);
 
         // Record usage transaction and deduct credits
         $this->transactionService->recordUsage($channel->team);
 
-        $this->saveChatHistory($channelId, $sender, $messageContent, $response);
-
         return response()->json(['response' => $response]);
     }
 
-    private function saveChatHistory($channelId, $sender, $message, $response)
-    {
-        ChatHistory::create([
-            'channel_id' => $channelId,
-            'sender' => $sender,
-            'message' => $message,
-            'response' => $response,
-        ]);
-    }
 }

@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Bot;
 use App\Models\Channel;
+use App\Models\ChatHistory;
 use App\Models\Knowledge;
+use App\Models\Tool;
 use App\Services\AIResponseService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -57,7 +59,7 @@ class BotController extends Controller
 
     public function show(Bot $bot)
     {
-        $bot->load('channels', 'knowledge');
+        $bot->load('channels', 'knowledge', 'tools');
 
         $availableChannels = Channel::where('team_id', $bot->team_id)
             ->whereNotIn('id', $bot->channels->pluck('id'))
@@ -67,10 +69,21 @@ class BotController extends Controller
             ->whereNotIn('id', $bot->knowledge->pluck('id'))
             ->get();
 
+        $availableTools = Tool::where('team_id', $bot->team_id)
+            ->whereNotIn('id', $bot->tools->pluck('id'))
+            ->get();
+
+        $chatHistories = ChatHistory::where('bot_id', $bot->id)
+            ->where('sender', 'testing')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         return inertia('Bots/Show', [
             'bot' => $bot,
             'availableChannels' => $availableChannels,
             'availableKnowledge' => $availableKnowledge,
+            'availableTools' => $availableTools,
+            'chatHistories' => $chatHistories,
         ]);
     }
 
@@ -153,22 +166,41 @@ class BotController extends Controller
         return back()->with('success', 'Knowledge disconnected successfully.');
     }
 
+    public function connectTool(Request $request, Bot $bot)
+    {
+        $validated = $request->validate([
+            'tool_id' => 'required|exists:tools,id',
+        ]);
+
+        $bot->tools()->attach($validated['tool_id']);
+
+        return back()->with('success', 'Tool connected successfully.');
+    }
+
+    public function disconnectTool(Request $request, Bot $bot)
+    {
+        $validated = $request->validate([
+            'tool_id' => 'required|exists:tools,id',
+        ]);
+
+        $bot->tools()->detach($validated['tool_id']);
+
+        return back()->with('success', 'Tool disconnected successfully.');
+    }
+
     public function testMessage(Request $request, Bot $bot)
     {
         $validated = $request->validate([
             'message' => 'required|string|max:1000',
-            'chat_history' => 'array',
-            'chat_history.*.message' => 'required|string',
-            'chat_history.*.response' => 'required|string',
         ]);
 
         try {
             $response = $this->aiResponseService->generateResponse(
                 $bot,
                 $validated['message'],
-                collect($validated['chat_history'] ?? []),
+                'testing',
+                null, // no channel for testing
                 null,
-                'text',
                 'html'
             );
 
@@ -190,6 +222,25 @@ class BotController extends Controller
                 'error' => 'Failed to generate response. Please try again.',
                 'timestamp' => now()->toISOString(),
             ]);
+        }
+    }
+
+    public function clearChat(Bot $bot)
+    {
+        try {
+            // Delete all chat histories for this bot with sender 'testing'
+            ChatHistory::where('bot_id', $bot->id)
+                ->where('sender', 'testing')
+                ->delete();
+
+            return back()->with('success', 'Chat history cleared successfully.');
+        } catch (\Exception $e) {
+            Log::error('Failed to clear chat history: ' . $e->getMessage(), [
+                'bot_id' => $bot->id,
+                'exception' => $e->getTraceAsString()
+            ]);
+
+            return back()->with('error', 'Failed to clear chat history. Please try again.');
         }
     }
 }

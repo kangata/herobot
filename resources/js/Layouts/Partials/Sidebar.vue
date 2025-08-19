@@ -167,6 +167,7 @@ import {
     UserGroupIcon,
     XMarkIcon,
     CreditCardIcon,
+    WrenchScrewdriverIcon,
 } from '@heroicons/vue/24/outline'
 import { LinkIcon } from '@heroicons/vue/20/solid'
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
@@ -178,6 +179,7 @@ const navigation = [
     { name: 'Dashboard', href: route('dashboard'), icon: HomeIcon, current: route().current('dashboard') },
     { name: 'Bot Management', href: route('bots.index'), icon: BotIcon, current: route().current('bots*') },
     { name: 'Knowledge', href: route('knowledges.index'), icon: DocumentDuplicateIcon, current: route().current('knowledges*') },
+    { name: 'Tools', href: route('tools.index'), icon: WrenchScrewdriverIcon, current: route().current('tools*') },
     // { name: 'Reports', href: route('reports'), icon: ChartPieIcon, current: route().current('reports*') },
     { name: 'Channels', href: route('channels.index'), icon: LinkIcon, current: route().current('channels*') },
 ]

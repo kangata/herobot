@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Services\TelegramService;
+use App\Services\ToolService;
 use App\Services\WhatsApp\WhatsAppService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
@@ -25,6 +26,10 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->singleton(TelegramService::class, function ($app) {
             return new TelegramService;
+        });
+
+        $this->app->singleton(ToolService::class, function ($app) {
+            return new ToolService();
         });
     }
 

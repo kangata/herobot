@@ -5,23 +5,54 @@ namespace App\Services;
 use App\Services\AIServiceFactory;
 use App\Services\Contracts\EmbeddingServiceInterface;
 use App\Models\ChatMedia;
+use App\Models\Tool;
+use App\Models\ChatHistory;
 use Illuminate\Support\Facades\Log;
 
 class AIResponseService
 {
+    protected ToolService $toolService;
+    protected bool $toolCallingEnabled = true;
+
+    public function __construct(ToolService $toolService)
+    {
+        $this->toolService = $toolService;
+    }
     /**
      * Generate AI response for a bot with message and chat history.
      *
      * @param  object                                   $bot         Instance model bot (memiliki properti "prompt")
      * @param  string                                   $message     Pesan terbaru dari pengguna
-     * @param  \Illuminate\Support\Collection           $chatHistory Koleksi objek riwayat obrolan
+     * @param  string                                   $sender      Sender identifier
+     * @param  int|null                                $channelId   Channel ID (nullable for testing)
      * @param  \App\Models\ChatMedia|null              $media       Media data (optional)
      * @param  string                                   $format      Output format: 'whatsapp' or 'html' (default: 'whatsapp')
      * @return string|bool  String berisi jawaban terformat, atau false kalau gagal
      */
-    public function generateResponse($bot, $message, $chatHistory, ?ChatMedia $media, $format = 'whatsapp')
+    public function generateResponse($bot, $message, $sender, $channelId, ?ChatMedia $media, $format = 'whatsapp')
     {
         try {
+            // Get chat history from database
+            $chatHistory = $this->getChatHistory($bot->id, $channelId, $sender, 5);
+            
+            // Save user message to chat history
+            $this->saveChatHistory([
+                'channel_id' => $channelId,
+                'bot_id' => $bot->id,
+                'sender' => $sender,
+                'message' => $message,
+                'role' => 'user',
+                'message_type' => $media ? 'media' : 'text',
+                'media_data' => $media ? [
+                    'mime_type' => $media->mime_type,
+                    'data' => $media->getData()
+                ] : null,
+                'metadata' => [
+                    'format' => $format,
+                    'timestamp' => now()->toISOString()
+                ]
+            ]);
+            
             // Get separately configured services
             $chatService = AIServiceFactory::createChatService();
             $embeddingService = AIServiceFactory::createEmbeddingService();
@@ -35,20 +66,93 @@ class AIResponseService
             // Build messages array
             $messages = $this->buildMessagesArray($systemPrompt, $chatHistory, $message);
             
+            // Get available tools for the bot if tool calling is enabled
+            $tools = $this->toolCallingEnabled 
+                ? $this->getAvailableToolsForBot($bot)
+                : [];
+            
             // Generate response using chat service
             $response = $chatService->generateResponse(
                 $messages,
-                null,
+                null, // model parameter
                 $media ? $media->getData() : null,
-                $media ? $media->mime_type : null
+                $media ? $media->mime_type : null,
+                $tools
             );
 
-            // Format response based on the specified format
-            if ($format === 'html') {
-                return $this->convertMarkdownToHtml($response);
+            $toolCalls = null;
+            $toolResponses = null;
+            $rawContent = null;
+            
+            // Handle tool calls if present in the response
+            if (is_array($response) && isset($response['tool_calls']) && !empty($response['tool_calls'])) {
+                $toolCalls = $response['tool_calls'];
+                
+                // Save assistant message with tool calls first
+                $this->saveChatHistory([
+                    'channel_id' => $channelId,
+                    'bot_id' => $bot->id,
+                    'sender' => $sender,
+                    'message' => $response['content'] ?? '',
+                    'role' => 'assistant',
+                    'message_type' => 'tool_call',
+                    'tool_calls' => $toolCalls,
+                    'raw_content' => $response['content'] ?? '',
+                    'metadata' => [
+                        'format' => $format,
+                        'model_used' => get_class($chatService),
+                        'timestamp' => now()->toISOString(),
+                        'has_tool_calls' => true
+                    ]
+                ]);
+                
+                $toolResponses = $this->handleToolCalls($response['tool_calls'], $bot, $channelId, $sender);
+
+                // Add assistant message with tool calls
+                $messages[] = [
+                    'role' => 'assistant', 
+                    'content' => $response['content'] ?? null,
+                    'tool_calls' => $response['tool_calls']
+                ];
+                
+                // Add tool responses
+                $messages = array_merge($messages, $toolResponses);
+                
+                // Generate final response
+                $finalResponse = $chatService->generateResponse($messages, null, null, null, []);
+                $responseContent = is_array($finalResponse) ? ($finalResponse['content'] ?? '') : $finalResponse;
+                $rawContent = $responseContent;
             } else {
-                return $this->convertMarkdownToWhatsApp($response);
+                $responseContent = is_array($response) ? ($response['content'] ?? $response) : $response;
+                $rawContent = $responseContent;
             }
+
+            // Format response based on the specified format
+            $formattedResponse = '';
+            if ($format === 'html') {
+                $formattedResponse = $this->convertMarkdownToHtml($responseContent);
+            } else {
+                $formattedResponse = $this->convertMarkdownToWhatsApp($responseContent);
+            }
+            
+            // Save assistant response to chat history
+            $this->saveChatHistory([
+                'channel_id' => $channelId,
+                'bot_id' => $bot->id,
+                'sender' => $sender,
+                'message' => $formattedResponse,
+                'role' => 'assistant',
+                'message_type' => 'text',
+                'raw_content' => $rawContent,
+                'metadata' => [
+                    'format' => $format,
+                    'model_used' => get_class($chatService),
+                    'timestamp' => now()->toISOString(),
+                    'knowledge_used' => $relevantKnowledge->isNotEmpty()
+                ]
+            ]);
+            
+            return $formattedResponse;
         } catch (\Exception $e) {
             Log::error('Failed to generate response: ' . $e->getMessage());
             return false;
@@ -83,16 +187,29 @@ class AIResponseService
             ['role' => 'system', 'content' => $systemPrompt],
         ];
 
-        // Add chat history - handle both object and array formats
+        // Add chat history using role and message fields
         foreach ($chatHistory as $ch) {
             if (is_object($ch)) {
-                // Object format (from WhatsAppMessageController)
-                $messages[] = ['role' => 'user', 'content' => $ch->message];
-                $messages[] = ['role' => 'assistant', 'content' => $ch->response];
+                // Object format - use role and message fields
+                $messageData = ['role' => $ch->role, 'content' => $ch->message];
+                
+                // Add tool_call_id for tool role messages
+                if ($ch->role === 'tool' && $ch->tool_call_id) {
+                    $messageData['tool_call_id'] = $ch->tool_call_id;
+                }
+                
+                // Add tool_calls for assistant messages that have them
+                if ($ch->role === 'assistant' && $ch->tool_calls) {
+                    $messageData['tool_calls'] = $ch->tool_calls;
+                }
+                
+                $messages[] = $messageData;
             } else {
-                // Array format (from BotController)
+                // Array format fallback for legacy data
                 $messages[] = ['role' => 'user', 'content' => $ch['message']];
-                $messages[] = ['role' => 'assistant', 'content' => $ch['response']];
+                if (isset($ch['response'])) {
+                    $messages[] = ['role' => 'assistant', 'content' => $ch['response']];
+                }
             }
         }
 
@@ -236,5 +353,282 @@ class AIResponseService
         $norm2 = sqrt($norm2);
 
         return $dotProduct / ($norm1 * $norm2);
+    }
+
+    /**
+     * Get available tools for a bot.
+     */
+    protected function getAvailableToolsForBot($bot): array
+    {
+        $tools = Tool::where('team_id', $bot->team_id)
+            ->where('is_active', true)
+            ->get();
+        
+        return $tools->map(function ($tool) {
+            return [
+                'type' => 'function',
+                'function' => [
+                    'name' => $this->sanitizeFunctionName($tool->id, $tool->name),
+                    'description' => $tool->description,
+                    'parameters' => $tool->parameters_schema,
+                ],
+            ];
+        })->toArray();
+    }
+
+    /**
+     * Handle tool calls from AI response.
+     */
+    protected function handleToolCalls(array $toolCalls, $bot, $channelId = null, $sender = null): array
+    {
+        $toolResponses = [];
+        
+        foreach ($toolCalls as $toolCall) {
+            $toolCallId = $toolCall['id'];
+            $toolName = $toolCall['function']['name'];
+
+            $toolId = preg_match('/_(\d+)$/', $toolName, $matches) ? $matches[1] : null;
+            if (!$toolId) {
+                $content = 'Error: Invalid tool name format';
+                
+                // Save tool response to chat history
+                if ($channelId !== null && $sender !== null) {
+                    $this->saveChatHistory([
+                        'channel_id' => $channelId,
+                        'bot_id' => $bot->id,
+                        'sender' => $sender,
+                        'message' => $content,
+                        'role' => 'tool',
+                        'message_type' => 'tool_response',
+                        'tool_call_id' => $toolCallId,
+                        'metadata' => [
+                            'tool_name' => $toolName,
+                            'timestamp' => now()->toISOString(),
+                            'error' => true
+                        ]
+                    ]);
+                }
+                
+                $toolResponses[] = [
+                    'tool_call_id' => $toolCallId,
+                    'role' => 'tool',
+                    'name' => $toolName,
+                    'content' => $content,
+                ];
+                continue;
+            }
+            
+            // Handle both string and array arguments
+            $arguments = $toolCall['function']['arguments'];
+            if (is_string($arguments)) {
+                $parameters = json_decode($arguments, true);
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    $content = 'Error: Invalid JSON in tool arguments';
+                    
+                    // Save tool response to chat history
+                    if ($channelId !== null && $sender !== null) {
+                        $this->saveChatHistory([
+                            'channel_id' => $channelId,
+                            'bot_id' => $bot->id,
+                            'sender' => $sender,
+                            'message' => $content,
+                            'role' => 'tool',
+                            'message_type' => 'tool_response',
+                            'tool_call_id' => $toolCallId,
+                            'metadata' => [
+                                'tool_name' => $toolName,
+                                'timestamp' => now()->toISOString(),
+                                'error' => true
+                            ]
+                        ]);
+                    }
+                    
+                    $toolResponses[] = [
+                        'tool_call_id' => $toolCallId,
+                        'role' => 'tool',
+                        'name' => $toolName,
+                        'content' => $content,
+                    ];
+                    continue;
+                }
+            } else {
+                $parameters = $arguments;
+            }
+            
+            // Find the tool by name
+            $tool = Tool::where('id', $toolId)
+                ->where('team_id', $bot->team_id)
+                ->where('is_active', true)
+                ->first();
+                
+            if (!$tool) {
+                $content = 'Error: Tool not found or inactive';
+                
+                // Save tool response to chat history
+                if ($channelId !== null && $sender !== null) {
+                    $this->saveChatHistory([
+                        'channel_id' => $channelId,
+                        'bot_id' => $bot->id,
+                        'sender' => $sender,
+                        'message' => $content,
+                        'role' => 'tool',
+                        'message_type' => 'tool_response',
+                        'tool_call_id' => $toolCallId,
+                        'metadata' => [
+                            'tool_name' => $toolName,
+                            'tool_id' => $toolId,
+                            'timestamp' => now()->toISOString(),
+                            'error' => true
+                        ]
+                    ]);
+                }
+                
+                $toolResponses[] = [
+                    'tool_call_id' => $toolCallId,
+                    'role' => 'tool',
+                    'name' => $toolName,
+                    'content' => $content,
+                ];
+                continue;
+            }
+            
+            try {
+                $execution = $this->toolService->executeTool($tool, $parameters);
+                
+                // Handle different execution statuses
+                if ($execution->status === 'completed') {
+                    $content = is_array($execution->output) ? json_encode($execution->output) : (string) $execution->output;
+                } elseif ($execution->status === 'failed') {
+                    $content = 'Error: ' . ($execution->error ?? 'Tool execution failed');
+                } else {
+                    $content = 'Error: Tool execution in unexpected state: ' . $execution->status;
+                }
+                
+                // Save tool response to chat history
+                $this->saveChatHistory([
+                    'channel_id' => $channelId,
+                    'bot_id' => $bot->id,
+                    'sender' => $sender,
+                    'message' => $content,
+                    'role' => 'tool',
+                    'message_type' => 'tool_response',
+                    'tool_call_id' => $toolCallId,
+                    'metadata' => [
+                        'tool_name' => $toolName,
+                        'tool_id' => $tool->id,
+                        'execution_status' => $execution->status,
+                        'timestamp' => now()->toISOString(),
+                        'error' => $execution->status !== 'completed'
+                    ]
+                ]);
+                
+                $toolResponses[] = [
+                    'tool_call_id' => $toolCallId,
+                    'role' => 'tool',
+                    'name' => $toolName,
+                    'content' => $content,
+                ];
+            } catch (\Exception $e) {
+                Log::error('Tool execution error', [
+                    'tool_name' => $toolName,
+                    'tool_id' => $toolCallId,
+                    'parameters' => $parameters,
+                    'error' => $e->getMessage(),
+                ]);
+                
+                $content = 'Error: ' . $e->getMessage();
+                
+                // Save tool response to chat history
+                if ($channelId !== null && $sender !== null) {
+                    $this->saveChatHistory([
+                        'channel_id' => $channelId,
+                        'bot_id' => $bot->id,
+                        'sender' => $sender,
+                        'message' => $content,
+                        'role' => 'tool',
+                        'message_type' => 'tool_response',
+                        'tool_call_id' => $toolCallId,
+                        'metadata' => [
+                            'tool_name' => $toolName,
+                            'tool_id' => $tool->id ?? null,
+                            'timestamp' => now()->toISOString(),
+                            'error' => true,
+                            'exception' => $e->getMessage()
+                        ]
+                    ]);
+                }
+                
+                $toolResponses[] = [
+                    'tool_call_id' => $toolCallId,
+                    'role' => 'tool',
+                    'name' => $toolName,
+                    'content' => $content,
+                ];
+            }
+        }
+        
+        return $toolResponses;
+    }
+
+    /**
+     * Sanitize function name to comply with Gemini API requirements:
+     * - Must start with a letter or underscore
+     * - Must be alphanumeric (a-z, A-Z, 0-9), underscores (_), dots (.) or dashes (-)
+     * - Maximum length of 64 characters
+     */
+    private function sanitizeFunctionName(int $id, string $name): string
+    {
+        // Replace spaces with underscores
+        $sanitized = str_replace(' ', '_', $name);
+        
+        // Remove any characters that are not alphanumeric, underscores, dots, or dashes
+        $sanitized = preg_replace('/[^a-zA-Z0-9_.-]/', '', $sanitized);
+        
+        // Limit to 64 characters
+        if (strlen($sanitized) > 64) {
+            $sanitized = substr($sanitized, 0, 64);
+        }
+        
+        // Fallback if name becomes empty
+        if (empty($sanitized)) {
+            $sanitized = 'function_' . uniqid();
+        }
+
+        // Ensure it starts with a letter or underscore
+        if (!preg_match('/^[a-zA-Z_]/', $sanitized)) {
+            $sanitized = '_' . $sanitized;
+        }
+
+        // Add id to the function name
+        $sanitized .= "_" . $id;
+
+        return $sanitized;
+    }
+
+    /**
+     * Get chat history for a specific channel, sender, and bot.
+     */
+    protected function getChatHistory($botId, $channelId, $sender, $limit = 5)
+    {
+        $query = ChatHistory::where('bot_id', $botId)
+            ->where('sender', $sender)
+            ->latest()
+            ->take($limit);
+            
+        if ($channelId !== null) {
+            $query->where('channel_id', $channelId);
+        } else {
+            $query->whereNull('channel_id');
+        }
+        
+        return $query->get()->reverse()->values();
+    }
+
+    /**
+     * Save chat history entry.
+     */
+    protected function saveChatHistory(array $data)
+    {
+        return ChatHistory::create($data);
     }
 }

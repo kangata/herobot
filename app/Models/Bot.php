@@ -27,4 +27,9 @@ class Bot extends Model
     {
         return $this->morphedByMany(Knowledge::class, 'connectable', 'bot_connections');
     }
+
+    public function tools()
+    {
+        return $this->morphedByMany(Tool::class, 'connectable', 'bot_connections');
+    }
 }

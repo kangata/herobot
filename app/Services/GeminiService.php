@@ -29,7 +29,7 @@ class GeminiService implements ChatServiceInterface, EmbeddingServiceInterface, 
             ]);
     }
 
-    public function generateResponse(array $messages, ?string $model = null, ?string $media = null, ?string $mimeType = null): string
+    public function generateResponse(array $messages, ?string $model = null, ?string $media = null, ?string $mimeType = null, array $tools = []): array|string
     {
         $model = $model ?? $this->model;
 
@@ -84,23 +84,69 @@ class GeminiService implements ChatServiceInterface, EmbeddingServiceInterface, 
             ];
         }
 
+        // Add tools if provided
+        if (!empty($tools)) {
+            $payload['tools'] = $this->formatToolsForGemini($tools);
+        }
+
         $response = $this->client->post("models/{$model}:generateContent", $payload);
 
         if (!$response->successful()) {
-            Log::error('Gemini API Error', [
+            $body = $response->body();
+            Log::error('Gemini API', [
                 'status' => $response->status(),
-                'body' => $response->body()
+                'request' => $payload,
+                'response' => $body
             ]);
-            throw new \Exception('Gemini chat request failed: ' . $response->body());
+            throw new \Exception('Gemini chat request failed: ' . $body);
         }
 
         $responseData = $response->json();
 
-        if (!isset($responseData['candidates'][0]['content']['parts'][0]['text'])) {
-            throw new \Exception('Invalid Gemini chat response format');
+        Log::info('Gemini API', [
+            'status' => $response->status(),
+            'request' => $payload,
+            'response' => $responseData
+        ]);
+
+        $candidate = $responseData['candidates'][0] ?? null;
+        if (!$candidate) {
+            throw new \Exception('Invalid Gemini chat response format: no candidates');
         }
 
-        return $responseData['candidates'][0]['content']['parts'][0]['text'];
+        // Check for function calls
+        if (isset($candidate['content']['parts'])) {
+            $functionCalls = [];
+            $textContent = '';
+            
+            foreach ($candidate['content']['parts'] as $part) {
+                if (isset($part['functionCall'])) {
+                    $functionCalls[] = [
+                        'id' => 'call_' . uniqid(),
+                        'type' => 'function',
+                        'function' => [
+                            'name' => $part['functionCall']['name'],
+                            'arguments' => json_encode($part['functionCall']['args'] ?? [])
+                        ]
+                    ];
+                } elseif (isset($part['text'])) {
+                    $textContent .= $part['text'];
+                }
+            }
+            
+            if (!empty($functionCalls)) {
+                return [
+                    'content' => $textContent,
+                    'tool_calls' => $functionCalls
+                ];
+            }
+            
+            if (!empty($textContent)) {
+                return $textContent;
+            }
+        }
+
+        throw new \Exception('Invalid Gemini chat response format: no content found');
     }
 
     public function createEmbedding(string|array $text): array
@@ -119,11 +165,13 @@ class GeminiService implements ChatServiceInterface, EmbeddingServiceInterface, 
             $response = $this->client->post("models/{$this->embeddingModel}:embedContent", $payload);
 
             if (!$response->successful()) {
-                Log::error('Gemini Embedding API Error', [
+                $body = $response->body();
+                Log::error('Gemini Embedding API', [
                     'status' => $response->status(),
-                    'body' => $response->body()
+                    'request' => $payload,
+                    'response' => $body
                 ]);
-                throw new \Exception('Failed to create embedding: ' . $response->body());
+                throw new \Exception('Failed to create embedding: ' . $body);
             }
 
             $responseData = $response->json();
@@ -160,11 +208,13 @@ class GeminiService implements ChatServiceInterface, EmbeddingServiceInterface, 
             $response = $this->client->post("models/{$this->embeddingModel}:batchEmbedContents", $payload);
 
             if (!$response->successful()) {
-                Log::error('Gemini Batch Embedding API Error', [
+                $body = $response->body();
+                Log::error('Gemini Batch Embedding API', [
                     'status' => $response->status(),
-                    'body' => $response->body()
+                    'request' => $payload,
+                    'response' => $body
                 ]);
-                throw new \Exception('Failed to create batch embeddings: ' . $response->body());
+                throw new \Exception('Failed to create batch embeddings: ' . $body);
             }
 
             $responseData = $response->json();
@@ -211,11 +261,13 @@ class GeminiService implements ChatServiceInterface, EmbeddingServiceInterface, 
             $response = $this->client->post("models/{$this->model}:generateContent", $payload);
 
             if (!$response->successful()) {
-                Log::error('Gemini Transcription API Error', [
+                $body = $response->body();
+                Log::error('Gemini Transcription API', [
                     'status' => $response->status(),
-                    'body' => $response->body()
+                    'request' => $payload,
+                    'response' => $body
                 ]);
-                throw new \Exception('Gemini transcription request failed: ' . $response->body());
+                throw new \Exception('Gemini transcription request failed: ' . $body);
             }
 
             $responseData = $response->json();
@@ -229,5 +281,29 @@ class GeminiService implements ChatServiceInterface, EmbeddingServiceInterface, 
             Log::error('Gemini Transcription Error', ['error' => $e->getMessage()]);
             throw new \Exception('Speech-to-text transcription failed: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Format tools array for Gemini API
+     */
+    private function formatToolsForGemini(array $tools): array
+    {
+        $functionDeclarations = [];
+        
+        foreach ($tools as $tool) {
+            if ($tool['type'] === 'function') {
+                $functionDeclarations[] = [
+                    'name' => $tool['function']['name'],
+                    'description' => $tool['function']['description'],
+                    'parameters' => $tool['function']['parameters']
+                ];
+            }
+        }
+
+        return [
+            [
+                'function_declarations' => $functionDeclarations
+            ]
+        ];
     }
 }
