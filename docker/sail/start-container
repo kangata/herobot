@@ -34,8 +34,9 @@ fi
 echo "Installing NPM dependencies..."
 if [ "$SUPERVISOR_PHP_USER" = "root" ]; then
     npm install
+    cd whatsapp-server && npm install && cd ..
 else
-    gosu $WWWUSER npm install
+    gosu $WWWUSER bash -c 'npm install && cd whatsapp-server && npm install && cd ..'
 fi
 
 # Generate application key
