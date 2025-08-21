@@ -50,10 +50,19 @@ class WhatsAppMessageController extends Controller
             return response()->json(['error' => 'No bot found for this channel'], 404);
         }
 
+        if (config('app.edition') === 'cloud') {
+            // Check if team has enough credits (150 per response)
+            if ($channel->team->balance->amount < 150) {
+                return response()->json(['error' => 'Insufficient credits. Please top up your credits to continue using the service.'], 402);
+            }
+        }
+
         $response = $this->aiResponseService->generateResponse($bot, $messageContent, $sender, $channelId, $media);
 
         // Record usage transaction and deduct credits
-        $this->transactionService->recordUsage($channel->team);
+        if (config('app.edition') === 'cloud') {
+            $this->transactionService->recordUsage($channel->team);
+        }
 
         return response()->json(['response' => $response]);
     }

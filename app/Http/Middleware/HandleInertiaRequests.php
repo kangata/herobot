@@ -42,6 +42,7 @@ class HandleInertiaRequests extends Middleware
 
         return array_merge(parent::share($request), [
             'flash' => $session->all(),
+            'appEdition' => config('app.edition'),
         ]);
     }
 }

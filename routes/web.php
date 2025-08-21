@@ -81,14 +81,13 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('/bots/{bot}/test-message', [BotController::class, 'testMessage'])->name('bots.test-message');
     Route::delete('/bots/{bot}/clear-chat', [BotController::class, 'clearChat'])->name('bots.clear-chat');
 
-    // Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
-    // Route::post('/billing/topup', [BillingController::class, 'topup'])->name('billing.topup');
-    // Route::get('/billing/topup/success', [BillingController::class, 'topupSuccess'])->name('billing.topup.success');
-    // Route::get('/billing/topup/failure', [BillingController::class, 'topupFailure'])->name('billing.topup.failure');
-
-    // Route::post('/billing/webhook', [BillingController::class, 'handleWebhook'])
-    //     ->name('billing.webhook')
-    //     ->withoutMiddleware(['auth:sanctum', 'web', 'verified', 'verify_csrf_token']);
+    Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
+    Route::post('/billing/topup', [BillingController::class, 'topup'])->name('billing.topup');
+    Route::get('/billing/topup/success', [BillingController::class, 'topupSuccess'])->name('billing.topup.success');
+    Route::get('/billing/topup/failure', [BillingController::class, 'topupFailure'])->name('billing.topup.failure');
+    Route::post('/billing/webhook', [BillingController::class, 'handleWebhook'])
+        ->name('billing.webhook')
+        ->withoutMiddleware(['auth:sanctum', 'web', 'verified', 'verify_csrf_token']);
 });
 
 Route::get('/terms', function () {

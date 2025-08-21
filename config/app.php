@@ -19,6 +19,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Application Edition
+    |--------------------------------------------------------------------------
+    |
+    | This value determines the "edition" of your application, which can be
+    | "cloud" or "self-hosted". This is used to enable or disable certain
+    | features depending on the edition.
+    |
+    */
+
+    'edition' => env('APP_EDITION', 'self-hosted'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |

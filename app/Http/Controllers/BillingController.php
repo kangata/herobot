@@ -17,6 +17,10 @@ class BillingController extends Controller
     public function __construct(XenditService $xenditService)
     {
         $this->xenditService = $xenditService;
+
+        if (config('app.edition') !== 'cloud') {
+            abort(404);
+        }
     }
 
     public function index(Request $request)
