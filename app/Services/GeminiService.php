@@ -29,7 +29,31 @@ class GeminiService implements ChatServiceInterface, EmbeddingServiceInterface, 
             ]);
     }
 
-    public function generateResponse(array $messages, ?string $model = null, ?string $media = null, ?string $mimeType = null, array $tools = []): array|string
+    /**
+     * Get the configured provider name
+     */
+    public function getProvider(): string
+    {
+        return 'Gemini';
+    }
+
+    /**
+     * Get the configured chat model name
+     */
+    public function getModel(): string
+    {
+        return $this->model;
+    }
+
+    /**
+     * Get the configured embedding model name
+     */
+    public function getEmbeddingModel(): string
+    {
+        return $this->embeddingModel;
+    }
+
+    public function generateResponse(array $messages, ?string $model = null, ?string $media = null, ?string $mimeType = null, array $tools = []): array
     {
         $model = $model ?? $this->model;
 
@@ -114,6 +138,14 @@ class GeminiService implements ChatServiceInterface, EmbeddingServiceInterface, 
             throw new \Exception('Invalid Gemini chat response format: no candidates');
         }
 
+        // Extract token usage data
+        $usage = $responseData['usageMetadata'] ?? [];
+        $tokenUsage = [
+            'input_tokens' => $usage['promptTokenCount'] ?? 0,
+            'output_tokens' => $usage['candidatesTokenCount'] ?? 0,
+            'total_tokens' => $usage['totalTokenCount'] ?? 0,
+        ];
+
         // Check for function calls
         if (isset($candidate['content']['parts'])) {
             $functionCalls = [];
@@ -137,12 +169,16 @@ class GeminiService implements ChatServiceInterface, EmbeddingServiceInterface, 
             if (!empty($functionCalls)) {
                 return [
                     'content' => $textContent,
-                    'tool_calls' => $functionCalls
+                    'tool_calls' => $functionCalls,
+                    'token_usage' => $tokenUsage
                 ];
             }
             
             if (!empty($textContent)) {
-                return $textContent;
+                return [
+                    'content' => $textContent,
+                    'token_usage' => $tokenUsage
+                ];
             }
         }
 
@@ -175,7 +211,21 @@ class GeminiService implements ChatServiceInterface, EmbeddingServiceInterface, 
             }
 
             $responseData = $response->json();
-            return $responseData['embedding']['values'] ?? [];
+
+            Log::info('Gemini Embedding API', [
+                'status' => $response->status(),
+                'request' => $payload,
+                'response' => $responseData
+            ]);
+
+            return [
+                'embeddings' => [$responseData['embedding']['values'] ?? []],
+                'token_usage' => [
+                    'input_tokens' => $responseData['usageMetadata']['promptTokenCount'] ?? 0,
+                    'output_tokens' => 0, // Embeddings don't have output tokens
+                    'total_tokens' => $responseData['usageMetadata']['totalTokenCount'] ?? 0,
+                ]
+            ];
         } catch (\Exception $e) {
             Log::error('Gemini Embedding Error', ['error' => $e->getMessage()]);
             throw $e;
@@ -226,7 +276,14 @@ class GeminiService implements ChatServiceInterface, EmbeddingServiceInterface, 
                 }
             }
 
-            return $embeddings;
+            return [
+                'embeddings' => $embeddings,
+                'token_usage' => [
+                    'input_tokens' => $responseData['usageMetadata']['promptTokenCount'] ?? 0,
+                    'output_tokens' => 0, // Embeddings don't have output tokens
+                    'total_tokens' => $responseData['usageMetadata']['totalTokenCount'] ?? 0,
+                ]
+            ];
         } catch (\Exception $e) {
             Log::error('Gemini Batch Embedding Error', ['error' => $e->getMessage()]);
             throw $e;

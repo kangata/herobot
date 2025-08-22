@@ -8,6 +8,7 @@ use App\Http\Controllers\EarlyAccessController;
 use App\Http\Controllers\ChannelController;
 use App\Http\Controllers\KnowledgeController;
 use App\Http\Controllers\ToolController;
+use App\Http\Controllers\UsageController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -88,6 +89,8 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('/billing/webhook', [BillingController::class, 'handleWebhook'])
         ->name('billing.webhook')
         ->withoutMiddleware(['auth:sanctum', 'web', 'verified', 'verify_csrf_token']);
+    
+    Route::get('/usage', [UsageController::class, 'index'])->name('usage.index');
 });
 
 Route::get('/terms', function () {

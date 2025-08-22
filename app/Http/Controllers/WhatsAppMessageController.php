@@ -6,22 +6,22 @@ use App\Models\ChatHistory;
 use App\Models\Channel;
 use App\Services\AIResponseService;
 use App\Services\MediaProcessingService;
-use App\Services\TransactionService;
+use App\Services\TokenPricingService;
 use Illuminate\Http\Request;
 
 class WhatsAppMessageController extends Controller
 {
     protected $aiResponseService;
-    protected $transactionService;
+    protected $tokenPricingService;
     protected $mediaProcessingService;
 
     public function __construct(
         AIResponseService $aiResponseService,
-        TransactionService $transactionService,
+        TokenPricingService $tokenPricingService,
         MediaProcessingService $mediaProcessingService
     ) {
         $this->aiResponseService = $aiResponseService;
-        $this->transactionService = $transactionService;
+        $this->tokenPricingService = $tokenPricingService;
         $this->mediaProcessingService = $mediaProcessingService;
     }
 
@@ -50,19 +50,7 @@ class WhatsAppMessageController extends Controller
             return response()->json(['error' => 'No bot found for this channel'], 404);
         }
 
-        if (config('app.edition') === 'cloud') {
-            // Check if team has enough credits (150 per response)
-            if ($channel->team->balance->amount < 150) {
-                return response()->json(['error' => 'Insufficient credits. Please top up your credits to continue using the service.'], 402);
-            }
-        }
-
         $response = $this->aiResponseService->generateResponse($bot, $messageContent, $sender, $channelId, $media);
-
-        // Record usage transaction and deduct credits
-        if (config('app.edition') === 'cloud') {
-            $this->transactionService->recordUsage($channel->team);
-        }
 
         return response()->json(['response' => $response]);
     }

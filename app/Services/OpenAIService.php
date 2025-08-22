@@ -30,7 +30,31 @@ class OpenAIService implements ChatServiceInterface, EmbeddingServiceInterface, 
             ->timeout(30);
     }
 
-    public function generateResponse(array $messages, ?string $model = null, ?string $media = null, ?string $mimeType = null, array $tools = []): array|string
+    /**
+     * Get the configured provider name
+     */
+    public function getProvider(): string
+    {
+        return 'OpenAI';
+    }
+
+    /**
+     * Get the configured chat model name
+     */
+    public function getModel(): string
+    {
+        return $this->model;
+    }
+
+    /**
+     * Get the configured embedding model name
+     */
+    public function getEmbeddingModel(): string
+    {
+        return $this->embeddingModel;
+    }
+
+    public function generateResponse(array $messages, ?string $model = null, ?string $media = null, ?string $mimeType = null, array $tools = []): array
     {
         $model = $model ?? $this->model;
 
@@ -72,17 +96,29 @@ class OpenAIService implements ChatServiceInterface, EmbeddingServiceInterface, 
             throw new \Exception('Invalid OpenAI chat response format: no message');
         }
 
+        // Extract token usage data
+        $usage = $responseData['usage'] ?? [];
+        $tokenUsage = [
+            'input_tokens' => $usage['prompt_tokens'] ?? 0,
+            'output_tokens' => $usage['completion_tokens'] ?? 0,
+            'total_tokens' => $usage['total_tokens'] ?? 0,
+        ];
+
         // Check for tool calls
         if (isset($message['tool_calls']) && !empty($message['tool_calls'])) {
             return [
                 'content' => $message['content'] ?? '',
-                'tool_calls' => $message['tool_calls']
+                'tool_calls' => $message['tool_calls'],
+                'token_usage' => $tokenUsage
             ];
         }
 
         // Return content if available
         if (isset($message['content'])) {
-            return $message['content'];
+            return [
+                'content' => $message['content'],
+                'token_usage' => $tokenUsage
+            ];
         }
 
         throw new \Exception('Invalid OpenAI chat response format: no content or tool calls');
@@ -97,10 +133,31 @@ class OpenAIService implements ChatServiceInterface, EmbeddingServiceInterface, 
             ]);
 
             if ($response->successful()) {
-                return collect($response->json()['data'])
+                $responseData = $response->json();
+
+                Log::info('OpenAI Embedding API', [
+                    'status' => $response->status(),
+                    'request' => [
+                        'model' => $this->embeddingModel,
+                        'input' => $text,
+                    ],
+                    'response' => $responseData
+                ]);
+
+                $embeddings = collect($responseData['data'])
                     ->sortBy('index')
                     ->pluck('embedding')
                     ->all();
+                
+                // Return embeddings with token usage
+                return [
+                    'embeddings' => $embeddings,
+                    'token_usage' => [
+                        'input_tokens' => $responseData['usage']['prompt_tokens'] ?? 0,
+                        'output_tokens' => 0, // Embeddings don't have output tokens
+                        'total_tokens' => $responseData['usage']['total_tokens'] ?? 0,
+                    ]
+                ];
             }
 
             throw new \Exception('Failed to create embedding: ' . $response->body());
