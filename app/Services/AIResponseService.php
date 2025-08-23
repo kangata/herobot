@@ -2,10 +2,10 @@
 
 namespace App\Services;
 
-use App\Services\AIServiceFactory;
 use App\Services\Contracts\EmbeddingServiceInterface;
 use App\Services\Contracts\ChatServiceInterface;
 use App\Services\TokenPricingService;
+use App\Services\Traits\AIServiceHelperTrait;
 use App\Models\Bot;
 use App\Models\Channel;
 use App\Models\ChatMedia;
@@ -23,6 +23,8 @@ use Illuminate\Support\Collection;
  */
 class AIResponseService
 {
+    use AIServiceHelperTrait;
+
     protected ToolService $toolService;
     protected TokenPricingService $tokenPricingService;
     protected bool $toolCallingEnabled = true;
@@ -74,8 +76,9 @@ class AIResponseService
             ]);
             
             // Get separately configured services
-            $chatService = AIServiceFactory::createChatService();
-            $embeddingService = AIServiceFactory::createEmbeddingService();
+            $services = $this->getAIServices();
+            $chatService = $services['chat'];
+            $embeddingService = $services['embedding'];
             
             // Search for relevant knowledge using embedding service
             $embeddingResult = $this->searchSimilarKnowledge($embeddingService, $message, $bot, 3);
@@ -207,28 +210,6 @@ class AIResponseService
         }
     }
 
-    /**
-     * Build system prompt with bot prompt and relevant knowledge.
-     *
-     * @param Bot $bot Bot instance with prompt property
-     * @param Collection $relevantKnowledge Collection of relevant knowledge items
-     * @return string Complete system prompt
-     */
-    private function buildSystemPrompt(Bot $bot, Collection $relevantKnowledge): string
-    {
-        $systemPrompt = $bot->prompt;
-        
-        if ($relevantKnowledge->isNotEmpty()) {
-            $systemPrompt .= "\n\nGunakan informasi berikut untuk menjawab pertanyaan:\n\n";
-            foreach ($relevantKnowledge as $knowledge) {
-                $systemPrompt .= "{$knowledge['text']}\n\n";
-            }
-        } else {
-            $systemPrompt .= "\n\nTidak ada informasi spesifik yang ditemukan dalam basis pengetahuan.";
-        }
-        
-        return $systemPrompt;
-    }
 
     /**
      * Build messages array from system prompt, chat history, and current message.
@@ -758,7 +739,8 @@ class AIResponseService
         $tokensPerSecond = $responseTime > 0 && $totalTokens > 0 ? round($totalTokens / $responseTime, 2) : null;
         
         // Calculate cost
-        $credits = $this->tokenPricingService->calculateCost(
+        $credits = $this->calculateCreditsForTokens(
+            $this->tokenPricingService,
             $provider,
             $model,
             $tokenUsage['input_tokens'],

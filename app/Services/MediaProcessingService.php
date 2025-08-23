@@ -3,12 +3,14 @@
 namespace App\Services;
 
 use App\Models\ChatMedia;
-use App\Services\AIServiceFactory;
+use App\Services\Traits\AIServiceHelperTrait;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 
 class MediaProcessingService
 {
+    use AIServiceHelperTrait;
+
     /**
      * Process an uploaded media file.
      *
@@ -28,11 +30,11 @@ class MediaProcessingService
 
             // Synthesize a default prompt if the message is empty
             if (is_null($messageContent) || trim($messageContent) === '') {
-                $messageContent = $this->generateDefaultPrompt($mimeType);
+                $messageContent = $this->generateDefaultPromptForMimeType($mimeType);
             }
 
             // Transcribe audio and append to the message
-            if (str_starts_with($mimeType, 'audio/')) {
+            if ($this->isAudioMimeType($mimeType)) {
                 $transcription = $this->transcribeAudio($base64Data, $mimeType);
                 if (!empty($transcription)) {
                     $messageContent = rtrim((string) $messageContent) . "\n\n[Audio transcription: " . $transcription . ']';
@@ -48,28 +50,6 @@ class MediaProcessingService
         return $media;
     }
 
-    /**
-     * Generate a default prompt based on the media's MIME type.
-     *
-     * @param string $mimeType
-     * @return string
-     */
-    private function generateDefaultPrompt(string $mimeType): string
-    {
-        if (str_starts_with($mimeType, 'image/')) {
-            return 'Please respond based on the attached image.';
-        }
-
-        if (str_starts_with($mimeType, 'audio/')) {
-            return 'Please respond based on the attached audio.';
-        }
-
-        if (str_starts_with($mimeType, 'video/')) {
-            return 'Please respond based on the attached video.';
-        }
-
-        return 'Please respond based on the attached document.';
-    }
 
     /**
      * Transcribe audio data using the configured speech-to-text service.
@@ -81,7 +61,7 @@ class MediaProcessingService
     private function transcribeAudio(string $base64Data, string $mimeType): ?string
     {
         try {
-            $speechToTextService = AIServiceFactory::createSpeechToTextService();
+            $speechToTextService = \App\Services\AIServiceFactory::createSpeechToTextService();
             return $speechToTextService->transcribe($base64Data, $mimeType);
         } catch (\Exception $e) {
             Log::warning('Failed to transcribe audio', ['error' => $e->getMessage()]);

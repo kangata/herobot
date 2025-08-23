@@ -228,7 +228,7 @@ class BotController extends Controller
 
             return back()->with('chatResponse', [
                 'success' => false,
-                'error' => 'Failed to generate response. Please try again.',
+                'error' => $e->getMessage(),
                 'timestamp' => now()->toISOString(),
             ]);
         }
