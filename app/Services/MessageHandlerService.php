@@ -121,7 +121,7 @@ class MessageHandlerService
 
         try {
             // Get AI services to determine provider and model
-            $services = $this->getAIServices();
+            $services = $this->getAIServices($bot);
             $chatService = $services['chat'];
             $embeddingService = $services['embedding'];
             

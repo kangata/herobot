@@ -79,7 +79,7 @@ class AIResponseService
             ]);
             
             // Get separately configured services
-            $services = $this->getAIServices();
+            $services = $this->getAIServices($bot);
             $chatService = $services['chat'];
             $embeddingService = $services['embedding'];
             
