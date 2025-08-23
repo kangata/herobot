@@ -35,9 +35,9 @@
                                             <ul role="list" class="-mx-2 space-y-1">
                                                 <li v-for="item in navigation" :key="item.name">
                                                     <Link :href="item.href"
-                                                        :class="[item.current ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
+                                                        :class="[item.current ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
                                                     <component :is="item.icon"
-                                                        :class="[item.current ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600', 'h-6 w-6 shrink-0']"
+                                                        :class="[item.current ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-600', 'h-6 w-6 shrink-0']"
                                                         aria-hidden="true" />
                                                     {{ item.name }}
                                                     </Link>
@@ -49,9 +49,9 @@
                                             <ul role="list" class="-mx-2 mt-2 space-y-1">
                                                 <li v-for="team in $page.props.auth.user.all_teams" :key="team.id">
                                                     <a @click.prevent="switchToTeam(team)" href="#"
-                                                        :class="[!route().current('teams.create') && team.id === $page.props.auth.user.current_team_id ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
+                                                        :class="[!route().current('teams.create') && team.id === $page.props.auth.user.current_team_id ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
                                                     <span
-                                                        :class="[!route().current('teams.create') && team.id === $page.props.auth.user.current_team_id ? 'text-indigo-600 border-indigo-600' : 'text-gray-400 border-gray-200 group-hover:border-indigo-600 group-hover:text-indigo-600', 'flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-[0.625rem] font-medium bg-white']">{{
+                                                        :class="[!route().current('teams.create') && team.id === $page.props.auth.user.current_team_id ? 'text-indigo-600 border-indigo-600' : 'text-gray-400 border-gray-200 group-hover:border-gray-400 group-hover:text-gray-600', 'flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-[0.625rem] font-medium bg-white']">{{
                                                             team.name.charAt(0).toUpperCase() }}
                                                     </span>
                                                     <span class="truncate">{{ team.name }}</span>
@@ -59,9 +59,9 @@
                                                 </li>
                                                 <li v-if="$page.props.jetstream.canCreateTeams">
                                                     <Link :href="route('teams.create')"
-                                                        :class="[route().current('teams.create') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
+                                                        :class="[route().current('teams.create') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
                                                     <span
-                                                        :class="[route().current('teams.create') ? 'text-indigo-600 border-indigo-600' : 'text-gray-400 border-gray-200 group-hover:border-indigo-600 group-hover:text-indigo-600', 'flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-[0.625rem] font-medium bg-white']">
+                                                        :class="[route().current('teams.create') ? 'text-indigo-600 border-indigo-600' : 'text-gray-400 border-gray-200 group-hover:border-gray-400 group-hover:text-gray-600', 'flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-[0.625rem] font-medium bg-white']">
                                                         +
                                                     </span>
                                                     <span class="truncate">Create New Team</span>
@@ -73,7 +73,7 @@
                                             <Link :href="route('profile.show')"
                                                 class="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-700 hover:bg-gray-50 hover:text-indigo-600">
                                             <Cog6ToothIcon
-                                                class="h-6 w-6 shrink-0 text-gray-400 group-hover:text-indigo-600"
+                                                class="h-6 w-6 shrink-0 text-gray-400 group-hover:text-gray-600"
                                                 aria-hidden="true" />
                                             Settings
                                             </Link>
@@ -100,9 +100,9 @@
                             <ul role="list" class="-mx-2 space-y-1">
                                 <li v-for="item in navigation" :key="item.name">
                                     <Link :href="item.href"
-                                        :class="[item.current ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
+                                        :class="[item.current ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
                                     <component :is="item.icon"
-                                        :class="[item.current ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600', 'h-6 w-6 shrink-0']"
+                                        :class="[item.current ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-600', 'h-6 w-6 shrink-0']"
                                         aria-hidden="true" />
                                     {{ item.name }}
                                     </Link>
@@ -114,9 +114,9 @@
                             <ul role="list" class="-mx-2 mt-2 space-y-1">
                                 <li v-for="team in $page.props.auth.user.all_teams" :key="team.id">
                                     <a @click.prevent="switchToTeam(team)" href="#"
-                                        :class="[!route().current('teams.create') && team.id === $page.props.auth.user.current_team_id ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
+                                        :class="[!route().current('teams.create') && team.id === $page.props.auth.user.current_team_id ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
                                     <span
-                                        :class="[!route().current('teams.create') && team.id === $page.props.auth.user.current_team_id ? 'text-indigo-600 border-indigo-600' : 'text-gray-400 border-gray-200 group-hover:border-indigo-600 group-hover:text-indigo-600', 'flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-[0.625rem] font-medium bg-white']">{{
+                                        :class="[!route().current('teams.create') && team.id === $page.props.auth.user.current_team_id ? 'text-indigo-600 border-indigo-600' : 'text-gray-400 border-gray-200 group-hover:border-gray-400 group-hover:text-gray-600', 'flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-[0.625rem] font-medium bg-white']">{{
                                             team.name.charAt(0).toUpperCase() }}
                                     </span>
                                     <span class="truncate">{{ team.name }}</span>
@@ -124,9 +124,9 @@
                                 </li>
                                 <li v-if="$page.props.jetstream.canCreateTeams">
                                     <Link :href="route('teams.create')"
-                                        :class="[route().current('teams.create') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
+                                        :class="[route().current('teams.create') ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
                                     <span
-                                        :class="[route().current('teams.create') ? 'text-indigo-600 border-indigo-600' : 'text-gray-400 border-gray-200 group-hover:border-indigo-600 group-hover:text-indigo-600', 'flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-[0.625rem] font-medium bg-white']">
+                                        :class="[route().current('teams.create') ? 'text-indigo-600 border-indigo-600' : 'text-gray-400 border-gray-200 group-hover:border-gray-400 group-hover:text-gray-600', 'flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-[0.625rem] font-medium bg-white']">
                                         +
                                     </span>
                                     <span class="truncate">Create New Team</span>
@@ -139,9 +139,9 @@
                         <template v-for="item in bottomNavigation" :key="item.name">
                             <li v-if="item.hide !== true" class="mt-auto">
                                 <Link :href="item.href"
-                                    :class="[item.current ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50', 'group -mx-2 flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
+                                    :class="[item.current ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100', 'group -mx-2 flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
                                     <component :is="item.icon"
-                                        :class="[item.current ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600', 'h-6 w-6 shrink-0']"
+                                        :class="[item.current ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-600', 'h-6 w-6 shrink-0']"
                                         aria-hidden="true" />
                                     {{ item.name }}
                                 </Link>
