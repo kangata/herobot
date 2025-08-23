@@ -44,8 +44,8 @@ class GeminiServiceTest extends TestCase
 
         $response = $geminiService->generateResponse($messages);
 
-        $this->assertIsString($response);
-        $this->assertEquals('Hello, how can I help you?', $response);
+        $this->assertIsArray($response);
+        $this->assertEquals('Hello, how can I help you?', $response['content']);
     }
 
     public function test_generate_response_returns_array_for_tool_calls()
@@ -104,6 +104,10 @@ class GeminiServiceTest extends TestCase
             'generativelanguage.googleapis.com/*' => Http::response([
                 'embedding' => [
                     'values' => [0.1, 0.2, 0.3, 0.4]
+                ],
+                'usageMetadata' => [
+                    'promptTokenCount' => 10,
+                    'totalTokenCount' => 10
                 ]
             ], 200)
         ]);
@@ -114,7 +118,14 @@ class GeminiServiceTest extends TestCase
         $embedding = $geminiService->createEmbedding($text);
 
         $this->assertIsArray($embedding);
-        $this->assertEquals([0.1, 0.2, 0.3, 0.4], $embedding);
+        $this->assertEquals([
+            'embeddings' => [[0.1, 0.2, 0.3, 0.4]],
+            'token_usage' => [
+                'input_tokens' => 10,
+                'output_tokens' => 0,
+                'total_tokens' => 10,
+            ],
+        ], $embedding);
     }
 
     public function test_transcribe_audio()

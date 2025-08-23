@@ -111,8 +111,7 @@ class OpenAIServiceTest extends TestCase
                 ],
                 'usage' => [
                     'prompt_tokens' => 10,
-                    'completion_tokens' => 20,
-                    'total_tokens' => 30
+                    'total_tokens' => 10
                 ]
             ], 200)
         ]);
@@ -127,8 +126,8 @@ class OpenAIServiceTest extends TestCase
             'embeddings' => [[0.1, 0.2, 0.3, 0.4]],
             'token_usage' => [
                 'input_tokens' => 10,
-                'output_tokens' => 20,
-                'total_tokens' => 30,
+                'output_tokens' => 0,
+                'total_tokens' => 10,
             ],
         ], $embedding);
     }

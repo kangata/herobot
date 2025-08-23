@@ -7,6 +7,7 @@ use App\Services\Contracts\EmbeddingServiceInterface;
 use App\Services\Contracts\ChatServiceInterface;
 use App\Services\TokenPricingService;
 use App\Models\Bot;
+use App\Models\Channel;
 use App\Models\ChatMedia;
 use App\Models\Tool;
 use App\Models\ChatHistory;
@@ -41,22 +42,22 @@ class AIResponseService
      * Generate AI response for a bot with message and chat history.
      *
      * @param Bot $bot Bot instance with prompt property
+     * @param Channel $channel Channel instance
      * @param string $message Latest message from user
      * @param string $sender Sender identifier
-     * @param int|null $channelId Channel ID (nullable for testing)
      * @param ChatMedia|null $media Media data (optional)
      * @param string $format Output format: 'whatsapp' or 'html'
      * @return string|false Formatted response string or false on failure
      */
-    public function generateResponse(Bot $bot, string $message, string $sender, ?int $channelId, ?ChatMedia $media = null, string $format = 'whatsapp'): string|false
+    public function generateResponse(Bot $bot, ?Channel $channel, string $message, string $sender, ?ChatMedia $media = null, string $format = 'whatsapp'): string|false
     {
         try {
             // Get chat history from database
-            $chatHistory = $this->getChatHistory($bot->id, $channelId, $sender, 5);
+            $chatHistory = $this->getChatHistory($bot->id, $channel->id ?? null, $sender, 5);
             
             // Save user message to chat history
             $this->saveChatHistory([
-                'channel_id' => $channelId,
+                'channel_id' => $channel->id ?? null,
                 'bot_id' => $bot->id,
                 'sender' => $sender,
                 'message' => $message,
@@ -116,7 +117,7 @@ class AIResponseService
                 
                 // Save assistant message with tool calls first
                 $this->saveChatHistory([
-                    'channel_id' => $channelId,
+                    'channel_id' => $channel->id ?? null,
                     'bot_id' => $bot->id,
                     'sender' => $sender,
                     'message' => $response['content'] ?? '',
@@ -132,7 +133,7 @@ class AIResponseService
                     ]
                 ]);
                 
-                $toolResponses = $this->handleToolCalls($response['tool_calls'], $bot, $channelId, $sender);
+                $toolResponses = $this->handleToolCalls($response['tool_calls'], $bot, $channel->id ?? null, $sender);
 
                 // Add assistant message with tool calls
                 $messages[] = [
@@ -182,7 +183,7 @@ class AIResponseService
             
             // Save assistant response to chat history
             $this->saveChatHistory([
-                'channel_id' => $channelId,
+                'channel_id' => $channel->id ?? null,
                 'bot_id' => $bot->id,
                 'sender' => $sender,
                 'message' => $formattedResponse,

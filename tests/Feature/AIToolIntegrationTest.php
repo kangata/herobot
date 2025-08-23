@@ -76,9 +76,9 @@ class AIToolIntegrationTest extends TestCase
 
         $response = $aiService->generateResponse(
             $this->bot,
+            null,
             "What's the weather in Jakarta?",
             'user123',
-            null,
             null,
             'whatsapp'
         );
@@ -135,9 +135,9 @@ class AIToolIntegrationTest extends TestCase
 
         $response = $aiService->generateResponse(
             $this->bot,
+            null,
             "What's the weather in Jakarta?",
             'user123',
-            null,
             null,
             'whatsapp'
         );

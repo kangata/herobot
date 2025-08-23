@@ -7,20 +7,20 @@ use App\Models\Channel;
 use App\Models\ChatHistory;
 use App\Models\Knowledge;
 use App\Models\Tool;
-use App\Services\AIResponseService;
+use App\Services\MessageHandlerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class BotController extends Controller
 {
-    protected $aiResponseService;
+    protected $messageHandlerService;
 
-    public function __construct(AIResponseService $aiResponseService)
+    public function __construct(MessageHandlerService $messageHandlerService)
     {
         $this->authorizeResource(Bot::class);
 
-        $this->aiResponseService = $aiResponseService;
+        $this->messageHandlerService = $messageHandlerService;
     }
 
     public function index(Request $request)
@@ -191,29 +191,38 @@ class BotController extends Controller
     public function testMessage(Request $request, Bot $bot)
     {
         $validated = $request->validate([
-            'message' => 'required|string|max:1000',
+            'message' => 'nullable|string|max:1000',
+            'media_file' => 'nullable|file|max:20480|mimes:jpg,jpeg,png,gif,webp,mp3,wav,ogg,m4a,webm,flac,mp4,avi,mov,pdf,doc,docx,txt',
         ]);
 
         try {
-            $response = $this->aiResponseService->generateResponse(
-                $bot,
-                $validated['message'],
-                'testing',
+            $messageContent = $validated['message'] ?? null;
+            $mediaFile = $request->hasFile('media_file') ? $request->file('media_file') : null;
+
+            // Use handleMessage method with bot parameter for testing
+            $result = $this->messageHandlerService->handleMessage(
                 null, // no channel for testing
-                null,
-                'html'
+                'testing',
+                $messageContent,
+                $mediaFile,
+                $bot,
             );
+
+            $response = $result['response'];
+            $media = $result['media'];
 
             // Return back with flash data
             return back()->with('chatResponse', [
                 'success' => true,
                 'response' => $response,
                 'timestamp' => now()->toISOString(),
+                'hasMedia' => $media !== null,
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to generate test response: ' . $e->getMessage(), [
                 'bot_id' => $bot->id,
-                'message' => $validated['message'],
+                'message' => $validated['message'] ?? null,
+                'has_media' => $request->hasFile('media_file'),
                 'exception' => $e->getTraceAsString()
             ]);
 
