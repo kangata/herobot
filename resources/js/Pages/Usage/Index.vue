@@ -1,61 +1,75 @@
 <template>
     <AppLayout title="Usage">
         <div class="bg-white overflow-hidden sm:rounded-lg">
-            <!-- Summary Section -->
+            <!-- Header Section -->
             <div class="mb-8">
                 <div class="sm:flex-auto">
                     <h1 class="text-base font-semibold leading-6 text-gray-900">Usage Summary</h1>
-                    <p class="mt-2 text-sm text-gray-700">Overview of your AI usage.</p>
+                    <p class="mt-2 text-sm text-gray-700">Overview of your AI usage and token consumption.</p>
                 </div>
-                <div class="grid mt-4 grid-cols-2 sm:grid-cols-4 gap-6">
-                    <!-- Total Credits Used -->
-                    <div class="border border-gray-200 rounded-lg p-4">
+            </div>
+
+            <!-- Summary Section -->
+            <div class="mb-8">
+                <div class="border border-gray-200 rounded-lg overflow-hidden">
+                    <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
                         <div class="flex items-center">
-                            <div class="flex-shrink-0 bg-green-200 rounded-md p-2">
-                                <CreditCardIcon class="h-6 w-6 text-green-700" />
-                            </div>
-                            <div class="ml-4">
-                                <p class="text-xs font-medium text-gray-500 truncate">Total Credits Used</p>
-                                <p class="text-lg font-semibold text-gray-900">{{ formatCredits(summary.total_credits) }}</p>
-                            </div>
+                            <div class="w-4 h-4 rounded-full mr-3 bg-indigo-500"></div>
+                            <h2 class="text-lg font-semibold text-gray-900">Usage Statistics</h2>
                         </div>
                     </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-6">
+                            <!-- Total Credits Used -->
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 bg-green-200 rounded-md p-2">
+                                        <CreditCardIcon class="h-6 w-6 text-green-700" />
+                                    </div>
+                                    <div class="ml-4">
+                                        <p class="text-xs font-medium text-gray-500 truncate">Total Credits Used</p>
+                                        <p class="text-lg font-semibold text-gray-900">{{ formatCredits(summary.total_credits) }}</p>
+                                    </div>
+                                </div>
+                            </div>
 
-                    <!-- Input Tokens -->
-                    <div class="border border-gray-200 rounded-lg p-4">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0 bg-blue-200 rounded-md p-2">
-                                <ArrowUpIcon class="h-6 w-6 text-blue-700" />
+                            <!-- Input Tokens -->
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 bg-blue-200 rounded-md p-2">
+                                        <ArrowUpIcon class="h-6 w-6 text-blue-700" />
+                                    </div>
+                                    <div class="ml-4">
+                                        <p class="text-xs font-medium text-gray-500 truncate">Input Tokens</p>
+                                        <p class="text-lg font-semibold text-gray-900">{{ formatNumber(summary.total_input_tokens) }}</p>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="ml-4">
-                                <p class="text-xs font-medium text-gray-500 truncate">Input Tokens</p>
-                                <p class="text-lg font-semibold text-gray-900">{{ formatNumber(summary.total_input_tokens) }}</p>
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- Output Tokens -->
-                    <div class="border border-gray-200 rounded-lg p-4">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0 bg-purple-200 rounded-md p-2">
-                                <ArrowDownIcon class="h-6 w-6 text-purple-700" />
+                            <!-- Output Tokens -->
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 bg-purple-200 rounded-md p-2">
+                                        <ArrowDownIcon class="h-6 w-6 text-purple-700" />
+                                    </div>
+                                    <div class="ml-4">
+                                        <p class="text-xs font-medium text-gray-500 truncate">Output Tokens</p>
+                                        <p class="text-lg font-semibold text-gray-900">{{ formatNumber(summary.total_output_tokens) }}</p>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="ml-4">
-                                <p class="text-xs font-medium text-gray-500 truncate">Output Tokens</p>
-                                <p class="text-lg font-semibold text-gray-900">{{ formatNumber(summary.total_output_tokens) }}</p>
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- Total Tokens -->
-                    <div class="border border-gray-200 rounded-lg p-4">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0 bg-orange-200 rounded-md p-2">
-                                <ChartBarIcon class="h-6 w-6 text-orange-700" />
-                            </div>
-                            <div class="ml-4">
-                                <p class="text-xs font-medium text-gray-500 truncate">Total Tokens</p>
-                                <p class="text-lg font-semibold text-gray-900">{{ formatNumber(summary.total_tokens) }}</p>
+                            <!-- Total Tokens -->
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 bg-orange-200 rounded-md p-2">
+                                        <ChartBarIcon class="h-6 w-6 text-orange-700" />
+                                    </div>
+                                    <div class="ml-4">
+                                        <p class="text-xs font-medium text-gray-500 truncate">Total Tokens</p>
+                                        <p class="text-lg font-semibold text-gray-900">{{ formatNumber(summary.total_tokens) }}</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -65,54 +79,68 @@
             <!-- Usage Breakdown Section -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                 <!-- Usage by Provider -->
-                <div class="border border-gray-200 rounded-lg p-6">
-                    <h3 class="text-base font-semibold mb-4">Usage by Provider</h3>
-                    <div class="space-y-4">
-                        <div v-if="usage_by_provider && usage_by_provider.length > 0" class="divide-y divide-gray-200">
-                            <div v-for="provider in usage_by_provider" :key="provider.provider" class="flex items-center justify-between py-4">
-                                <div class="flex items-center">
-                                    <div class="flex-shrink-0">
-                                        <div class="w-4 h-4 rounded-full" :class="getProviderColor(provider.provider)"></div>
-                                    </div>
-                                    <div class="ml-3">
-                                        <p class="text-sm font-medium text-gray-900 capitalize">{{ provider.provider }}</p>
-                                        <p class="text-xs text-gray-500">{{ formatNumber(provider.total_input_tokens + provider.total_output_tokens) }} tokens</p>
-                                    </div>
-                                </div>
-                                <div class="text-sm font-medium text-gray-900">
-                                    {{ formatCredits(provider.total_credits) }}
-                                </div>
-                            </div>
+                <div class="border border-gray-200 rounded-lg overflow-hidden">
+                    <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                        <div class="flex items-center">
+                            <div class="w-4 h-4 rounded-full mr-3 bg-green-500"></div>
+                            <h2 class="text-lg font-semibold text-gray-900">Usage by Provider</h2>
                         </div>
-                        <div v-else class="text-center py-8">
-                            <div class="text-gray-400 mb-2">
-                                <ChartBarIcon class="h-12 w-12 mx-auto" />
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-4">
+                            <div v-if="usage_by_provider && usage_by_provider.length > 0" class="divide-y divide-gray-200">
+                                <div v-for="provider in usage_by_provider" :key="provider.provider" class="flex items-center justify-between py-4">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0">
+                                            <div class="w-4 h-4 rounded-full" :class="getProviderColor(provider.provider)"></div>
+                                        </div>
+                                        <div class="ml-3">
+                                            <p class="text-sm font-medium text-gray-900 capitalize">{{ provider.provider }}</p>
+                                            <p class="text-xs text-gray-500">{{ formatNumber(provider.total_input_tokens + provider.total_output_tokens) }} tokens</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-sm font-medium text-gray-900">
+                                        {{ formatCredits(provider.total_credits) }}
+                                    </div>
+                                </div>
                             </div>
-                            <p class="text-xs text-gray-500">No provider usage data available</p>
+                            <div v-else class="text-center py-8">
+                                <div class="text-gray-400 mb-2">
+                                    <ChartBarIcon class="h-12 w-12 mx-auto" />
+                                </div>
+                                <p class="text-xs text-gray-500">No provider usage data available</p>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Top Models by Cost -->
-                <div class="border border-gray-200 rounded-lg p-6">
-                    <h3 class="text-base font-semibold mb-4">Top Models by Cost</h3>
-                    <div class="space-y-4">
-                        <div v-if="usage_by_model && usage_by_model.length > 0" class="divide-y divide-gray-200">
-                            <div v-for="model in usage_by_model.slice(0, 5)" :key="`${model.provider}-${model.model}`" class="flex items-center justify-between py-4">
-                                <div class="flex-1">
-                                    <p class="text-sm font-medium text-gray-900">{{ model.model }}</p>
-                                    <p class="text-xs text-gray-500">{{ model.provider }} • {{ model.usage_count }} requests</p>
-                                </div>
-                                <div class="text-sm font-medium text-gray-900">
-                                    {{ formatCredits(model.total_credits) }}
-                                </div>
-                            </div>
+                <div class="border border-gray-200 rounded-lg overflow-hidden">
+                    <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                        <div class="flex items-center">
+                            <div class="w-4 h-4 rounded-full mr-3 bg-blue-500"></div>
+                            <h2 class="text-lg font-semibold text-gray-900">Top Models by Cost</h2>
                         </div>
-                        <div v-else class="text-center py-8">
-                            <div class="text-gray-400 mb-2">
-                                <CreditCardIcon class="h-12 w-12 mx-auto" />
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-4">
+                            <div v-if="usage_by_model && usage_by_model.length > 0" class="divide-y divide-gray-200">
+                                <div v-for="model in usage_by_model.slice(0, 5)" :key="`${model.provider}-${model.model}`" class="flex items-center justify-between py-4">
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium text-gray-900">{{ model.model }}</p>
+                                        <p class="text-xs text-gray-500">{{ model.provider }} • {{ model.usage_count }} requests</p>
+                                    </div>
+                                    <div class="text-sm font-medium text-gray-900">
+                                        {{ formatCredits(model.total_credits) }}
+                                    </div>
+                                </div>
                             </div>
-                            <p class="text-xs text-gray-500">No model usage data available</p>
+                            <div v-else class="text-center py-8">
+                                <div class="text-gray-400 mb-2">
+                                    <CreditCardIcon class="h-12 w-12 mx-auto" />
+                                </div>
+                                <p class="text-xs text-gray-500">No model usage data available</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -120,41 +148,48 @@
 
             <!-- Detailed Usage History Section -->
             <div>
-                <h3 class="text-base font-semibold mb-4">Usage History</h3>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Timestamp</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Provider / Model</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bot</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tokens (In → Out)</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Speed</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cost</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            <tr v-for="usage in usages.data" :key="usage.id">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatDate(usage.created_at) }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <div class="w-3 h-3 rounded-full mr-2" :class="getProviderColor(usage.provider)"></div>
-                                        <div>
-                                            <div class="text-sm font-medium text-gray-900 capitalize">{{ usage.provider }}</div>
-                                            <div class="text-sm text-gray-500">{{ usage.model }}</div>
+                <div class="border border-gray-200 rounded-lg overflow-hidden">
+                    <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                        <div class="flex items-center">
+                            <div class="w-4 h-4 rounded-full mr-3 bg-orange-500"></div>
+                            <h2 class="text-lg font-semibold text-gray-900">Usage History</h2>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Provider / Model</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bot</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tokens (In → Out)</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Speed</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cost</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr v-for="usage in usages.data" :key="usage.id" class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatDate(usage.created_at) }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="w-3 h-3 rounded-full mr-2" :class="getProviderColor(usage.provider)"></div>
+                                            <div>
+                                                <div class="text-sm font-medium text-gray-900 capitalize">{{ usage.provider }}</div>
+                                                <div class="text-sm text-gray-500">{{ usage.model }}</div>
+                                            </div>
                                         </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ usage.bot?.name || 'Unknown' }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatNumber(usage.input_tokens) }}{{ usage.output_tokens > 0 ? ` → ${formatNumber(usage.output_tokens)}` : '' }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ usage.tokens_per_second > 0 ? formatTPS(usage.tokens_per_second) : 'N/A' }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ formatCredits(usage.credits) }}</td>
-                            </tr>
-                            <tr v-if="usages.data.length === 0">
-                                <td colspan="6" class="px-6 py-4 whitespace-nowrap text-xs text-gray-500 text-center">No usage data found</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ usage.bot?.name || 'Unknown' }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatNumber(usage.input_tokens) }}{{ usage.output_tokens > 0 ? ` → ${formatNumber(usage.output_tokens)}` : '' }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ usage.tokens_per_second > 0 ? formatTPS(usage.tokens_per_second) : 'N/A' }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ formatCredits(usage.credits) }}</td>
+                                </tr>
+                                <tr v-if="usages.data.length === 0">
+                                    <td colspan="6" class="px-6 py-4 whitespace-nowrap text-xs text-gray-500 text-center">No usage data found</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <!-- Pagination -->
@@ -232,11 +267,11 @@ const formatCredits = (amount) => {
 }
 
 const formatNumber = (number) => {
-    return new Intl.NumberFormat('en-US').format(number)
+    return new Intl.NumberFormat('id-ID').format(number)
 }
 
 const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleString('en-US', {
+    return new Date(dateString).toLocaleString('id-ID', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',

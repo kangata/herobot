@@ -5,39 +5,38 @@ namespace App\Services;
 class TokenPricingService
 {
     /**
-     * Token pricing in credits per 1M tokens.
+     * Token pricing in USD per 1M tokens.
      * 1 Credit = 1 Rupiah, 16,500 Credits = 1 USD
      */
     private const PRICING = [
         'OpenAI' => [
             // GPT-5 Series
-            'gpt-5' => ['input' => 20625, 'output' => 165000],
-            'gpt-5-mini' => ['input' => 4125, 'output' => 33000],
-            'gpt-5-nano' => ['input' => 825, 'output' => 6600],
-            'gpt-5-chat-latest' => ['input' => 20625, 'output' => 165000],
+            'gpt-5' => ['input' => 1.25, 'output' => 10.0],
+            'gpt-5-mini' => ['input' => 0.25, 'output' => 2.0],
+            'gpt-5-nano' => ['input' => 0.05, 'output' => 0.4],
             
             // GPT-4.1 Series
-            'gpt-4.1' => ['input' => 33000, 'output' => 132000],
-            'gpt-4.1-mini' => ['input' => 6600, 'output' => 26400],
-            'gpt-4.1-nano' => ['input' => 1650, 'output' => 6600],
+            'gpt-4.1' => ['input' => 2.0, 'output' => 8.0],
+            'gpt-4.1-mini' => ['input' => 0.4, 'output' => 1.6],
+            'gpt-4.1-nano' => ['input' => 0.1, 'output' => 0.4],
             
             // GPT-4o Series
-            'gpt-4o' => ['input' => 41250, 'output' => 165000],
-            'gpt-4o-mini' => ['input' => 825, 'output' => 3300], // Based on current pricing
+            'gpt-4o' => ['input' => 2.5, 'output' => 10.0],
+            'gpt-4o-mini' => ['input' => 0.15, 'output' => 0.6],
             
             // Embeddings
-            'text-embedding-3-small' => ['input' => 165, 'output' => 0],
-            'text-embedding-3-large' => ['input' => 1072.5, 'output' => 0],
-            'text-embedding-ada-002' => ['input' => 825, 'output' => 0],
+            'text-embedding-3-small' => ['input' => 0.01, 'output' => 0],
+            'text-embedding-3-large' => ['input' => 0.065, 'output' => 0],
+            'text-embedding-ada-002' => ['input' => 0.05, 'output' => 0],
         ],
         'Gemini' => [
             // Gemini 2.5 Series
-            'gemini-2.5-pro' => ['input' => 20625, 'output' => 165000],
-            'gemini-2.5-flash' => ['input' => 4950, 'output' => 41250],
-            'gemini-2.5-flash-lite' => ['input' => 1650, 'output' => 6600],
+            'gemini-2.5-pro' => ['input' => 1.25, 'output' => 10.0],
+            'gemini-2.5-flash' => ['input' => 0.3, 'output' => 2.5],
+            'gemini-2.5-flash-lite' => ['input' => 0.1, 'output' => 0.4],
             
             // Embeddings
-            'text-embedding-004' => ['input' => 2475, 'output' => 0],
+            'text-embedding-004' => ['input' => 0.15, 'output' => 0],
         ],
     ];
 
@@ -61,10 +60,15 @@ class TokenPricingService
             return round($inputCost + $outputCost, 6);
         }
 
-        $inputCost = ($inputTokens / 1000000) * $pricing['input'];
-        $outputCost = ($outputTokens / 1000000) * $pricing['output'];
+        // Convert USD pricing to credits (1 USD = 16,500 credits)
+        $inputCostUsd = ($inputTokens / 1000000) * $pricing['input'];
+        $outputCostUsd = ($outputTokens / 1000000) * $pricing['output'];
+        $totalCostUsd = $inputCostUsd + $outputCostUsd;
+        
+        // Convert to credits
+        $totalCostCredits = $totalCostUsd * 16500;
 
-        return round($inputCost + $outputCost, 6);
+        return round($totalCostCredits, 6);
     }
 
     /**
@@ -111,7 +115,11 @@ class TokenPricingService
     public function getInputPrice(string $provider, string $model): float
     {
         $pricing = $this->getPricing($provider, $model);
-        return $pricing ? $pricing['input'] : 1000; // Fallback
+        if (!$pricing) {
+            return 1000; // Fallback in credits
+        }
+        // Convert USD to credits (1 USD = 16,500 credits)
+        return $pricing['input'] * 16500;
     }
 
     /**
@@ -124,7 +132,11 @@ class TokenPricingService
     public function getOutputPrice(string $provider, string $model): float
     {
         $pricing = $this->getPricing($provider, $model);
-        return $pricing ? $pricing['output'] : 5000; // Fallback
+        if (!$pricing) {
+            return 5000; // Fallback in credits
+        }
+        // Convert USD to credits (1 USD = 16,500 credits)
+        return $pricing['output'] * 16500;
     }
 
     /**

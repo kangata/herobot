@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EarlyAccessController;
 use App\Http\Controllers\ChannelController;
 use App\Http\Controllers\KnowledgeController;
+use App\Http\Controllers\PricingController;
 use App\Http\Controllers\ToolController;
 use App\Http\Controllers\UsageController;
 use Illuminate\Foundation\Application;
@@ -91,6 +92,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
         ->withoutMiddleware(['auth:sanctum', 'web', 'verified', 'verify_csrf_token']);
     
     Route::get('/usage', [UsageController::class, 'index'])->name('usage.index');
+    Route::get('/pricing', [PricingController::class, 'index'])->name('pricing.index');
 });
 
 Route::get('/terms', function () {
