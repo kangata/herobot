@@ -99,7 +99,8 @@
                         <li>
                             <ul role="list" class="-mx-2 space-y-1">
                                 <li v-for="item in navigation" :key="item.name">
-                                    <Link :href="item.href"
+                                    <Link v-if="item.hide !== true"
+                                        :href="item.href"
                                         :class="[item.current ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
                                     <component :is="item.icon"
                                         :class="[item.current ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-600', 'h-6 w-6 shrink-0']"
@@ -186,13 +187,13 @@ const navigation = [
     { name: 'Knowledge', href: route('knowledges.index'), icon: DocumentDuplicateIcon, current: route().current('knowledges*') },
     { name: 'Tools', href: route('tools.index'), icon: WrenchScrewdriverIcon, current: route().current('tools*') },
     { name: 'Channels', href: route('channels.index'), icon: LinkIcon, current: route().current('channels*') },
+    { name: 'AI Usage', href: route('usage.index'), icon: ChartBarIcon, current: route().current('usage*'), hide: isSelfHosted },
+    { name: 'Pricing', href: route('pricing.index'), icon: CurrencyDollarIcon, current: route().current('pricing*'), hide: isSelfHosted },
+    { name: 'Billing', href: route('billing.index'), icon: CreditCardIcon, current: route().current('billing*'), hide: isSelfHosted },
 ]
 
 const bottomNavigation = [
     { name: 'Team Settings', href: route('teams.show', page.props.auth.user.current_team), icon: UserGroupIcon, current: route().current('teams.show') },
-    { name: 'Billing', href: route('billing.index'), icon: CreditCardIcon, current: route().current('billing*'), hide: isSelfHosted },
-    { name: 'AI Usage', href: route('usage.index'), icon: ChartBarIcon, current: route().current('usage*'), hide: isSelfHosted },
-    { name: 'Pricing', href: route('pricing.index'), icon: CurrencyDollarIcon, current: route().current('pricing*'), hide: isSelfHosted },
     { name: 'Settings', href: route('profile.show'), icon: Cog6ToothIcon, current: route().current('profile.show') },
 ]
 
