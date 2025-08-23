@@ -28,7 +28,7 @@
                                     </div>
                                     <div class="ml-4">
                                         <p class="text-xs font-medium text-gray-500 truncate">Total Credits Used</p>
-                                        <p class="text-lg font-semibold text-gray-900">{{ formatCredits(summary.total_credits) }}</p>
+                                        <p class="text-lg font-semibold text-gray-900">{{ formatNumber(summary.total_credits) }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -100,7 +100,7 @@
                                         </div>
                                     </div>
                                     <div class="text-sm font-medium text-gray-900">
-                                        {{ formatCredits(provider.total_credits) }}
+                                        {{ formatNumber(provider.total_credits) }} credits
                                     </div>
                                 </div>
                             </div>
@@ -131,7 +131,7 @@
                                         <p class="text-xs text-gray-500">{{ model.provider }} • {{ model.usage_count }} requests</p>
                                     </div>
                                     <div class="text-sm font-medium text-gray-900">
-                                        {{ formatCredits(model.total_credits) }}
+                                        {{ formatNumber(model.total_credits) }} credits
                                     </div>
                                 </div>
                             </div>
@@ -162,7 +162,7 @@
                                         <p class="text-xs text-gray-500">{{ bot.usage_count }} requests • {{ formatNumber(bot.total_input_tokens + bot.total_output_tokens) }} tokens</p>
                                     </div>
                                     <div class="text-sm font-medium text-gray-900">
-                                        {{ formatCredits(bot.total_credits) }}
+                                        {{ formatNumber(bot.total_credits) }} credits
                                     </div>
                                 </div>
                             </div>
@@ -213,7 +213,7 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ usage.bot?.name || 'Unknown' }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatNumber(usage.input_tokens) }}{{ usage.output_tokens > 0 ? ` → ${formatNumber(usage.output_tokens)}` : '' }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ usage.tokens_per_second > 0 ? formatTPS(usage.tokens_per_second) : 'N/A' }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ formatCredits(usage.credits) }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ formatCredits(usage.credits / 1000000) }}</td>
                                 </tr>
                                 <tr v-if="usages.data.length === 0">
                                     <td colspan="6" class="px-6 py-4 whitespace-nowrap text-xs text-gray-500 text-center">No usage data found</td>
@@ -294,12 +294,15 @@ const formatCredits = (amount) => {
     const significantDigits = amount < 0.01 ? -Math.floor(Math.log10(amount)) + 1 : 2;
     return new Intl.NumberFormat('id-ID', {
         minimumFractionDigits: 2,
-        maximumFractionDigits: Math.max(significantDigits, 2)
+        maximumFractionDigits: Math.min(significantDigits, 6)
     }).format(amount) + ' credits'
 }
 
 const formatNumber = (number) => {
-    return new Intl.NumberFormat('id-ID').format(number)
+    return new Intl.NumberFormat('id-ID', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
+    }).format(number)
 }
 
 const formatDate = (dateString) => {

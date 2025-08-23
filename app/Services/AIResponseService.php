@@ -12,6 +12,7 @@ use App\Models\ChatMedia;
 use App\Models\Tool;
 use App\Models\ChatHistory;
 use App\Models\TokenUsage;
+use App\Services\TokenUsageService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;
 
@@ -27,18 +28,20 @@ class AIResponseService
 
     protected ToolService $toolService;
     protected TokenPricingService $tokenPricingService;
+    protected TokenUsageService $tokenUsageService;
     protected bool $toolCallingEnabled = true;
 
     /**
      * Constructor
      *
-     * @param ToolService $toolService Service for handling tool execution
      * @param TokenPricingService $tokenPricingService Service for calculating token costs
+     * @param TokenUsageService $tokenUsageService Service for handling token usage
      */
-    public function __construct(ToolService $toolService, TokenPricingService $tokenPricingService)
+    public function __construct(ToolService $toolService, TokenPricingService $tokenPricingService, TokenUsageService $tokenUsageService)
     {
         $this->toolService = $toolService;
         $this->tokenPricingService = $tokenPricingService;
+        $this->tokenUsageService = $tokenUsageService;
     }
     /**
      * Generate AI response for a bot with message and chat history.
@@ -179,10 +182,10 @@ class AIResponseService
             }
             
             // Record token usage and calculate costs
-            $this->recordTokenUsage($bot, $chatService, $chatTokenUsage, $responseTime);
             if ($embeddingTokenUsage) {
                 $this->recordTokenUsage($bot, $embeddingService, $embeddingTokenUsage, 0, 'embedding');
             }
+            $this->recordTokenUsage($bot, $chatService, $chatTokenUsage, $responseTime);
             
             // Save assistant response to chat history
             $this->saveChatHistory([
@@ -747,8 +750,8 @@ class AIResponseService
             $tokenUsage['output_tokens']
         );
         
-        // Store token usage
-        TokenUsage::create([
+        // Store token usage and create daily transaction
+        $this->tokenUsageService->createTokenUsage([
             'team_id' => $bot->team_id,
             'bot_id' => $bot->id,
             'provider' => $provider,
@@ -758,11 +761,6 @@ class AIResponseService
             'tokens_per_second' => $tokensPerSecond,
             'credits' => $credits,
         ]);
-        
-        // Deduct credits from team balance
-        if ($bot->team && $bot->team->balance) {
-            $bot->team->balance->decrement('amount', $credits);
-        }
     }
 
     /**

@@ -25,7 +25,7 @@ class TokenUsage extends Model
         'input_tokens' => 'integer',
         'output_tokens' => 'integer',
         'tokens_per_second' => 'decimal:2',
-        'credits' => 'decimal:6',
+        'credits' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -76,5 +76,21 @@ class TokenUsage extends Model
     public function scopeDateRange($query, $startDate, $endDate)
     {
         return $query->whereBetween('created_at', [$startDate, $endDate]);
+    }
+
+    /**
+     * Convert integer credits to decimal for display
+     */
+    public function getDecimalCreditsAttribute()
+    {
+        return $this->credits / 1000000;
+    }
+
+    /**
+     * Set credits from decimal value (converts to integer for storage)
+     */
+    public function setCreditsAttribute($value)
+    {
+        $this->attributes['credits'] = round($value * 1000000);
     }
 }

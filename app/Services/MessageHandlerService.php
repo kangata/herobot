@@ -54,7 +54,7 @@ class MessageHandlerService
         $isCloud = config('app.edition') === 'cloud';
         if ($isCloud && $bot && $bot->team && $bot->team->balance) {
             // Get current balance
-            $currentBalance = $bot->team->balance->amount;
+            $currentBalance = $bot->team->balance->amount / 1000000;
 
             // Calculate estimated credits needed before processing
             $estimatedCredits = $this->calculateEstimatedCredits($bot, $messageContent, $mediaFile);
@@ -84,7 +84,6 @@ class MessageHandlerService
             'channel' => $channel,
             'bot' => $bot,
             'media' => $media,
-            'estimated_credits' => $estimatedCredits
         ];
     }
 
@@ -199,7 +198,6 @@ class MessageHandlerService
             $totalEstimatedCredits = $this->applySafetyMargin($totalEstimatedCredits);
             
             return round($totalEstimatedCredits, 6);
-            
         } catch (\Exception $e) {
             // Fallback to conservative estimate if calculation fails
             $baseTokens = $messageContent ? $this->estimateTokens($messageContent) : 100;

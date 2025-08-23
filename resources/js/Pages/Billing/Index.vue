@@ -58,7 +58,7 @@
                                     </div>
                                     <div class="ml-4">
                                         <p class="text-xs font-medium text-gray-500 truncate">Available Credits</p>
-                                        <p class="text-lg font-semibold text-gray-900">{{ formatNumber(balance.amount) }} credits</p>
+                                        <p class="text-lg font-semibold text-gray-900">{{ formatNumber(balance.amount / 1000000) }} credits</p>
                                     </div>
                                 </div>
                             </div>
@@ -69,7 +69,7 @@
                                     </div>
                                     <div class="ml-4">
                                         <p class="text-xs font-medium text-gray-500 truncate">USD Equivalent</p>
-                                        <p class="text-lg font-semibold text-gray-900">${{ formatUSD(balance.amount / 16500) }}</p>
+                                        <p class="text-lg font-semibold text-gray-900">${{ formatUSD((balance.amount / 1000000) / 16500) }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -107,8 +107,8 @@
                                         class="p-4 border rounded-lg hover:bg-gray-50 transition-colors duration-150"
                                         :class="{ 'bg-indigo-50 border-indigo-500 ring-2 ring-indigo-500': form.amount === amount }"
                                         @click="form.amount = amount">
-                                        <div class="font-semibold">Rp {{ formatNumber(amount) }}</div>
-                                        <div class="text-sm text-gray-500">{{ formatNumber(amount) }} credits</div>
+                                        <div class="font-semibold">{{ formatNumber(amount) }} credits</div>
+                                        <div class="text-sm text-gray-500">Rp {{ formatNumber(amount) }}</div>
                                     </button>
                                 </div>
                                 <InputError :message="form.errors.amount" class="mt-2" />
@@ -154,9 +154,9 @@
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                        <span :class="transaction.type === 'usage' ? 'text-red-600' : 'text-green-600'">
-                                            {{ transaction.type === 'usage' ? '-' : '+' }}
-                                            Rp {{ formatNumber(transaction.amount) }}
+                                        <span :class="transaction.transaction_type === 'debit' ? 'text-red-600' : 'text-green-600'">
+                                            {{ transaction.transaction_type === 'debit' ? '-' : '+' }}
+                                            {{ formatNumber(transaction.amount / 1000000) }} credits
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
@@ -237,7 +237,10 @@ const formatDate = (date) => {
 };
 
 const formatNumber = (number) => {
-    return new Intl.NumberFormat('id-ID').format(number);
+    return new Intl.NumberFormat('id-ID', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
+    }).format(number);
 };
 
 const formatUSD = (amount) => {

@@ -25,11 +25,12 @@ class UsageController extends Controller
         // Get token usage data for the current team
         $usages = TokenUsage::where('team_id', $team->id)
             ->with('bot:id,name')
-            ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc')
             ->paginate(50);
 
         // Calculate summary statistics
-        $totalCredits = TokenUsage::where('team_id', $team->id)->sum('credits');
+        $totalCreditsRaw = TokenUsage::where('team_id', $team->id)->sum('credits');
+        $totalCredits = $totalCreditsRaw / 1000000; // Convert from integer to decimal
         $totalInputTokens = TokenUsage::where('team_id', $team->id)->sum('input_tokens');
         $totalOutputTokens = TokenUsage::where('team_id', $team->id)->sum('output_tokens');
         
@@ -41,7 +42,7 @@ class UsageController extends Controller
             ->map(function ($item) {
                 $item->total_input_tokens = (int) $item->total_input_tokens;
                 $item->total_output_tokens = (int) $item->total_output_tokens;
-                $item->total_credits = (float) $item->total_credits;
+                $item->total_credits = (float) ($item->total_credits / 1000000); // Convert from integer to decimal
                 return $item;
             });
 
@@ -54,7 +55,7 @@ class UsageController extends Controller
             ->map(function ($item) {
                 $item->total_input_tokens = (int) $item->total_input_tokens;
                 $item->total_output_tokens = (int) $item->total_output_tokens;
-                $item->total_credits = (float) $item->total_credits;
+                $item->total_credits = (float) ($item->total_credits / 1000000); // Convert from integer to decimal
                 $item->usage_count = (int) $item->usage_count;
                 return $item;
             });
@@ -69,7 +70,7 @@ class UsageController extends Controller
             ->map(function ($item) {
                 $item->total_input_tokens = (int) $item->total_input_tokens;
                 $item->total_output_tokens = (int) $item->total_output_tokens;
-                $item->total_credits = (float) $item->total_credits;
+                $item->total_credits = (float) ($item->total_credits / 1000000); // Convert from integer to decimal
                 $item->usage_count = (int) $item->usage_count;
                 return $item;
             });
@@ -84,7 +85,7 @@ class UsageController extends Controller
             ->map(function ($item) {
                 $item->total_input_tokens = (int) $item->total_input_tokens;
                 $item->total_output_tokens = (int) $item->total_output_tokens;
-                $item->total_credits = (float) $item->total_credits;
+                $item->total_credits = (float) ($item->total_credits / 1000000); // Convert from integer to decimal
                 return $item;
             });
 
