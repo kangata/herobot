@@ -7,6 +7,7 @@ use App\Models\Team;
 use App\Models\Tool;
 use App\Models\User;
 use App\Services\AIResponseService;
+use App\Services\TokenPricingService;
 use App\Services\ToolService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -59,7 +60,8 @@ class AIToolIntegrationTest extends TestCase
     public function test_ai_response_service_includes_available_tools()
     {
         $toolService = new ToolService();
-        $aiService = new AIResponseService($toolService);
+        $tokenPricingService = new TokenPricingService();
+        $aiService = new AIResponseService($toolService, $tokenPricingService);
 
         // Mock the AI service factory and embedding service
         $this->mockAIServices();
@@ -88,7 +90,8 @@ class AIToolIntegrationTest extends TestCase
     public function test_ai_response_service_handles_tool_calls()
     {
         $toolService = new ToolService();
-        $aiService = new AIResponseService($toolService);
+        $tokenPricingService = new TokenPricingService();
+        $aiService = new AIResponseService($toolService, $tokenPricingService);
 
         // Mock chat service to return tool calls
         $mockChatService = Mockery::mock('App\Services\Contracts\ChatServiceInterface');
