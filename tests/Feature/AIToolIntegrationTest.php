@@ -7,6 +7,8 @@ use App\Models\Team;
 use App\Models\Tool;
 use App\Models\User;
 use App\Services\AIResponseService;
+use App\Services\TokenPricingService;
+use App\Services\TokenUsageService;
 use App\Services\ToolService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -59,7 +61,9 @@ class AIToolIntegrationTest extends TestCase
     public function test_ai_response_service_includes_available_tools()
     {
         $toolService = new ToolService();
-        $aiService = new AIResponseService($toolService);
+        $tokenPricingService = new TokenPricingService();
+        $tokenUsageService = new TokenUsageService();
+        $aiService = new AIResponseService($toolService, $tokenPricingService, $tokenUsageService);
 
         // Mock the AI service factory and embedding service
         $this->mockAIServices();
@@ -74,9 +78,9 @@ class AIToolIntegrationTest extends TestCase
 
         $response = $aiService->generateResponse(
             $this->bot,
+            null,
             "What's the weather in Jakarta?",
             'user123',
-            null,
             null,
             'whatsapp'
         );
@@ -88,7 +92,9 @@ class AIToolIntegrationTest extends TestCase
     public function test_ai_response_service_handles_tool_calls()
     {
         $toolService = new ToolService();
-        $aiService = new AIResponseService($toolService);
+        $tokenPricingService = new TokenPricingService();
+        $tokenUsageService = new TokenUsageService();
+        $aiService = new AIResponseService($toolService, $tokenPricingService, $tokenUsageService);
 
         // Mock chat service to return tool calls
         $mockChatService = Mockery::mock('App\Services\Contracts\ChatServiceInterface');
@@ -132,9 +138,9 @@ class AIToolIntegrationTest extends TestCase
 
         $response = $aiService->generateResponse(
             $this->bot,
+            null,
             "What's the weather in Jakarta?",
             'user123',
-            null,
             null,
             'whatsapp'
         );

@@ -7,7 +7,9 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EarlyAccessController;
 use App\Http\Controllers\ChannelController;
 use App\Http\Controllers\KnowledgeController;
+use App\Http\Controllers\PricingController;
 use App\Http\Controllers\ToolController;
+use App\Http\Controllers\UsageController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -81,14 +83,16 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('/bots/{bot}/test-message', [BotController::class, 'testMessage'])->name('bots.test-message');
     Route::delete('/bots/{bot}/clear-chat', [BotController::class, 'clearChat'])->name('bots.clear-chat');
 
-    // Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
-    // Route::post('/billing/topup', [BillingController::class, 'topup'])->name('billing.topup');
-    // Route::get('/billing/topup/success', [BillingController::class, 'topupSuccess'])->name('billing.topup.success');
-    // Route::get('/billing/topup/failure', [BillingController::class, 'topupFailure'])->name('billing.topup.failure');
-
-    // Route::post('/billing/webhook', [BillingController::class, 'handleWebhook'])
-    //     ->name('billing.webhook')
-    //     ->withoutMiddleware(['auth:sanctum', 'web', 'verified', 'verify_csrf_token']);
+    Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
+    Route::post('/billing/topup', [BillingController::class, 'topup'])->name('billing.topup');
+    Route::get('/billing/topup/success', [BillingController::class, 'topupSuccess'])->name('billing.topup.success');
+    Route::get('/billing/topup/failure', [BillingController::class, 'topupFailure'])->name('billing.topup.failure');
+    Route::post('/billing/webhook', [BillingController::class, 'handleWebhook'])
+        ->name('billing.webhook')
+        ->withoutMiddleware(['auth:sanctum', 'web', 'verified', 'verify_csrf_token']);
+    
+    Route::get('/usage', [UsageController::class, 'index'])->name('usage.index');
+    Route::get('/pricing', [PricingController::class, 'index'])->name('pricing.index');
 });
 
 Route::get('/terms', function () {

@@ -45,8 +45,8 @@ class OpenAIServiceTest extends TestCase
 
         $response = $openAIService->generateResponse($messages);
 
-        $this->assertIsString($response);
-        $this->assertEquals('Hello, how can I help you today?', $response);
+        $this->assertIsArray($response);
+        $this->assertEquals('Hello, how can I help you today?', $response['content']);
     }
 
     public function test_generate_response_returns_array_for_tool_calls()
@@ -108,6 +108,10 @@ class OpenAIServiceTest extends TestCase
                         'index' => 0,
                         'embedding' => [0.1, 0.2, 0.3, 0.4]
                     ]
+                ],
+                'usage' => [
+                    'prompt_tokens' => 10,
+                    'total_tokens' => 10
                 ]
             ], 200)
         ]);
@@ -118,7 +122,14 @@ class OpenAIServiceTest extends TestCase
         $embedding = $openAIService->createEmbedding($text);
 
         $this->assertIsArray($embedding);
-        $this->assertEquals([[0.1, 0.2, 0.3, 0.4]], $embedding);
+        $this->assertEquals([
+            'embeddings' => [[0.1, 0.2, 0.3, 0.4]],
+            'token_usage' => [
+                'input_tokens' => 10,
+                'output_tokens' => 0,
+                'total_tokens' => 10,
+            ],
+        ], $embedding);
     }
 
     public function test_transcribe_audio()

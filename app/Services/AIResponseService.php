@@ -2,42 +2,67 @@
 
 namespace App\Services;
 
-use App\Services\AIServiceFactory;
 use App\Services\Contracts\EmbeddingServiceInterface;
+use App\Services\Contracts\ChatServiceInterface;
+use App\Services\TokenPricingService;
+use App\Services\Traits\AIServiceHelperTrait;
+use App\Models\Bot;
+use App\Models\Channel;
 use App\Models\ChatMedia;
 use App\Models\Tool;
 use App\Models\ChatHistory;
+use App\Models\TokenUsage;
+use App\Services\TokenUsageService;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Collection;
 
+/**
+ * AI Response Service
+ * 
+ * Handles AI response generation, tool calling, knowledge search,
+ * and chat history management for bots.
+ */
 class AIResponseService
 {
+    use AIServiceHelperTrait;
+
     protected ToolService $toolService;
+    protected TokenPricingService $tokenPricingService;
+    protected TokenUsageService $tokenUsageService;
     protected bool $toolCallingEnabled = true;
 
-    public function __construct(ToolService $toolService)
+    /**
+     * Constructor
+     *
+     * @param TokenPricingService $tokenPricingService Service for calculating token costs
+     * @param TokenUsageService $tokenUsageService Service for handling token usage
+     */
+    public function __construct(ToolService $toolService, TokenPricingService $tokenPricingService, TokenUsageService $tokenUsageService)
     {
         $this->toolService = $toolService;
+        $this->tokenPricingService = $tokenPricingService;
+        $this->tokenUsageService = $tokenUsageService;
     }
     /**
      * Generate AI response for a bot with message and chat history.
      *
-     * @param  object                                   $bot         Instance model bot (memiliki properti "prompt")
-     * @param  string                                   $message     Pesan terbaru dari pengguna
-     * @param  string                                   $sender      Sender identifier
-     * @param  int|null                                $channelId   Channel ID (nullable for testing)
-     * @param  \App\Models\ChatMedia|null              $media       Media data (optional)
-     * @param  string                                   $format      Output format: 'whatsapp' or 'html' (default: 'whatsapp')
-     * @return string|bool  String berisi jawaban terformat, atau false kalau gagal
+     * @param Bot $bot Bot instance with prompt property
+     * @param Channel $channel Channel instance
+     * @param string $message Latest message from user
+     * @param string $sender Sender identifier
+     * @param ChatMedia|null $media Media data (optional)
+     * @param string $format Output format: 'whatsapp' or 'html'
+     * @return string|false Formatted response string or false on failure
      */
-    public function generateResponse($bot, $message, $sender, $channelId, ?ChatMedia $media, $format = 'whatsapp')
+    public function generateResponse(Bot $bot, ?Channel $channel, string $message, string $sender, ?ChatMedia $media = null, string $format = 'whatsapp'): string|false
     {
         try {
             // Get chat history from database
-            $chatHistory = $this->getChatHistory($bot->id, $channelId, $sender, 5);
+            $chatHistory = $this->getChatHistory($bot->id, $channel->id ?? null, $sender, 5);
             
             // Save user message to chat history
             $this->saveChatHistory([
-                'channel_id' => $channelId,
+                'channel_id' => $channel->id ?? null,
                 'bot_id' => $bot->id,
                 'sender' => $sender,
                 'message' => $message,
@@ -54,11 +79,14 @@ class AIResponseService
             ]);
             
             // Get separately configured services
-            $chatService = AIServiceFactory::createChatService();
-            $embeddingService = AIServiceFactory::createEmbeddingService();
+            $services = $this->getAIServices();
+            $chatService = $services['chat'];
+            $embeddingService = $services['embedding'];
             
             // Search for relevant knowledge using embedding service
-            $relevantKnowledge = $this->searchSimilarKnowledge($embeddingService, $message, $bot, 3);
+            $embeddingResult = $this->searchSimilarKnowledge($embeddingService, $message, $bot, 3);
+            $relevantKnowledge = $embeddingResult['knowledge'];
+            $embeddingTokenUsage = $embeddingResult['token_usage'] ?? null;
             
             // Build system prompt
             $systemPrompt = $this->buildSystemPrompt($bot, $relevantKnowledge);
@@ -72,6 +100,7 @@ class AIResponseService
                 : [];
             
             // Generate response using chat service
+            $startTime = microtime(true);
             $response = $chatService->generateResponse(
                 $messages,
                 null, // model parameter
@@ -79,10 +108,14 @@ class AIResponseService
                 $media ? $media->mime_type : null,
                 $tools
             );
+            $endTime = microtime(true);
+            $responseTime = $endTime - $startTime;
 
             $toolCalls = null;
             $toolResponses = null;
             $rawContent = null;
+            $chatTokenUsage = $response['token_usage'] ?? null;
+            $finalTokenUsage = null;
             
             // Handle tool calls if present in the response
             if (is_array($response) && isset($response['tool_calls']) && !empty($response['tool_calls'])) {
@@ -90,7 +123,7 @@ class AIResponseService
                 
                 // Save assistant message with tool calls first
                 $this->saveChatHistory([
-                    'channel_id' => $channelId,
+                    'channel_id' => $channel->id ?? null,
                     'bot_id' => $bot->id,
                     'sender' => $sender,
                     'message' => $response['content'] ?? '',
@@ -106,7 +139,7 @@ class AIResponseService
                     ]
                 ]);
                 
-                $toolResponses = $this->handleToolCalls($response['tool_calls'], $bot, $channelId, $sender);
+                $toolResponses = $this->handleToolCalls($response['tool_calls'], $bot, $channel->id ?? null, $sender);
 
                 // Add assistant message with tool calls
                 $messages[] = [
@@ -119,11 +152,24 @@ class AIResponseService
                 $messages = array_merge($messages, $toolResponses);
                 
                 // Generate final response
+                $finalStartTime = microtime(true);
                 $finalResponse = $chatService->generateResponse($messages, null, null, null, []);
+                $finalEndTime = microtime(true);
+                $finalResponseTime = $finalEndTime - $finalStartTime;
+                
                 $responseContent = is_array($finalResponse) ? ($finalResponse['content'] ?? '') : $finalResponse;
                 $rawContent = $responseContent;
+                $finalTokenUsage = $finalResponse['token_usage'] ?? null;
+                
+                // Combine token usage from both calls
+                if ($chatTokenUsage && $finalTokenUsage) {
+                    $chatTokenUsage['input_tokens'] += $finalTokenUsage['input_tokens'];
+                    $chatTokenUsage['output_tokens'] += $finalTokenUsage['output_tokens'];
+                    $chatTokenUsage['total_tokens'] += $finalTokenUsage['total_tokens'];
+                }
+                $responseTime += $finalResponseTime;
             } else {
-                $responseContent = is_array($response) ? ($response['content'] ?? $response) : $response;
+                $responseContent = is_array($response) ? ($response['content'] ?? '') : $response;
                 $rawContent = $responseContent;
             }
 
@@ -135,9 +181,15 @@ class AIResponseService
                 $formattedResponse = $this->convertMarkdownToWhatsApp($responseContent);
             }
             
+            // Record token usage and calculate costs
+            if ($embeddingTokenUsage) {
+                $this->recordTokenUsage($bot, $embeddingService, $embeddingTokenUsage, 0, 'embedding');
+            }
+            $this->recordTokenUsage($bot, $chatService, $chatTokenUsage, $responseTime);
+            
             // Save assistant response to chat history
             $this->saveChatHistory([
-                'channel_id' => $channelId,
+                'channel_id' => $channel->id ?? null,
                 'bot_id' => $bot->id,
                 'sender' => $sender,
                 'message' => $formattedResponse,
@@ -148,7 +200,9 @@ class AIResponseService
                     'format' => $format,
                     'model_used' => get_class($chatService),
                     'timestamp' => now()->toISOString(),
-                    'knowledge_used' => $relevantKnowledge->isNotEmpty()
+                    'knowledge_used' => $relevantKnowledge->isNotEmpty(),
+                    'token_usage' => $chatTokenUsage,
+                    'embedding_token_usage' => $embeddingTokenUsage
                 ]
             ]);
             
@@ -159,29 +213,16 @@ class AIResponseService
         }
     }
 
-    /**
-     * Build system prompt with bot prompt and relevant knowledge.
-     */
-    private function buildSystemPrompt($bot, $relevantKnowledge)
-    {
-        $systemPrompt = $bot->prompt;
-        
-        if ($relevantKnowledge->isNotEmpty()) {
-            $systemPrompt .= "\n\nGunakan informasi berikut untuk menjawab pertanyaan:\n\n";
-            foreach ($relevantKnowledge as $knowledge) {
-                $systemPrompt .= "{$knowledge['text']}\n\n";
-            }
-        } else {
-            $systemPrompt .= "\n\nTidak ada informasi spesifik yang ditemukan dalam basis pengetahuan.";
-        }
-        
-        return $systemPrompt;
-    }
 
     /**
      * Build messages array from system prompt, chat history, and current message.
+     *
+     * @param string $systemPrompt System prompt text
+     * @param Collection $chatHistory Collection of chat history items
+     * @param string $message Current user message
+     * @return array Array of messages formatted for AI service
      */
-    private function buildMessagesArray($systemPrompt, $chatHistory, $message)
+    private function buildMessagesArray(string $systemPrompt, Collection $chatHistory, string $message): array
     {
         $messages = [
             ['role' => 'system', 'content' => $systemPrompt],
@@ -221,8 +262,11 @@ class AIResponseService
 
     /**
      * Convert markdown formatting to HTML.
+     *
+     * @param string $text Markdown text to convert
+     * @return string HTML formatted text
      */
-    public function convertMarkdownToHtml($text)
+    public function convertMarkdownToHtml(string $text): string
     {
         // Convert headers: # text to <h1>text</h1>, ## text to <h2>text</h2>, etc.
         $text = preg_replace_callback('/^(#{1,6})\s+(.*)$/m', function($matches) {
@@ -263,8 +307,11 @@ class AIResponseService
 
     /**
      * Convert markdown formatting to WhatsApp-compatible formatting.
+     *
+     * @param string $text Markdown text to convert
+     * @return string WhatsApp formatted text
      */
-    public function convertMarkdownToWhatsApp($text)
+    public function convertMarkdownToWhatsApp(string $text): string
     {
         // Convert italic: *text* or _text_ to _text_
         $text = preg_replace('/(?<!\*)\*(?!\*)(\S+?)(?<!\*)\*(?!\*)|_(\S+?)_/', '_$1$2_', $text);
@@ -290,11 +337,22 @@ class AIResponseService
         return $text;
     }
 
-    public function searchSimilarKnowledge(EmbeddingServiceInterface $embeddingService, $query, $bot, int $limit = 3)
+    /**
+     * Search for similar knowledge using embedding service.
+     *
+     * @param EmbeddingServiceInterface $embeddingService Embedding service instance
+     * @param string $query Search query
+     * @param Bot $bot Bot instance
+     * @param int $limit Maximum number of results to return
+     * @return array Array containing knowledge collection and token usage
+     */
+    public function searchSimilarKnowledge(EmbeddingServiceInterface $embeddingService, string $query, Bot $bot, int $limit = 3): array
     {
         try {
             // Create embedding for the query
-            $queryEmbedding = $embeddingService->createEmbedding($query);
+            $embeddingResult = $embeddingService->createEmbedding($query);
+            $queryEmbedding = $embeddingResult['embeddings'][0] ?? $embeddingResult;
+            $tokenUsage = $embeddingResult['token_usage'] ?? null;
 
             // Get only necessary vectors with optimized query
             $knowledgeVectors = $bot->knowledge()
@@ -311,21 +369,33 @@ class AIResponseService
                 });
 
             // Sort and limit results
-            return $knowledgeVectors->sortByDesc('similarity')
+            $knowledge = $knowledgeVectors->sortByDesc('similarity')
                 ->take($limit)
                 ->values();
 
+            return [
+                'knowledge' => $knowledge,
+                'token_usage' => $tokenUsage
+            ];
+
         } catch (\Exception $e) {
             Log::error('Error searching similar knowledge: ' . $e->getMessage());
-            return collect();
+            return [
+                'knowledge' => collect(),
+                'token_usage' => null
+            ];
         }
     }
 
     /**
      * Calculate similarity between two vectors using fast C extension if available,
      * otherwise fallback to PHP implementation.
+     *
+     * @param array $vector1 First vector
+     * @param array $vector2 Second vector
+     * @return float Similarity score between 0 and 1
      */
-    protected function calculateSimilarity($vector1, $vector2)
+    protected function calculateSimilarity(array $vector1, array $vector2): float
     {
         if (function_exists('fast_cosine_similarity')) {
             return fast_cosine_similarity($vector1, $vector2);
@@ -336,8 +406,12 @@ class AIResponseService
 
     /**
      * Calculate cosine similarity between two vectors using PHP implementation.
+     *
+     * @param array $vector1 First vector
+     * @param array $vector2 Second vector
+     * @return float Cosine similarity score between -1 and 1
      */
-    protected function cosineSimilarity($vector1, $vector2)
+    protected function cosineSimilarity(array $vector1, array $vector2): float
     {
         $dotProduct = 0;
         $norm1 = 0;
@@ -357,8 +431,11 @@ class AIResponseService
 
     /**
      * Get available tools for a bot.
+     *
+     * @param Bot $bot Bot instance with team_id property
+     * @return array Array of formatted tools for AI service
      */
-    protected function getAvailableToolsForBot($bot): array
+    protected function getAvailableToolsForBot(Bot $bot): array
     {
         $tools = Tool::where('team_id', $bot->team_id)
             ->where('is_active', true)
@@ -378,8 +455,14 @@ class AIResponseService
 
     /**
      * Handle tool calls from AI response.
+     *
+     * @param array $toolCalls Array of tool calls from AI response
+     * @param Bot $bot Bot instance
+     * @param int|null $channelId Channel ID (optional)
+     * @param string|null $sender Sender identifier (optional)
+     * @return array Array of tool responses
      */
-    protected function handleToolCalls(array $toolCalls, $bot, $channelId = null, $sender = null): array
+    protected function handleToolCalls(array $toolCalls, Bot $bot, ?int $channelId = null, ?string $sender = null): array
     {
         $toolResponses = [];
         
@@ -575,6 +658,10 @@ class AIResponseService
      * - Must start with a letter or underscore
      * - Must be alphanumeric (a-z, A-Z, 0-9), underscores (_), dots (.) or dashes (-)
      * - Maximum length of 64 characters
+     *
+     * @param int $id Tool ID to append to function name
+     * @param string $name Original function name
+     * @return string Sanitized function name
      */
     private function sanitizeFunctionName(int $id, string $name): string
     {
@@ -607,8 +694,14 @@ class AIResponseService
 
     /**
      * Get chat history for a specific channel, sender, and bot.
+     *
+     * @param int $botId Bot ID
+     * @param int|null $channelId Channel ID (nullable)
+     * @param string $sender Sender identifier
+     * @param int $limit Maximum number of history items to retrieve
+     * @return Collection Collection of chat history items
      */
-    protected function getChatHistory($botId, $channelId, $sender, $limit = 5)
+    protected function getChatHistory(int $botId, ?int $channelId, string $sender, int $limit = 5): Collection
     {
         $query = ChatHistory::where('bot_id', $botId)
             ->where('sender', $sender)
@@ -625,9 +718,58 @@ class AIResponseService
     }
 
     /**
-     * Save chat history entry.
+     * Record token usage and calculate costs.
+     *
+     * @param Bot $bot Bot instance with team_id property
+     * @param ChatServiceInterface|EmbeddingServiceInterface $service AI service instance
+     * @param array|null $tokenUsage Token usage data with input_tokens and output_tokens
+     * @param float $responseTime Response time in seconds
+     * @param string $type Usage type ('chat' or 'embedding')
+     * @return void
      */
-    protected function saveChatHistory(array $data)
+    protected function recordTokenUsage(Bot $bot, ChatServiceInterface|EmbeddingServiceInterface $service, ?array $tokenUsage, float $responseTime, string $type = 'chat'): void
+    {
+        if (!$tokenUsage || !isset($tokenUsage['input_tokens'], $tokenUsage['output_tokens'])) {
+            return;
+        }
+
+        // Determine provider and model
+        $provider = $service->getProvider();
+        $model = $type === 'chat' ? $service->getModel() : $service->getEmbeddingModel();
+        
+        // Calculate tokens per second
+        $totalTokens = $tokenUsage['output_tokens'];
+        $tokensPerSecond = $responseTime > 0 && $totalTokens > 0 ? round($totalTokens / $responseTime, 2) : null;
+        
+        // Calculate cost
+        $credits = $this->calculateCreditsForTokens(
+            $this->tokenPricingService,
+            $provider,
+            $model,
+            $tokenUsage['input_tokens'],
+            $tokenUsage['output_tokens']
+        );
+        
+        // Store token usage and create daily transaction
+        $this->tokenUsageService->createTokenUsage([
+            'team_id' => $bot->team_id,
+            'bot_id' => $bot->id,
+            'provider' => $provider,
+            'model' => $model,
+            'input_tokens' => $tokenUsage['input_tokens'],
+            'output_tokens' => $tokenUsage['output_tokens'],
+            'tokens_per_second' => $tokensPerSecond,
+            'credits' => $credits,
+        ]);
+    }
+
+    /**
+     * Save chat history entry.
+     *
+     * @param array $data Chat history data to save
+     * @return ChatHistory Created chat history instance
+     */
+    protected function saveChatHistory(array $data): ChatHistory
     {
         return ChatHistory::create($data);
     }

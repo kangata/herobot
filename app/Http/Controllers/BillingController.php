@@ -17,6 +17,10 @@ class BillingController extends Controller
     public function __construct(XenditService $xenditService)
     {
         $this->xenditService = $xenditService;
+
+        if (config('app.edition') !== 'cloud') {
+            abort(404);
+        }
     }
 
     public function index(Request $request)
@@ -36,6 +40,7 @@ class BillingController extends Controller
                     'updated_at' => $transaction->updated_at,
                     'amount' => $transaction->amount,
                     'type' => $transaction->type,
+                    'transaction_type' => $transaction->transaction_type,
                     'description' => $transaction->description,
                     'status' => $currentStatus,
                     'payment_method' => $transaction->payment_method,
@@ -43,7 +48,7 @@ class BillingController extends Controller
                     'expired_at' => $transaction->expired_at,
                     'formatted_status' => ucfirst($currentStatus),
                     'status_color' => $this->getStatusColor($currentStatus),
-                    'formatted_type' => ucfirst($transaction->type),
+                    'formatted_type' => ucfirst(str_replace('_', ' ', $transaction->type)),
                     'type_color' => $this->getTypeColor($transaction->type),
                 ];
             });
@@ -103,6 +108,7 @@ class BillingController extends Controller
             'team_id' => $team->id,
             'amount' => $request->amount,
             'type' => 'topup',
+            'transaction_type' => 'credit',
             'description' => 'Credit top-up',
             'status' => 'pending',
             'external_id' => $externalId,
@@ -216,7 +222,10 @@ class BillingController extends Controller
                             ['team_id' => $transaction->team_id],
                             ['amount' => 0]
                         );
-                        $balance->amount += $payload['amount'];
+                        // Amount is now stored as integer (multiplied by 1,000,000)
+                        // The setAmountAttribute in Balance model will handle the conversion
+                        $currentDecimalAmount = $balance->decimal_amount;
+                        $balance->amount = $currentDecimalAmount + $payload['amount'];
                         $balance->save();
 
                         Log::info('Successfully processed Xendit payment', [
