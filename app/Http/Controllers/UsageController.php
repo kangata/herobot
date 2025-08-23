@@ -14,6 +14,7 @@ class UsageController extends Controller
             abort(404);
         }
     }
+
     /**
      * Display the usage page with token usage statistics.
      */

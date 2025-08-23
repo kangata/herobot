@@ -13,6 +13,10 @@ class PricingController extends Controller
     public function __construct(TokenPricingService $tokenPricingService)
     {
         $this->tokenPricingService = $tokenPricingService;
+
+        if (config('app.edition') !== 'cloud') {
+            abort(404);
+        }
     }
 
     /**
