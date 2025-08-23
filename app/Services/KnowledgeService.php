@@ -27,13 +27,9 @@ class KnowledgeService
             $texts = array_column($chunks, 'content');
 
             // Create embeddings using configured service
-            $vectors = $this->embeddingService->createEmbedding($texts);
+            $embed = $this->embeddingService->createEmbedding($texts);
 
-            Log::info('Creating embeddings', [
-                'service' => get_class($this->embeddingService),
-                'knowledge_id' => $knowledge->id,
-                'chunk_count' => count($chunks),
-            ]);
+            $vectors = $embed['embeddings'];
 
             // Delete existing vectors
             $knowledge->vectors()->delete();
