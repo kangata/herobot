@@ -77,7 +77,7 @@
             </div>
 
             <!-- Usage Breakdown Section -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                 <!-- Usage by Provider -->
                 <div class="border border-gray-200 rounded-lg overflow-hidden">
                     <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
@@ -140,6 +140,37 @@
                                     <CreditCardIcon class="h-12 w-12 mx-auto" />
                                 </div>
                                 <p class="text-xs text-gray-500">No model usage data available</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Usage by Bot -->
+                <div class="border border-gray-200 rounded-lg overflow-hidden">
+                    <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                        <div class="flex items-center">
+                            <div class="w-4 h-4 rounded-full mr-3 bg-purple-500"></div>
+                            <h2 class="text-lg font-semibold text-gray-900">Usage by Bot</h2>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-4">
+                            <div v-if="usage_by_bot && usage_by_bot.length > 0" class="divide-y divide-gray-200">
+                                <div v-for="bot in usage_by_bot.slice(0, 5)" :key="bot.bot_id" class="flex items-center justify-between py-4">
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium text-gray-900">{{ bot.bot?.name || 'Unknown Bot' }}</p>
+                                        <p class="text-xs text-gray-500">{{ bot.usage_count }} requests • {{ formatNumber(bot.total_input_tokens + bot.total_output_tokens) }} tokens</p>
+                                    </div>
+                                    <div class="text-sm font-medium text-gray-900">
+                                        {{ formatCredits(bot.total_credits) }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-else class="text-center py-8">
+                                <div class="text-gray-400 mb-2">
+                                    <ChartBarIcon class="h-12 w-12 mx-auto" />
+                                </div>
+                                <p class="text-xs text-gray-500">No bot usage data available</p>
                             </div>
                         </div>
                     </div>
@@ -255,6 +286,7 @@ defineProps({
     summary: Object,
     usage_by_provider: Array,
     usage_by_model: Array,
+    usage_by_bot: Array,
     daily_usage: Array,
 })
 

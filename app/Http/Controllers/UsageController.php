@@ -37,14 +37,42 @@ class UsageController extends Controller
         $usageByProvider = TokenUsage::where('team_id', $team->id)
             ->selectRaw('provider, SUM(credits) as total_credits, SUM(input_tokens) as total_input_tokens, SUM(output_tokens) as total_output_tokens')
             ->groupBy('provider')
-            ->get();
+            ->get()
+            ->map(function ($item) {
+                $item->total_input_tokens = (int) $item->total_input_tokens;
+                $item->total_output_tokens = (int) $item->total_output_tokens;
+                $item->total_credits = (float) $item->total_credits;
+                return $item;
+            });
 
         // Get usage by model
         $usageByModel = TokenUsage::where('team_id', $team->id)
             ->selectRaw('provider, model, SUM(credits) as total_credits, SUM(input_tokens) as total_input_tokens, SUM(output_tokens) as total_output_tokens, COUNT(*) as usage_count')
             ->groupBy('provider', 'model')
             ->orderBy('total_credits', 'desc')
-            ->get();
+            ->get()
+            ->map(function ($item) {
+                $item->total_input_tokens = (int) $item->total_input_tokens;
+                $item->total_output_tokens = (int) $item->total_output_tokens;
+                $item->total_credits = (float) $item->total_credits;
+                $item->usage_count = (int) $item->usage_count;
+                return $item;
+            });
+
+        // Get usage by bot
+        $usageByBot = TokenUsage::where('team_id', $team->id)
+            ->with('bot:id,name')
+            ->selectRaw('bot_id, SUM(credits) as total_credits, SUM(input_tokens) as total_input_tokens, SUM(output_tokens) as total_output_tokens, COUNT(*) as usage_count')
+            ->groupBy('bot_id')
+            ->orderBy('total_credits', 'desc')
+            ->get()
+            ->map(function ($item) {
+                $item->total_input_tokens = (int) $item->total_input_tokens;
+                $item->total_output_tokens = (int) $item->total_output_tokens;
+                $item->total_credits = (float) $item->total_credits;
+                $item->usage_count = (int) $item->usage_count;
+                return $item;
+            });
 
         // Get daily usage for the last 30 days
         $dailyUsage = TokenUsage::where('team_id', $team->id)
@@ -52,7 +80,13 @@ class UsageController extends Controller
             ->where('created_at', '>=', now()->subDays(30))
             ->groupBy('date')
             ->orderBy('date', 'desc')
-            ->get();
+            ->get()
+            ->map(function ($item) {
+                $item->total_input_tokens = (int) $item->total_input_tokens;
+                $item->total_output_tokens = (int) $item->total_output_tokens;
+                $item->total_credits = (float) $item->total_credits;
+                return $item;
+            });
 
         return Inertia::render('Usage/Index', [
             'usages' => $usages,
@@ -64,6 +98,7 @@ class UsageController extends Controller
             ],
             'usage_by_provider' => $usageByProvider,
             'usage_by_model' => $usageByModel,
+            'usage_by_bot' => $usageByBot,
             'daily_usage' => $dailyUsage,
         ]);
     }
