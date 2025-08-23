@@ -52,6 +52,11 @@ class Team extends JetstreamTeam
         return $this->hasMany(Knowledge::class);
     }
 
+    public function knowledgeVectors()
+    {
+        return $this->hasManyThrough(KnowledgeVector::class, Knowledge::class);
+    }
+
     public function channels()
     {
         return $this->hasMany(Channel::class);
@@ -72,5 +77,22 @@ class Team extends JetstreamTeam
     public function tools()
     {
         return $this->hasMany(Tool::class);
+    }
+
+    public function purge()
+    {
+        $this->knowledgeVectors()->delete();
+
+        $this->knowledges()->delete();
+
+        $this->tools()->delete();
+
+        $this->balance()->delete();
+
+        $this->channels()->delete();
+
+        $this->bots()->delete();
+
+        parent::purge();
     }
 }
