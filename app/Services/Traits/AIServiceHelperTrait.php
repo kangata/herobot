@@ -59,14 +59,15 @@ trait AIServiceHelperTrait
     /**
      * Get AI services (chat and embedding)
      *
+     * @param Bot|null $bot
      * @return array
      */
-    protected function getAIServices(): array
+    protected function getAIServices(?Bot $bot = null): array
     {
         try {
             return [
-                'chat' => AIServiceFactory::createChatService(),
-                'embedding' => AIServiceFactory::createEmbeddingService(),
+                'chat' => AIServiceFactory::createChatService($bot),
+                'embedding' => AIServiceFactory::createEmbeddingService($bot),
             ];
         } catch (\Exception $e) {
             Log::error('Failed to create AI services: ' . $e->getMessage());

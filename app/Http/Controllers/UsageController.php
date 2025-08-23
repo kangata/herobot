@@ -38,6 +38,7 @@ class UsageController extends Controller
         $usageByProvider = TokenUsage::where('team_id', $team->id)
             ->selectRaw('provider, SUM(credits) as total_credits, SUM(input_tokens) as total_input_tokens, SUM(output_tokens) as total_output_tokens')
             ->groupBy('provider')
+            ->orderBy('total_credits', 'desc')
             ->get()
             ->map(function ($item) {
                 $item->total_input_tokens = (int) $item->total_input_tokens;

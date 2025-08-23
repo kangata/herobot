@@ -34,21 +34,28 @@ class PricingController extends Controller
             $pricingData[$provider] = [];
             
             foreach ($models as $modelName => $pricing) {
+                $isAudioModel = $this->tokenPricingService->isAudioModel($provider, $modelName);
+                
                 $pricingData[$provider][$modelName] = [
                     'input_usd' => $pricing['input'],
                     'output_usd' => $pricing['output'],
                     'input_credits' => $this->tokenPricingService->usdToCredits($pricing['input']),
                     'output_credits' => $this->tokenPricingService->usdToCredits($pricing['output']),
+                    'is_audio' => $isAudioModel,
+                    'type' => $pricing['type'] ?? 'text',
                 ];
             }
         }
 
+        $aiModelService = new \App\Services\AIModelService();
+        
         return Inertia::render('Pricing/Index', [
             'pricing' => $pricingData,
             'exchange_rate' => [
                 'usd_to_credits' => 16500,
                 'credits_to_usd' => 1 / 16500,
             ],
+            'aiModels' => $aiModelService->getModelConfigForFrontend(),
         ]);
     }
 }

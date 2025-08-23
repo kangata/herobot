@@ -53,6 +53,35 @@ class GeminiService implements ChatServiceInterface, EmbeddingServiceInterface, 
         return $this->embeddingModel;
     }
 
+    /**
+     * Set the chat model
+     */
+    public function setModel(string $model): void
+    {
+        $this->model = $model;
+    }
+
+    /**
+     * Set the embedding model
+     */
+    public function setEmbeddingModel(string $embeddingModel): void
+    {
+        $this->embeddingModel = $embeddingModel;
+    }
+
+    /**
+     * Set the API key
+     */
+    public function setApiKey(string $apiKey): void
+    {
+        $this->apiKey = $apiKey;
+        $this->client = Http::baseUrl($this->baseUrl)
+            ->withHeaders([
+                'Content-Type' => 'application/json',
+                'x-goog-api-key' => $this->apiKey,
+            ]);
+    }
+
     public function generateResponse(array $messages, ?string $model = null, ?string $media = null, ?string $mimeType = null, array $tools = []): array
     {
         $model = $model ?? $this->model;

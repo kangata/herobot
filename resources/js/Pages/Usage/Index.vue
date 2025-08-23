@@ -86,7 +86,7 @@
                             <h2 class="text-lg font-semibold text-gray-900">Usage by Provider</h2>
                         </div>
                     </div>
-                    <div class="p-6">
+                    <div class="px-6">
                         <div class="space-y-4">
                             <div v-if="usage_by_provider && usage_by_provider.length > 0" class="divide-y divide-gray-200">
                                 <div v-for="provider in usage_by_provider" :key="provider.provider" class="flex items-center justify-between py-4">
@@ -122,7 +122,7 @@
                             <h2 class="text-lg font-semibold text-gray-900">Top Models by Cost</h2>
                         </div>
                     </div>
-                    <div class="p-6">
+                    <div class="px-6">
                         <div class="space-y-4">
                             <div v-if="usage_by_model && usage_by_model.length > 0" class="divide-y divide-gray-200">
                                 <div v-for="model in usage_by_model.slice(0, 5)" :key="`${model.provider}-${model.model}`" class="flex items-center justify-between py-4">
@@ -153,7 +153,7 @@
                             <h2 class="text-lg font-semibold text-gray-900">Usage by Bot</h2>
                         </div>
                     </div>
-                    <div class="p-6">
+                    <div class="px-6">
                         <div class="space-y-4">
                             <div v-if="usage_by_bot && usage_by_bot.length > 0" class="divide-y divide-gray-200">
                                 <div v-for="bot in usage_by_bot.slice(0, 5)" :key="bot.bot_id" class="flex items-center justify-between py-4">

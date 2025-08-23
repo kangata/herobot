@@ -60,16 +60,30 @@ class AIToolIntegrationTest extends TestCase
 
     public function test_ai_response_service_includes_available_tools()
     {
+        // Set self-hosted mode to avoid credit checks
+        config(['app.edition' => 'self-hosted']);
+        
         $toolService = new ToolService();
         $tokenPricingService = new TokenPricingService();
         $tokenUsageService = new TokenUsageService();
         $aiService = new AIResponseService($toolService, $tokenPricingService, $tokenUsageService);
 
-        // Mock the AI service factory and embedding service
-        $this->mockAIServices();
-
-        // Mock HTTP response for weather API
+        // Mock OpenAI API responses
         Http::fake([
+            'api.openai.com/v1/chat/completions' => Http::response([
+                'choices' => [[
+                    'message' => [
+                        'content' => 'The weather is nice today.'
+                    ]
+                ]],
+                'usage' => ['prompt_tokens' => 50, 'completion_tokens' => 10, 'total_tokens' => 60]
+            ], 200),
+            'api.openai.com/v1/embeddings' => Http::response([
+                'data' => [[
+                    'embedding' => [0.1, 0.2, 0.3]
+                ]],
+                'usage' => ['prompt_tokens' => 10, 'total_tokens' => 10]
+            ], 200),
             'api.openweathermap.org/*' => Http::response([
                 'main' => ['temp' => 25],
                 'weather' => [['description' => 'clear sky']]
@@ -91,42 +105,48 @@ class AIToolIntegrationTest extends TestCase
 
     public function test_ai_response_service_handles_tool_calls()
     {
+        // Set self-hosted mode to avoid credit checks  
+        config(['app.edition' => 'self-hosted']);
+        
         $toolService = new ToolService();
         $tokenPricingService = new TokenPricingService();
         $tokenUsageService = new TokenUsageService();
         $aiService = new AIResponseService($toolService, $tokenPricingService, $tokenUsageService);
 
-        // Mock chat service to return tool calls
-        $mockChatService = Mockery::mock('App\Services\Contracts\ChatServiceInterface');
-        $mockChatService->shouldReceive('generateResponse')
-            ->once()
-            ->andReturn([
-                'content' => '',
-                'tool_calls' => [[
-                    'id' => 'call_123',
-                    'type' => 'function',
-                    'function' => [
-                        'name' => 'Get Weather',
-                        'arguments' => json_encode(['location' => 'Jakarta', 'api_key' => 'test_key'])
-                    ]
-                ]]
-            ]);
-        
-        // Mock second call for final response
-        $mockChatService->shouldReceive('generateResponse')
-            ->once()
-            ->andReturn('The weather in Jakarta is 25°C with clear sky.');
-
-        $mockEmbeddingService = Mockery::mock('App\Services\Contracts\EmbeddingServiceInterface');
-        $mockEmbeddingService->shouldReceive('createEmbedding')
-            ->andReturn([0.1, 0.2, 0.3]);
-
-        // Mock the static methods of AIServiceFactory
-        Mockery::mock('alias:App\Services\AIServiceFactory')
-            ->shouldReceive('createChatService')
-            ->andReturn($mockChatService)
-            ->shouldReceive('createEmbeddingService')
-            ->andReturn($mockEmbeddingService);
+        // Mock OpenAI API responses for tool calls
+        Http::fake([
+            'api.openai.com/v1/chat/completions' => Http::sequence()
+                ->push([
+                    'choices' => [[
+                        'message' => [
+                            'content' => '',
+                            'tool_calls' => [[
+                                'id' => 'call_123',
+                                'type' => 'function',
+                                'function' => [
+                                    'name' => 'Get Weather',
+                                    'arguments' => json_encode(['location' => 'Jakarta', 'api_key' => 'test_key'])
+                                ]
+                            ]]
+                        ]
+                    ]],
+                    'usage' => ['prompt_tokens' => 50, 'completion_tokens' => 10, 'total_tokens' => 60]
+                ], 200)
+                ->push([
+                    'choices' => [[
+                        'message' => [
+                            'content' => 'The weather in Jakarta is 25°C with clear sky.'
+                        ]
+                    ]],
+                    'usage' => ['prompt_tokens' => 100, 'completion_tokens' => 20, 'total_tokens' => 120]
+                ], 200),
+            'api.openai.com/v1/embeddings' => Http::response([
+                'data' => [[
+                    'embedding' => [0.1, 0.2, 0.3]
+                ]],
+                'usage' => ['prompt_tokens' => 10, 'total_tokens' => 10]
+            ], 200)
+        ]);
 
         // Mock HTTP response for weather API
         Http::fake([
@@ -233,25 +253,6 @@ class AIToolIntegrationTest extends TestCase
         $tools = $toolService->getToolsForBot($otherBot->id);
 
         $this->assertEmpty($tools);
-    }
-
-    private function mockAIServices()
-    {
-        $mockChatService = Mockery::mock('App\Services\Contracts\ChatServiceInterface');
-        $mockChatService->shouldReceive('generateResponse')
-            ->with(Mockery::type('array'), Mockery::any(), Mockery::any(), Mockery::any(), Mockery::type('array'))
-            ->andReturn('The weather is nice today.');
-
-        $mockEmbeddingService = Mockery::mock('App\Services\Contracts\EmbeddingServiceInterface');
-        $mockEmbeddingService->shouldReceive('createEmbedding')
-            ->andReturn([0.1, 0.2, 0.3]);
-
-        // Mock the static methods of AIServiceFactory
-        Mockery::mock('alias:App\Services\AIServiceFactory')
-            ->shouldReceive('createChatService')
-            ->andReturn($mockChatService)
-            ->shouldReceive('createEmbeddingService')
-            ->andReturn($mockEmbeddingService);
     }
 
     protected function tearDown(): void

@@ -23,6 +23,11 @@ class BotFactory extends Factory
             'name' => $this->faker->name,
             'description' => $this->faker->sentence,
             'prompt' => $this->faker->paragraph,
+            'ai_chat_service' => 'openai/gpt-4',
+            'ai_embedding_service' => 'openai/text-embedding-3-small',
+            'ai_speech_to_text_service' => 'openai/whisper-1',
+            'openai_api_key' => null,
+            'gemini_api_key' => null,
         ];
     }
 }

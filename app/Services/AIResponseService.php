@@ -79,7 +79,7 @@ class AIResponseService
             ]);
             
             // Get separately configured services
-            $services = $this->getAIServices();
+            $services = $this->getAIServices($bot);
             $chatService = $services['chat'];
             $embeddingService = $services['embedding'];
             
@@ -349,6 +349,15 @@ class AIResponseService
     public function searchSimilarKnowledge(EmbeddingServiceInterface $embeddingService, string $query, Bot $bot, int $limit = 3): array
     {
         try {
+            $hasKnowledge = $bot->knowledge()->exists();
+            
+            if (!$hasKnowledge) {
+                return [
+                    'knowledge' => collect(),
+                    'token_usage' => null
+                ];
+            }
+            
             // Create embedding for the query
             $embeddingResult = $embeddingService->createEmbedding($query);
             $queryEmbedding = $embeddingResult['embeddings'][0] ?? $embeddingResult;
@@ -750,17 +759,19 @@ class AIResponseService
             $tokenUsage['output_tokens']
         );
         
-        // Store token usage and create daily transaction
-        $this->tokenUsageService->createTokenUsage([
-            'team_id' => $bot->team_id,
-            'bot_id' => $bot->id,
-            'provider' => $provider,
-            'model' => $model,
-            'input_tokens' => $tokenUsage['input_tokens'],
-            'output_tokens' => $tokenUsage['output_tokens'],
-            'tokens_per_second' => $tokensPerSecond,
-            'credits' => $credits,
-        ]);
+        // Store token usage and create daily transaction (skip if using custom API keys)
+        if (!$bot->isUsingCustomApiKeys()) {
+            $this->tokenUsageService->createTokenUsage([
+                'team_id' => $bot->team_id,
+                'bot_id' => $bot->id,
+                'provider' => $provider,
+                'model' => $model,
+                'input_tokens' => $tokenUsage['input_tokens'],
+                'output_tokens' => $tokenUsage['output_tokens'],
+                'tokens_per_second' => $tokensPerSecond,
+                'credits' => $credits,
+            ]);
+        }
     }
 
     /**

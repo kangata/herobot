@@ -37,25 +37,37 @@
                             <thead class="bg-gray-50">
                                 <tr>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Model</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Input / 1M Tokens</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Output / 1M Tokens</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <span v-if="hasAudioModels(models)">Input / Usage</span>
+                                        <span v-else>Input / 1M Tokens</span>
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <span v-if="hasAudioModels(models)">Output / Usage</span>
+                                        <span v-else>Output / 1M Tokens</span>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
                                 <tr v-for="(modelPricing, modelName) in models" :key="modelName" class="hover:bg-gray-50">
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="text-sm font-medium text-gray-900">{{ modelName }}</div>
-                                        <div v-if="getModelCategory(modelName)" class="text-xs text-gray-500">{{ getModelCategory(modelName) }}</div>
+                                        <div v-if="getModelCategory(modelName, aiModels)" class="text-xs text-gray-500">{{ getModelCategory(modelName, aiModels) }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="text-sm text-gray-900">
-                                            <div class="font-medium">${{ formatUSD(modelPricing.input_usd) }}</div>
+                                            <div class="font-medium">
+                                                ${{ formatUSD(modelPricing.input_usd) }}
+                                                <span v-if="modelPricing.is_audio" class="text-xs text-gray-500">/ minute</span>
+                                            </div>
                                             <div class="text-xs text-gray-500">{{ formatCredits(modelPricing.input_credits) }}</div>
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div v-if="modelPricing.output_credits > 0" class="text-sm text-gray-900">
-                                            <div class="font-medium">${{ formatUSD(modelPricing.output_usd) }}</div>
+                                            <div class="font-medium">
+                                                ${{ formatUSD(modelPricing.output_usd) }}
+                                                <span v-if="modelPricing.is_audio" class="text-xs text-gray-500">/ minute</span>
+                                            </div>
                                             <div class="text-xs text-gray-500">{{ formatCredits(modelPricing.output_credits) }}</div>
                                         </div>
                                         <div v-else class="text-sm text-gray-400">
@@ -75,7 +87,7 @@
                 <ul class="text-xs text-gray-600 space-y-2">
                     <li class="flex items-start">
                         <span class="inline-block w-1.5 h-1.5 bg-gray-400 rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
-                        All prices are per 1 million tokens (1M tokens)
+                        Text model prices are per 1 million tokens (1M tokens), audio model prices are per minute
                     </li>
                     <li class="flex items-start">
                         <span class="inline-block w-1.5 h-1.5 bg-gray-400 rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
@@ -102,6 +114,7 @@ import { CurrencyDollarIcon } from '@heroicons/vue/24/outline'
 defineProps({
     pricing: Object,
     exchange_rate: Object,
+    aiModels: Object,
 })
 
 const formatCredits = (amount) => {
@@ -125,24 +138,39 @@ const formatNumber = (number) => {
 const getProviderColor = (provider) => {
     const colors = {
         'OpenAI': 'bg-green-500',
-        'Gemini': 'bg-blue-500',
+        'Google Gemini': 'bg-blue-500',
         'unknown': 'bg-gray-500'
     }
     return colors[provider] || colors.unknown
 }
 
-const getModelCategory = (modelName) => {
-    if (modelName.includes('embedding')) {
-        return 'Embedding Model'
-    } else if (modelName.includes('gpt-5')) {
-        return 'GPT-5 Series'
-    } else if (modelName.includes('gpt-4.1')) {
-        return 'GPT-4.1 Series'
-    } else if (modelName.includes('gpt-4o')) {
-        return 'GPT-4o Series'
-    } else if (modelName.includes('gemini-2.5')) {
-        return 'Gemini 2.5 Series'
+const hasAudioModels = (models) => {
+    return Object.values(models).some(model => model.is_audio)
+}
+
+const getModelCategory = (modelName, aiModels) => {
+    if (!aiModels?.providers) return null;
+    
+    for (const [providerId, provider] of Object.entries(aiModels.providers)) {
+        const model = provider.models?.[modelName];
+        if (model) {
+            // Determine category based on services
+            if (model.services.includes('embedding')) {
+                return 'Embedding Model';
+            } else if (model.services.includes('speech')) {
+                return 'Audio Transcription';
+            } else if (modelName.includes('gpt-5')) {
+                return 'GPT-5 Series';
+            } else if (modelName.includes('gpt-4.1')) {
+                return 'GPT-4.1 Series';
+            } else if (modelName.includes('gpt-4o')) {
+                return 'GPT-4o Series';
+            } else if (modelName.includes('gemini-2.5')) {
+                return 'Gemini 2.5 Series';
+            }
+            return 'Chat Model';
+        }
     }
-    return null
+    return null;
 }
 </script>

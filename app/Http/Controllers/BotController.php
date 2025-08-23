@@ -36,7 +36,11 @@ class BotController extends Controller
 
     public function create()
     {
-        return inertia('Bots/Create');
+        $aiModelService = new \App\Services\AIModelService();
+        
+        return inertia('Bots/Create', [
+            'aiModels' => $aiModelService->getModelConfigForFrontend(),
+        ]);
     }
 
     public function store(Request $request)
@@ -45,6 +49,11 @@ class BotController extends Controller
             'name' => 'required',
             'description' => 'required',
             'prompt' => 'required|string',
+            'ai_chat_service' => 'nullable|string',
+            'ai_embedding_service' => 'nullable|string',
+            'ai_speech_to_text_service' => 'nullable|string',
+            'openai_api_key' => 'nullable|string',
+            'gemini_api_key' => 'nullable|string',
         ]);
 
         $bot = Bot::create([
@@ -52,6 +61,11 @@ class BotController extends Controller
             'name' => $validatedData['name'],
             'description' => $validatedData['description'],
             'prompt' => $validatedData['prompt'],
+            'ai_chat_service' => $validatedData['ai_chat_service'] ?: null,
+            'ai_embedding_service' => $validatedData['ai_embedding_service'] ?: null,
+            'ai_speech_to_text_service' => $validatedData['ai_speech_to_text_service'] ?: null,
+            'openai_api_key' => $validatedData['openai_api_key'] ?: null,
+            'gemini_api_key' => $validatedData['gemini_api_key'] ?: null,
         ]);
 
         return redirect()->route('bots.show', $bot)->with('success', 'Bot created successfully.');
@@ -89,8 +103,11 @@ class BotController extends Controller
 
     public function edit(Bot $bot)
     {
+        $aiModelService = new \App\Services\AIModelService();
+        
         return inertia('Bots/Edit', [
             'bot' => $bot,
+            'aiModels' => $aiModelService->getModelConfigForFrontend(),
         ]);
     }
 
@@ -100,12 +117,22 @@ class BotController extends Controller
             'name' => 'required',
             'description' => 'required',
             'prompt' => 'required|string',
+            'ai_chat_service' => 'nullable|string',
+            'ai_embedding_service' => 'nullable|string',
+            'ai_speech_to_text_service' => 'nullable|string',
+            'openai_api_key' => 'nullable|string',
+            'gemini_api_key' => 'nullable|string',
         ]);
 
         $bot->update([
             'name' => $validatedData['name'],
             'description' => $validatedData['description'],
             'prompt' => $validatedData['prompt'],
+            'ai_chat_service' => $validatedData['ai_chat_service'] ?: null,
+            'ai_embedding_service' => $validatedData['ai_embedding_service'] ?: null,
+            'ai_speech_to_text_service' => $validatedData['ai_speech_to_text_service'] ?: null,
+            'openai_api_key' => $validatedData['openai_api_key'] ?: null,
+            'gemini_api_key' => $validatedData['gemini_api_key'] ?: null,
         ]);
 
         return redirect()->route('bots.show', $bot)->with('success', 'Bot updated successfully.');

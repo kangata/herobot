@@ -45,6 +45,9 @@
                 <p class="mt-2 text-sm text-gray-500">Define how your bot should behave and interact with users. Click the buttons above to use predefined prompts, or write your own custom prompt.</p>
             </div>
 
+            <!-- AI Service Configuration -->
+            <AIServiceSelector :form="form" :ai-models="props.aiModels" />
+
             <div class="flex flex-row text-right">
                 <SecondaryButton class="mr-2" :href="route('bots.index')">
                     Cancel
@@ -66,6 +69,11 @@ import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
+import AIServiceSelector from '@/Components/AIServiceSelector.vue';
+
+const props = defineProps({
+    aiModels: Object,
+});
 
 const predefinedPrompts = {
     customer_service: "You are a customer service AI assistant. Your goal is to help customers with their inquiries professionally and efficiently. Always maintain a friendly, helpful tone and prioritize customer satisfaction.",
@@ -78,6 +86,11 @@ const form = useForm({
     name: '',
     description: '',
     prompt: predefinedPrompts.customer_service,
+    ai_chat_service: '',
+    ai_embedding_service: '',
+    ai_speech_to_text_service: '',
+    openai_api_key: '',
+    gemini_api_key: '',
 });
 
 const updatePrompt = (prompt) => {
