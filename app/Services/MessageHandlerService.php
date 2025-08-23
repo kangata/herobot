@@ -50,9 +50,11 @@ class MessageHandlerService
             }
         }
 
-        // Check if team has sufficient credits
+        // Check if team has sufficient credits (skip if bot uses custom API keys)
         $isCloud = config('app.edition') === 'cloud';
-        if ($isCloud && $bot && $bot->team && $bot->team->balance) {
+        $usingCustomApiKeys = $bot && $bot->isUsingCustomApiKeys();
+        
+        if ($isCloud && $bot && $bot->team && $bot->team->balance && !$usingCustomApiKeys) {
             // Get current balance
             $currentBalance = $bot->team->balance->amount / 1000000;
 

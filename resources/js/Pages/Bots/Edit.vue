@@ -46,7 +46,7 @@
             </div>
 
             <!-- AI Service Configuration -->
-            <AIServiceSelector :form="form" />
+            <AIServiceSelector :form="form" :ai-models="aiModels" />
 
             <div class="flex flex-row items-center">
                 <SecondaryButton class="mr-2" :href="route('bots.index')">
@@ -82,7 +82,8 @@ const props = defineProps({
     bot: {
         type: Object,
         required: true,
-    }
+    },
+    aiModels: Object,
 });
 
 const form = useForm({

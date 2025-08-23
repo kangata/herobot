@@ -191,7 +191,7 @@ const navigation = [
 const bottomNavigation = [
     { name: 'Team Settings', href: route('teams.show', page.props.auth.user.current_team), icon: UserGroupIcon, current: route().current('teams.show') },
     { name: 'Billing', href: route('billing.index'), icon: CreditCardIcon, current: route().current('billing*'), hide: isSelfHosted },
-    { name: 'Usage', href: route('usage.index'), icon: ChartBarIcon, current: route().current('usage*'), hide: isSelfHosted },
+    { name: 'AI Usage', href: route('usage.index'), icon: ChartBarIcon, current: route().current('usage*'), hide: isSelfHosted },
     { name: 'Pricing', href: route('pricing.index'), icon: CurrencyDollarIcon, current: route().current('pricing*'), hide: isSelfHosted },
     { name: 'Settings', href: route('profile.show'), icon: Cog6ToothIcon, current: route().current('profile.show') },
 ]

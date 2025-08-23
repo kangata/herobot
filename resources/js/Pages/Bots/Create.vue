@@ -46,7 +46,7 @@
             </div>
 
             <!-- AI Service Configuration -->
-            <AIServiceSelector :form="form" />
+            <AIServiceSelector :form="form" :ai-models="props.aiModels" />
 
             <div class="flex flex-row text-right">
                 <SecondaryButton class="mr-2" :href="route('bots.index')">
@@ -70,6 +70,10 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import AIServiceSelector from '@/Components/AIServiceSelector.vue';
+
+const props = defineProps({
+    aiModels: Object,
+});
 
 const predefinedPrompts = {
     customer_service: "You are a customer service AI assistant. Your goal is to help customers with their inquiries professionally and efficiently. Always maintain a friendly, helpful tone and prioritize customer satisfaction.",

@@ -48,7 +48,16 @@ class Bot extends Model
      */
     public function getAiChatService(): string
     {
-        return $this->ai_chat_service ?? config('services.ai.chat_service', 'gemini') . '/' . config('services.gemini.model', 'gemini-2.5-flash');
+        if ($this->ai_chat_service) {
+            return $this->ai_chat_service;
+        }
+        
+        $provider = config('services.ai.chat_service', 'gemini');
+        $model = $provider === 'openai' 
+            ? config('services.openai.model')
+            : config('services.gemini.model');
+            
+        return $provider . '/' . $model;
     }
 
     /**
@@ -56,7 +65,16 @@ class Bot extends Model
      */
     public function getAiEmbeddingService(): string
     {
-        return $this->ai_embedding_service ?? config('services.ai.embedding_service', 'gemini') . '/' . config('services.gemini.embedding_model', 'text-embedding-004');
+        if ($this->ai_embedding_service) {
+            return $this->ai_embedding_service;
+        }
+        
+        $provider = config('services.ai.embedding_service', 'gemini');
+        $model = $provider === 'openai' 
+            ? config('services.openai.embedding_model')
+            : config('services.gemini.embedding_model');
+            
+        return $provider . '/' . $model;
     }
 
     /**
@@ -64,7 +82,16 @@ class Bot extends Model
      */
     public function getAiSpeechToTextService(): string
     {
-        return $this->ai_speech_to_text_service ?? config('services.ai.speech_to_text_service', 'gemini') . '/' . config('services.gemini.model', 'gemini-2.5-flash');
+        if ($this->ai_speech_to_text_service) {
+            return $this->ai_speech_to_text_service;
+        }
+        
+        $provider = config('services.ai.speech_to_text_service', 'gemini');
+        $model = $provider === 'openai' 
+            ? 'whisper-1'
+            : config('services.gemini.model');
+            
+        return $provider . '/' . $model;
     }
 
     /**
@@ -96,74 +123,17 @@ class Bot extends Model
     }
 
     /**
-     * Get available AI providers
+     * Check if bot is using custom API keys for any service
      */
-    public static function getAvailableProviders(): array
+    public function isUsingCustomApiKeys(): bool
     {
-        return [
-            'openai' => 'OpenAI',
-            'gemini' => 'Google Gemini',
-        ];
-    }
-
-    /**
-     * Get available models for a provider
-     */
-    public static function getAvailableModels(string $provider): array
-    {
-        return match($provider) {
-            'openai' => [
-                'gpt-4o' => 'GPT-4o',
-                'gpt-4o-mini' => 'GPT-4o Mini',
-                'gpt-4-turbo' => 'GPT-4 Turbo',
-                'gpt-3.5-turbo' => 'GPT-3.5 Turbo',
-            ],
-            'gemini' => [
-                'gemini-2.5-flash' => 'Gemini 2.5 Flash',
-                'gemini-1.5-pro' => 'Gemini 1.5 Pro',
-                'gemini-1.5-flash' => 'Gemini 1.5 Flash',
-            ],
-            default => [],
-        };
-    }
-
-    /**
-     * Get available embedding models for a provider
-     */
-    public static function getAvailableEmbeddingModels(string $provider): array
-    {
-        return match($provider) {
-            'openai' => [
-                'text-embedding-3-large' => 'Text Embedding 3 Large',
-                'text-embedding-3-small' => 'Text Embedding 3 Small',
-                'text-embedding-ada-002' => 'Text Embedding Ada 002',
-            ],
-            'gemini' => [
-                'text-embedding-004' => 'Text Embedding 004',
-            ],
-            default => [],
-        };
-    }
-
-    /**
-     * Get available service configurations for a service type
-     */
-    public static function getAvailableServiceConfigs(string $serviceType): array
-    {
-        $configs = [];
+        // Check if any of the configured services use custom API keys
+        $chatConfig = $this->parseServiceConfig($this->getAiChatService());
+        $embeddingConfig = $this->parseServiceConfig($this->getAiEmbeddingService());
+        $speechConfig = $this->parseServiceConfig($this->getAiSpeechToTextService());
         
-        foreach (self::getAvailableProviders() as $provider => $providerName) {
-            if ($serviceType === 'embedding') {
-                $models = self::getAvailableEmbeddingModels($provider);
-            } else {
-                $models = self::getAvailableModels($provider);
-            }
-            
-            foreach ($models as $model => $modelName) {
-                $configs["{$provider}/{$model}"] = "{$providerName} - {$modelName}";
-            }
-        }
-        
-        return $configs;
+        return $this->getCustomApiKey($chatConfig['provider']) !== null ||
+               $this->getCustomApiKey($embeddingConfig['provider']) !== null ||
+               $this->getCustomApiKey($speechConfig['provider']) !== null;
     }
 }

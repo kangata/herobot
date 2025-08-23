@@ -36,7 +36,11 @@ class BotController extends Controller
 
     public function create()
     {
-        return inertia('Bots/Create');
+        $aiModelService = new \App\Services\AIModelService();
+        
+        return inertia('Bots/Create', [
+            'aiModels' => $aiModelService->getModelConfigForFrontend(),
+        ]);
     }
 
     public function store(Request $request)
@@ -99,8 +103,11 @@ class BotController extends Controller
 
     public function edit(Bot $bot)
     {
+        $aiModelService = new \App\Services\AIModelService();
+        
         return inertia('Bots/Edit', [
             'bot' => $bot,
+            'aiModels' => $aiModelService->getModelConfigForFrontend(),
         ]);
     }
 

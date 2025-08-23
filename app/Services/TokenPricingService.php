@@ -5,40 +5,30 @@ namespace App\Services;
 class TokenPricingService
 {
     /**
-     * Token pricing in USD per 1M tokens.
+     * Get pricing data from configuration.
      * 1 Credit = 1 Rupiah, 16,500 Credits = 1 USD
      */
-    private const PRICING = [
-        'OpenAI' => [
-            // GPT-5 Series
-            'gpt-5' => ['input' => 1.25, 'output' => 10.0],
-            'gpt-5-mini' => ['input' => 0.25, 'output' => 2.0],
-            'gpt-5-nano' => ['input' => 0.05, 'output' => 0.4],
+    private function getPricingConfig(): array
+    {
+        $config = config('ai-models.providers');
+        $pricing = [];
+        
+        foreach ($config as $providerId => $provider) {
+            $providerName = ucfirst($providerId) === 'Openai' ? 'OpenAI' : $provider['name'];
+            $pricing[$providerName] = [];
             
-            // GPT-4.1 Series
-            'gpt-4.1' => ['input' => 2.0, 'output' => 8.0],
-            'gpt-4.1-mini' => ['input' => 0.4, 'output' => 1.6],
-            'gpt-4.1-nano' => ['input' => 0.1, 'output' => 0.4],
-            
-            // GPT-4o Series
-            'gpt-4o' => ['input' => 2.5, 'output' => 10.0],
-            'gpt-4o-mini' => ['input' => 0.15, 'output' => 0.6],
-            
-            // Embeddings
-            'text-embedding-3-small' => ['input' => 0.01, 'output' => 0],
-            'text-embedding-3-large' => ['input' => 0.065, 'output' => 0],
-            'text-embedding-ada-002' => ['input' => 0.05, 'output' => 0],
-        ],
-        'Gemini' => [
-            // Gemini 2.5 Series
-            'gemini-2.5-pro' => ['input' => 1.25, 'output' => 10.0],
-            'gemini-2.5-flash' => ['input' => 0.3, 'output' => 2.5],
-            'gemini-2.5-flash-lite' => ['input' => 0.1, 'output' => 0.4],
-            
-            // Embeddings
-            'text-embedding-004' => ['input' => 0.15, 'output' => 0],
-        ],
-    ];
+            foreach ($provider['models'] as $modelId => $model) {
+                $pricing[$providerName][$modelId] = $model['pricing'];
+                
+                // Add type for audio models
+                if (isset($model['type'])) {
+                    $pricing[$providerName][$modelId]['type'] = $model['type'];
+                }
+            }
+        }
+        
+        return $pricing;
+    }
 
     /**
      * Calculate the cost in credits for token usage.
@@ -72,6 +62,43 @@ class TokenPricingService
     }
 
     /**
+     * Calculate the cost in credits for audio usage (per minute).
+     *
+     * @param string $provider The AI provider (OpenAI, Gemini)
+     * @param string $model The model name
+     * @param float $minutes Number of minutes of audio
+     * @return float Cost in credits
+     */
+    public function calculateAudioCost(string $provider, string $model, float $minutes): float
+    {
+        $pricing = $this->getPricing($provider, $model);
+        
+        if (!$pricing || !$this->isAudioModel($provider, $model)) {
+            // Fallback pricing for audio if model not found
+            return round($minutes * 0.006 * 16500, 6); // Default to Whisper pricing
+        }
+
+        // Convert USD pricing to credits (1 USD = 16,500 credits)
+        $totalCostUsd = $minutes * $pricing['input'];
+        $totalCostCredits = $totalCostUsd * 16500;
+
+        return round($totalCostCredits, 6);
+    }
+
+    /**
+     * Check if a model is an audio model.
+     *
+     * @param string $provider
+     * @param string $model
+     * @return bool
+     */
+    public function isAudioModel(string $provider, string $model): bool
+    {
+        $pricing = $this->getPricing($provider, $model);
+        return $pricing && isset($pricing['type']) && $pricing['type'] === 'audio';
+    }
+
+    /**
      * Get pricing for a specific provider and model.
      *
      * @param string $provider
@@ -80,7 +107,8 @@ class TokenPricingService
      */
     public function getPricing(string $provider, string $model): ?array
     {
-        return self::PRICING[$provider][$model] ?? null;
+        $pricing = $this->getPricingConfig();
+        return $pricing[$provider][$model] ?? null;
     }
 
     /**
@@ -90,7 +118,7 @@ class TokenPricingService
      */
     public function getAllPricing(): array
     {
-        return self::PRICING;
+        return $this->getPricingConfig();
     }
 
     /**
@@ -102,7 +130,8 @@ class TokenPricingService
      */
     public function isSupported(string $provider, string $model): bool
     {
-        return isset(self::PRICING[$provider][$model]);
+        $pricing = $this->getPricingConfig();
+        return isset($pricing[$provider][$model]);
     }
 
     /**
