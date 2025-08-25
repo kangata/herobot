@@ -63,6 +63,10 @@ class AIToolIntegrationTest extends TestCase
         // Set self-hosted mode to avoid credit checks
         config(['app.edition' => 'self-hosted']);
         
+        // Set required API keys for service creation
+        config(['services.openai.api_key' => 'test-api-key']);
+        config(['services.gemini.api_key' => 'test-api-key']);
+        
         $toolService = new ToolService();
         $tokenPricingService = new TokenPricingService();
         $tokenUsageService = new TokenUsageService();
@@ -107,6 +111,10 @@ class AIToolIntegrationTest extends TestCase
     {
         // Set self-hosted mode to avoid credit checks  
         config(['app.edition' => 'self-hosted']);
+        
+        // Set required API keys for service creation
+        config(['services.openai.api_key' => 'test-api-key']);
+        config(['services.gemini.api_key' => 'test-api-key']);
         
         $toolService = new ToolService();
         $tokenPricingService = new TokenPricingService();
