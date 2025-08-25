@@ -20,8 +20,13 @@ services:
             XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}'
             IGNITION_LOCAL_SITES_PATH: '${PWD}'
             SUPERVISOR_PHP_USER: '${SUPERVISOR_PHP_USER:-sail}'
+            SUPERVISOR_PHP_COMMAND: "/usr/bin/php -d variables_order=EGPCS /var/www/html/artisan octane:start --server=frankenphp --host=127.0.0.1 --admin-port=2019 --port='${APP_PORT:-80}'"
+            XDG_CONFIG_HOME:  /var/www/html/data/sail/config 
+            XDG_DATA_HOME:  /var/www/html/data/sail/data
         volumes:
             - '.:/var/www/html'
+            - './data/sail/config:/var/www/html/data/sail/config'
+            - './data/sail/data:/var/www/html/data/sail/data'
         networks:
             - sail
         depends_on:
