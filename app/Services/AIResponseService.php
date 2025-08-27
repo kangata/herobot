@@ -48,24 +48,26 @@ class AIResponseService
      *
      * @param Bot $bot Bot instance with prompt property
      * @param Channel $channel Channel instance
-     * @param string $message Latest message from user
+     * @param string|null $message Latest message from user (nullable for media-only)
      * @param string $sender Sender identifier
      * @param ChatMedia|null $media Media data (optional)
      * @param string $format Output format: 'whatsapp' or 'html'
      * @return string|false Formatted response string or false on failure
      */
-    public function generateResponse(Bot $bot, ?Channel $channel, string $message, string $sender, ?ChatMedia $media = null, string $format = 'whatsapp'): string|false
+    public function generateResponse(Bot $bot, ?Channel $channel, ?string $message, string $sender, ?ChatMedia $media = null, string $format = 'whatsapp'): string|false
     {
         try {
             // Get chat history from database
             $chatHistory = $this->getChatHistory($bot->id, $channel->id ?? null, $sender, 5);
+            
+            $hasTextMessage = $message !== null && trim($message) !== '';
             
             // Save user message to chat history
             $this->saveChatHistory([
                 'channel_id' => $channel->id ?? null,
                 'bot_id' => $bot->id,
                 'sender' => $sender,
-                'message' => $message,
+                'message' => $message ?? '',
                 'role' => 'user',
                 'message_type' => $media ? 'media' : 'text',
                 'media_data' => $media ? [
@@ -84,9 +86,14 @@ class AIResponseService
             $embeddingService = $services['embedding'];
             
             // Search for relevant knowledge using embedding service
-            $embeddingResult = $this->searchSimilarKnowledge($embeddingService, $message, $bot, 3);
-            $relevantKnowledge = $embeddingResult['knowledge'];
-            $embeddingTokenUsage = $embeddingResult['token_usage'] ?? null;
+            if ($hasTextMessage) {
+                $embeddingResult = $this->searchSimilarKnowledge($embeddingService, $message, $bot, 3);
+                $relevantKnowledge = $embeddingResult['knowledge'];
+                $embeddingTokenUsage = $embeddingResult['token_usage'] ?? null;
+            } else {
+                $relevantKnowledge = collect();
+                $embeddingTokenUsage = null;
+            }
             
             // Build system prompt
             $systemPrompt = $this->buildSystemPrompt($bot, $relevantKnowledge);
@@ -219,10 +226,10 @@ class AIResponseService
      *
      * @param string $systemPrompt System prompt text
      * @param Collection $chatHistory Collection of chat history items
-     * @param string $message Current user message
+     * @param string|null $message Current user message (nullable for media-only)
      * @return array Array of messages formatted for AI service
      */
-    private function buildMessagesArray(string $systemPrompt, Collection $chatHistory, string $message): array
+    private function buildMessagesArray(string $systemPrompt, Collection $chatHistory, ?string $message): array
     {
         $messages = [
             ['role' => 'system', 'content' => $systemPrompt],
@@ -254,8 +261,10 @@ class AIResponseService
             }
         }
 
-        // Add current message
-        $messages[] = ['role' => 'user', 'content' => $message];
+        // Add current message only if provided
+        if ($message !== null && trim($message) !== '') {
+            $messages[] = ['role' => 'user', 'content' => $message];
+        }
 
         return $messages;
     }
@@ -406,8 +415,8 @@ class AIResponseService
      */
     protected function calculateSimilarity(array $vector1, array $vector2): float
     {
-        if (function_exists('fast_cosine_similarity')) {
-            return fast_cosine_similarity($vector1, $vector2);
+        if (\function_exists('fast_cosine_similarity')) {
+            return \call_user_func('fast_cosine_similarity', $vector1, $vector2);
         }
 
         return $this->cosineSimilarity($vector1, $vector2);
