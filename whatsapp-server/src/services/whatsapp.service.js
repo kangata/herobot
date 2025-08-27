@@ -246,6 +246,10 @@ async function handleIncomingMessage(sock, channelId, m) {
             });
         }
 
+        if (!messageContent && !mediaBuffer) {
+            return;
+        }
+
         const response = await fetch(`${config.laravelApiUrl}/api/whatsapp/incoming-message`, {
             method: 'POST',
             headers: {
